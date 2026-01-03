@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page.title }} | {{ site.title }}</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: #f5f7fb;
+        color: #1f2a44;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        background: linear-gradient(120deg, #1f3f7a, #3559a2);
+        color: #fff;
+        padding: 56px 24px 64px;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 16px 40px rgba(31, 42, 68, 0.08);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: #f4f6fb;
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+      }
+
+      .tool-index a:hover {
+        border-color: #99b0ea;
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: #5b6884;
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: #3559a2;
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid #d4d9e6;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: #f6f8ff;
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .status {
+        color: #56637e;
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: #b42318;
+      }
+
+      footer {
+        text-align: center;
+        color: #62708d;
+        font-size: 0.9rem;
+        margin-top: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>{{ page.hero_title | default: page.title }}</h1>
+      <p>{{ page.hero_subtitle }}</p>
+    </header>
+
+    <main>
+      {{ content }}
+    </main>
+  </body>
+</html>
