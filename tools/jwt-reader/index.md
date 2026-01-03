@@ -12,6 +12,9 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   </div>
   <label for="jwt-input">JWT Token</label>
   <textarea id="jwt-input" placeholder="eyJhbGciOi..." spellcheck="false"></textarea>
+  <p class="helper">
+    Need a sample? <button class="link-button" type="button" id="jwt-example-button">Load example token</button>
+  </p>
   <div class="tool-grid">
     <div>
       <h3>Header</h3>
@@ -30,6 +33,7 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
     <li>Decoding happens entirely in your browser.</li>
     <li>Signatures are not verified here—use your auth stack for validation.</li>
     <li>Tokens must have at least two sections separated by periods.</li>
+    <li>Use the example token button above to see a sample header and payload.</li>
   </ul>
 </section>
 
@@ -42,6 +46,9 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   const jwtHeader = document.getElementById("jwt-header");
   const jwtPayload = document.getElementById("jwt-payload");
   const jwtStatus = document.getElementById("jwt-status");
+  const jwtExampleButton = document.getElementById("jwt-example-button");
+  const exampleToken =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.signature";
 
   const decodeSegment = (segment) => {
     const normalized = segment.replace(/-/g, "+").replace(/_/g, "/");
@@ -97,5 +104,9 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   };
 
   jwtInput.addEventListener("input", handleDecode);
+  jwtExampleButton.addEventListener("click", () => {
+    jwtInput.value = exampleToken;
+    handleDecode();
+  });
   renderEmpty();
 </script>
