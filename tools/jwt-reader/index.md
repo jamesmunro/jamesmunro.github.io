@@ -32,7 +32,7 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   <ul>
     <li>Decoding happens entirely in your browser.</li>
     <li>Signatures are not verified here—use your auth stack for validation.</li>
-    <li>Tokens must have two or three sections separated by periods.</li>
+    <li>Tokens must have three sections separated by periods.</li>
     <li>Use the example token button above to see a sample header and payload.</li>
   </ul>
 </section>
@@ -86,8 +86,8 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
     }
 
     const parts = token.split(".");
-    if (parts.length < 2 || parts.length > 3) {
-      renderError("That does not look like a JWT. It should have two or three sections.");
+    if (parts.length !== 3) {
+      renderError("That does not look like a JWT. It should have three sections.");
       return;
     }
 
