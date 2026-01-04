@@ -7,6 +7,13 @@ hero_subtitle: Fast, client-side utilities. Everything runs locally in your brow
 <section class="card" aria-labelledby="tool-index">
   <h2 id="tool-index">Tool Index</h2>
   <div class="tool-index">
+    <a href="/tools/world-clock/">
+      <div class="tool-meta">
+        <span>World Clock</span>
+        <span>Large multi-timezone clock with second-by-second updates.</span>
+      </div>
+      <span aria-hidden="true">→</span>
+    </a>
     <a href="/tools/jwt-reader/">
       <div class="tool-meta">
         <span>JWT Reader</span>
