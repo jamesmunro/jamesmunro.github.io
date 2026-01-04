@@ -79,15 +79,15 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   };
 
   const handleDecode = () => {
-    const token = jwtInput.value.trim();
-    if (!token) {
+    const normalizedToken = jwtInput.value.replace(/\s+/g, "");
+    if (!normalizedToken) {
       renderEmpty();
       return;
     }
 
-    const parts = token.split(".");
+    const parts = normalizedToken.split(".");
     if (parts.length < 2) {
-      renderError("That does not look like a JWT. It should have at least two sections.");
+      renderError("That does not look like a JWT. It should have at least two sections (whitespace is ignored).");
       return;
     }
 
@@ -99,7 +99,7 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
       jwtStatus.textContent = "Decoded successfully. Signature not validated.";
       jwtStatus.classList.remove("error");
     } catch (error) {
-      renderError("Unable to decode this token. Check the formatting and try again.");
+      renderError("Unable to decode this token. Whitespace is ignored; check the formatting and try again.");
     }
   };
 
