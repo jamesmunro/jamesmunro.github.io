@@ -1,4 +1,4 @@
-# [jamesmunro.github.io](jamesmunro.github.io)
+# [jamesmunro.github.io](https://jamesmunro.github.io)
 
 ## Local development
 
