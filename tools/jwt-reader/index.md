@@ -38,7 +38,7 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
 </section>
 
 <footer>
-  Built for quick diagnostics. More tools coming soon.
+  Built for quick diagnostics.
 </footer>
 
 <script>
