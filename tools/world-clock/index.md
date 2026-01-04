@@ -71,16 +71,16 @@ hero_subtitle: Large, multi-timezone clock with second-by-second updates.
 <script>
   const clocks = [
     {
+      label: "Singapore & Hong Kong",
+      timeZone: "Asia/Singapore",
+    },
+    {
       label: "Jersey & London",
       timeZone: "Europe/London",
     },
     {
       label: "New York",
       timeZone: "America/New_York",
-    },
-    {
-      label: "Singapore & Hong Kong",
-      timeZone: "Asia/Singapore",
     },
   ];
 
