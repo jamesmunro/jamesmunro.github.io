@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Web Tools
-hero_subtitle: A growing collection of fast, client-side utilities. Everything runs locally in your browser so your data never leaves your device.
+hero_subtitle: Fast, client-side utilities. Everything runs locally in your browser so your data never leaves your device.
 ---
 
 <section class="card" aria-labelledby="tool-index">
@@ -20,11 +20,11 @@ hero_subtitle: A growing collection of fast, client-side utilities. Everything r
 <section class="card" aria-labelledby="about-tools">
   <h2 id="about-tools">About these tools</h2>
   <p>
-    Each tool lives in its own directory so the site can grow as new utilities are added.
-    Bookmark the ones you use most, or jump back here whenever you need something new.
+    Each tool lives in its own directory for clarity and isolation.
+    Bookmark the ones you use most, or jump back here when you need one.
   </p>
 </section>
 
 <footer>
-  Built for quick diagnostics. More tools coming soon.
+  Built for quick diagnostics.
 </footer>
