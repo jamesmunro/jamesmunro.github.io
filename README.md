@@ -22,3 +22,9 @@ bundle exec jekyll serve --livereload
 ```
 
 Then open `http://localhost:4000` in your browser.
+
+### Tests
+
+```sh
+node --test tools/jwt-reader/jwt-reader.test.js
+```
