@@ -41,7 +41,9 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   Built for quick diagnostics.
 </footer>
 
-<script>
+<script type="module">
+  import { decodeToken } from "./jwt-reader.js";
+
   const jwtInput = document.getElementById("jwt-input");
   const jwtHeader = document.getElementById("jwt-header");
   const jwtPayload = document.getElementById("jwt-payload");
@@ -49,18 +51,6 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
   const jwtExampleButton = document.getElementById("jwt-example-button");
   const exampleToken =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.signature";
-
-  const decodeSegment = (segment) => {
-    const normalized = segment.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
-    const decoded = atob(padded);
-    return decodeURIComponent(
-      decoded
-        .split("")
-        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
-        .join("")
-    );
-  };
 
   const formatJson = (value) => JSON.stringify(value, null, 2);
 
@@ -85,17 +75,10 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
       return;
     }
 
-    const parts = normalizedToken.split(".");
-    if (parts.length < 2 || parts.length > 3) {
-      renderError("That does not look like a JWT. It should have two or three sections (whitespace is ignored).");
-      return;
-    }
-
     try {
-      const headerJson = JSON.parse(decodeSegment(parts[0]));
-      const payloadJson = JSON.parse(decodeSegment(parts[1]));
-      jwtHeader.textContent = formatJson(headerJson);
-      jwtPayload.textContent = formatJson(payloadJson);
+      const { header, payload } = decodeToken(normalizedToken);
+      jwtHeader.textContent = formatJson(header);
+      jwtPayload.textContent = formatJson(payload);
       jwtStatus.textContent = "Decoded successfully. Signature not validated.";
       jwtStatus.classList.remove("error");
     } catch (error) {
