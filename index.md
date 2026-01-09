@@ -21,6 +21,13 @@ hero_subtitle: Fast, client-side utilities. Everything runs locally in your brow
       </div>
       <span aria-hidden="true">→</span>
     </a>
+    <a href="/tools/thameslink-timetable/">
+      <div class="tool-meta">
+        <span>Thameslink Timetable</span>
+        <span>OTRL timetable with Harpenden → St Pancras defaults plus live updates.</span>
+      </div>
+      <span aria-hidden="true">→</span>
+    </a>
   </div>
 </section>
 
