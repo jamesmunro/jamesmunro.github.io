@@ -2,29 +2,28 @@
 
 ## Local development
 
-This site is a Jekyll project configured to match GitHub Pages.
+This site is built with [Eleventy](https://www.11ty.dev/).
 
 ### Prerequisites
 
-- Ruby (https://www.ruby-lang.org/)
-- Bundler (`gem install bundler`)
+- Node.js 20+
 
 ### Install dependencies
 
 ```sh
-bundle install
+npm install
 ```
 
 ### Build and preview locally
 
 ```sh
-bundle exec jekyll serve --livereload
+npm run dev
 ```
 
-Then open `http://localhost:4000` in your browser.
+Then open `http://localhost:8080` in your browser.
 
 ### Tests
 
 ```sh
-node --test tools/jwt-reader/jwt-reader.test.js
+npm test
 ```

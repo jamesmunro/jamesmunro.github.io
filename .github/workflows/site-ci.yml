@@ -1,76 +1,84 @@
 name: Site CI
 
 on:
-  pull_request:
+  push:
+    branches-ignore:
+      - gh-pages
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-  pull-requests: write
+  contents: write
 
 concurrency:
-  group: site-ci-${{ github.event.pull_request.number || github.ref }}
+  group: site-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-test:
+  build-deploy:
     runs-on: ubuntu-latest
-    env:
-      BUNDLE_WITHOUT: ""
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.4.4
-          bundler-cache: true
-
-      - name: Build site
-        run: bundle exec jekyll build
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build site
+        run: npm run build
 
       - name: Run JavaScript tests
-        run: node --test tools/jwt-reader/jwt-reader.test.js
+        run: npm test
 
       - name: Lint JavaScript sources
-        run: node --check tools/jwt-reader/jwt-reader.js
+        run: npm run lint
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-  preview:
-    runs-on: ubuntu-latest
-    needs: build-test
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Comment with preview URL
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issueNumber = context.payload.pull_request.number;
-            const body = `🛰️ Preview ready: ${process.env.PAGE_URL}`;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body,
-            });
+      - name: Deploy to gh-pages
         env:
-          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin gh-pages || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add gh-pages origin/gh-pages
+          else
+            git worktree add gh-pages --orphan gh-pages
+            (cd gh-pages && git commit --allow-empty -m "Initialize gh-pages")
+          fi
+
+          if [ "$BRANCH_NAME" = "main" ]; then
+            target_dir="."
+            find gh-pages -mindepth 1 -maxdepth 1 ! -name preview ! -name .git -exec rm -rf {} +
+          else
+            target_dir="preview/$BRANCH_NAME"
+            rm -rf "gh-pages/$target_dir"
+            mkdir -p "gh-pages/$target_dir"
+          fi
+
+          touch gh-pages/.nojekyll
+
+          if [ "$target_dir" = "." ]; then
+            rsync -av --delete --exclude ".git" --exclude "preview" _site/ gh-pages/
+          else
+            rsync -av --delete _site/ "gh-pages/$target_dir/"
+          fi
+
+          cd gh-pages
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to deploy."
+            exit 0
+          fi
+          git commit -m "Deploy $BRANCH_NAME to gh-pages"
+          git push origin HEAD:gh-pages
