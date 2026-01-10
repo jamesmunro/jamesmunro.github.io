@@ -4,3 +4,5 @@ _site/
 node_modules/
 .cache/
 .DS_Store
+.venv/
+.jupyterlite.doit.db

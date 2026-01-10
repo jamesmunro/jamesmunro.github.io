@@ -28,6 +28,13 @@ hero_subtitle: Fast, client-side utilities. Everything runs locally in your brow
       </div>
       <span aria-hidden="true">→</span>
     </a>
+    <a href="tools/jupyter-lite/">
+      <div class="tool-meta">
+        <span>Jupyter Lite</span>
+        <span>Run Python notebooks directly in your browser using WebAssembly.</span>
+      </div>
+      <span aria-hidden="true">→</span>
+    </a>
   </div>
 </section>
 
