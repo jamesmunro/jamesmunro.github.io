@@ -1,11 +1,11 @@
 ---
-layout: default
+layout: layouts/default.njk
 title: JWT Reader
 hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not validated, but the header and payload are decoded for quick inspection.
 ---
 
 <section class="card" aria-labelledby="jwt-reader-title">
-  <div class="breadcrumb"><a href="{{ '/' | relative_url }}">← Back to tool index</a></div>
+  <div class="breadcrumb"><a href="../../">← Back to tool index</a></div>
   <div class="tool-header">
     <h2 id="jwt-reader-title">Decode a token</h2>
     <span class="status" id="jwt-status">Paste a token to decode the header and payload.</span>

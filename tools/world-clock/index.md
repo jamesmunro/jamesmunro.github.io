@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: layouts/default.njk
 title: World Clock
 hero_subtitle: Large, multi-timezone clock with second-by-second updates.
 ---
@@ -44,7 +44,7 @@ hero_subtitle: Large, multi-timezone clock with second-by-second updates.
 </style>
 
 <section class="card" aria-labelledby="world-clock-title">
-  <div class="breadcrumb"><a href="{{ '/' | relative_url }}">← Back to tool index</a></div>
+  <div class="breadcrumb"><a href="../../">← Back to tool index</a></div>
   <div class="tool-header">
     <h2 id="world-clock-title">Multi-timezone clock</h2>
     <span class="status" id="clock-status">Updating every second.</span>

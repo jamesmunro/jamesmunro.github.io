@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: layouts/default.njk
 title: Thameslink Timetable
 hero_subtitle: Live Thameslink departures alongside the latest service updates.
 ---
@@ -40,7 +40,7 @@ hero_subtitle: Live Thameslink departures alongside the latest service updates.
 </style>
 
 <section class="card" aria-labelledby="thameslink-timetable-title">
-  <div class="breadcrumb"><a href="{{ '/' | relative_url }}">← Back to tool index</a></div>
+  <div class="breadcrumb"><a href="../../">← Back to tool index</a></div>
   <div class="tool-header">
     <h2 id="thameslink-timetable-title">Thameslink timetable + service updates</h2>
     <span class="status">Harpenden → St Pancras defaults</span>
