@@ -39,22 +39,28 @@ pip install -r requirements.txt
 <ul>
 <li>Start the development server (Eleventy):<pre><code class="language-sh">npm run dev
 </code></pre>
-Access at <code>http://localhost:8080</code>.</li>
+Access at <code>http://localhost:8080</code>. The server is configured to bind to <code>0.0.0.0</code> to support access from WSL hosts or other devices on the network.</li>
 </ul>
 <h3>Building</h3>
 <ul>
-<li>Full build (Site + Jupyter Lite):<pre><code class="language-sh">npm run build
+<li>Full build (Site + Jupyter Lite):<pre><code class="language-sh">source .venv/bin/activate
+npm run build
 </code></pre>
 </li>
-<li><strong>Note:</strong> Jupyter Lite build can be slow. For content-only changes, <code>eleventy</code> (or <code>npm run dev</code>) is sufficient.</li>
+<li><strong>Note:</strong> Jupyter Lite build requires an active Python virtual environment and can be slow. For content-only changes, <code>eleventy</code> (or <code>npm run dev</code>) is sufficient.</li>
 </ul>
 <h3>Testing</h3>
 <ul>
 <li>Run unit and structural tests:<pre><code class="language-sh">npm test
 </code></pre>
-Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.js</code> files in <code>tools/</code>.</li>
+Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.js</code> files in <code>tools/</code>. This includes structural and syntax verification for tools like Pyodide Terminal.</li>
 </ul>
 <h2>Conventions &amp; Guidelines</h2>
+<h3>External Libraries &amp; Self-Hosting</h3>
+<ul>
+<li><strong>Prefer self-hosting:</strong> Install libraries via <code>npm</code> and use <code>eleventyConfig.addPassthroughCopy</code> in <code>.eleventy.js</code> to mirror them into <code>assets/libs/</code>.</li>
+<li><strong>Example:</strong> <code>xterm.js</code> and <code>Pyodide</code> are self-hosted to ensure offline reliability and performance on GitHub Pages.</li>
+</ul>
 <h3>Adding a New Tool</h3>
 <ol>
 <li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>).</li>
