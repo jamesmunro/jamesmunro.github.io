@@ -26,7 +26,9 @@ pip install -r requirements.txt
 npm run dev
 ```
 
-Then open `http://localhost:8080` in your browser.
+The server listens on `0.0.0.0:8080`, making it accessible from:
+- **Localhost:** `http://localhost:8080`
+- **WSL Host / Network:** `http://<YOUR_IP>:8080` (e.g., from Windows via WSL IP)
 
 ### Tests
 

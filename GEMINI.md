@@ -17,6 +17,7 @@ This repository hosts a personal website and portfolio built as a static site. I
 - **`tools/`**: Contains individual interactive tools. Each tool usually has its own subdirectory with an `index.md` and associated scripts.
     - **`tools/tools.json`**: Directory data file applying `layouts/tool.njk` to all tools.
     - **`tools/jwt-reader/`**: Example tool with client-side JS and tests.
+    - **`tools/pyodide-terminal/`**: Python REPL using Pyodide (WASM) and xterm.js.
 - **`.eleventy.js`**: Main configuration file for Eleventy.
 - **`package.json`**: Node dependencies and scripts.
 - **`requirements.txt`**: Python dependencies for Jupyter Lite.
@@ -47,11 +48,11 @@ This repository hosts a personal website and portfolio built as a static site. I
 - **Note:** Jupyter Lite build can be slow. For content-only changes, `eleventy` (or `npm run dev`) is sufficient.
 
 ### Testing
-- Run unit tests (currently for JS tools):
+- Run unit and structural tests:
   ```sh
   npm test
   ```
-  Uses Node's built-in test runner (`node --test`).
+  Uses Node's built-in test runner (`node --test`) to run all `*.test.js` files in `tools/`.
 
 ## Conventions & Guidelines
 
