@@ -94,11 +94,11 @@ hero_subtitle: A full Python REPL in your browser, powered by WebAssembly.
       });
 
       // Prepare basic environment
-      await pyodide.runPythonAsync(
-        "import sys\n"
-        "print(f\"Python {sys.version}\")\n"
-        "print('Type \"help\", \"copyright\", \"credits\" or \"license\" for more information.')"
-      );
+      await pyodide.runPythonAsync(`
+        import sys
+        print(f"Python {sys.version}")
+        print('Type "help", "copyright", "credits" or "license" for more information.')
+      `);
       
       document.getElementById('loading').style.display = 'none';
       pyodideReady = true;
