@@ -1,7 +1,6 @@
 ---
 layout: layouts/default.njk
 title: Web Tools
-hero_subtitle: Fast, client-side utilities. Everything runs locally in your browser so your data never leaves your device.
 ---
 
 <section class="card" aria-labelledby="tool-index">
