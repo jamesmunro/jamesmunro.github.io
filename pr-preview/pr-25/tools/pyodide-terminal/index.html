@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pyodide Terminal | jamesmunro.github.io</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: #f5f7fb;
+        color: #1f2a44;
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, #1f3f7a, #3559a2);
+        color: #fff;
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px rgba(31, 63, 122, 0.25);
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 16px 40px rgba(31, 42, 68, 0.08);
+        border: 1px solid rgba(153, 176, 234, 0.3);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: #f4f6fb;
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: #99b0ea;
+        background: #eef2fb;
+        box-shadow: 0 10px 18px rgba(53, 89, 162, 0.12);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: #5b6884;
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: #3559a2;
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid #d4d9e6;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: #56637e;
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: #3559a2;
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: #2b4a89;
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: #f6f8ff;
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .status {
+        color: #56637e;
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: #b42318;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Pyodide Terminal</h1>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<link rel="stylesheet" href="../../assets/libs/xterm/xterm.css" />
+<style>
+  /* Expand main container */
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .breadcrumb {
+    margin: 0 !important;
+    padding: 12px 24px !important;
+    background: #fdfdfe;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  #terminal-container {
+    width: 100%;
+    height: calc(100vh - 180px); /* Adjust to fill remaining viewport */
+    background: #1e1e1e;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Loading overlay */
+  #loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-family: monospace;
+    font-size: 1.2rem;
+    z-index: 10;
+  }
+
+  header {
+    padding: 24px 24px 32px !important; /* Shrink header for this tool */
+  }
+
+  .helper {
+    padding: 12px 24px;
+    font-size: 0.85rem;
+    color: #64748b;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    margin: 0;
+  }
+</style>
+<div id="terminal-container">
+  <div id="loading">Loading Python environment...</div>
+</div>
+<p class="helper">
+  Powered by <a href="https://pyodide.org/" target="_blank">Pyodide</a> and <a href="https://xtermjs.org/" target="_blank">xterm.js</a>.
+</p>
+<!-- Load xterm.js -->
+<script src="../../assets/libs/xterm/xterm.js"></script>
+<script src="../../assets/libs/xterm/xterm-addon-fit.js"></script>
+<!-- Load Pyodide -->
+<script src="../../assets/libs/pyodide/pyodide.js"></script>
+<script>
+  // Global error handler to catch issues early
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errorMsg = `\x1b[31m[Error] ${message} (${source ? source.split('/').pop() : 'unknown'}:${lineno})\x1b[0m\r\n`;
+    if (window.term) {
+        term.write(errorMsg);
+    } else {
+        // If term isn't ready, try to append to container if possible or just console
+        console.error(message);
+        const container = document.getElementById('terminal-container');
+        if (container) {
+            const errDiv = document.createElement('div');
+            errDiv.style.color = 'red';
+            errDiv.textContent = message;
+            container.appendChild(errDiv);
+        }
+    }
+  };
+
+  // Terminal setup
+  const term = new Terminal({
+    cursorBlink: true,
+    theme: {
+      background: '#1e1e1e',
+      foreground: '#f0f0f0',
+      cursor: '#f0f0f0'
+    },
+    fontSize: 14,
+    fontFamily: '"JetBrains Mono", "Menlo", "Consolas", monospace'
+  });
+  
+  const fitAddon = new FitAddon.FitAddon();
+  term.loadAddon(fitAddon);
+  
+  term.open(document.getElementById('terminal-container'));
+  fitAddon.fit();
+  
+  // Handle window resize
+  window.addEventListener('resize', () => fitAddon.fit());
+
+  // Input handling variables
+  let inputBuffer = '';
+  let commandHistory = [];
+  let historyIndex = -1;
+  let pyodideReady = false;
+  let pyodide = null;
+
+  // Initialize Pyodide
+  async function initPyodide() {
+    try {
+      pyodide = await loadPyodide({ indexURL: "../../assets/libs/pyodide/" });
+      
+      // Redirect stdout/stderr
+      pyodide.setStdout({
+        batched: (str) => {
+           term.write(str + '\r\n');
+        }
+      });
+      pyodide.setStderr({
+        batched: (str) => {
+           term.write('\x1b[31m' + str + '\x1b[0m\r\n');
+        }
+      });
+
+      // Prepare basic environment
+      await pyodide.runPythonAsync(`
+        import sys
+        print(f"Python {sys.version}")
+        print('Type "help", "copyright", "credits" or "license" for more information.')
+      `);
+      
+      document.getElementById('loading').style.display = 'none';
+      pyodideReady = true;
+      prompt();
+    } catch (err) {
+      document.getElementById('loading').textContent = "Error loading Pyodide: " + err.message;
+      console.error(err);
+    }
+  }
+
+  function prompt() {
+    term.write('>>> ');
+  }
+
+  function promptContinuation() {
+    term.write('... ');
+  }
+
+  // Simple line editor and history handler
+  term.onData(async (data) => {
+    if (!pyodideReady) return;
+
+    const ord = data.charCodeAt(0);
+
+    if (ord === 13) { // Enter
+      term.write('\r\n');
+      const code = inputBuffer;
+      
+      if (code.trim()) {
+        commandHistory.push(code);
+        historyIndex = commandHistory.length;
+      }
+      
+      inputBuffer = '';
+      
+      await executeCode(code);
+      
+    } else if (ord === 127) { // Backspace
+      if (inputBuffer.length > 0) {
+        term.write('\b \b');
+        inputBuffer = inputBuffer.slice(0, -1);
+      }
+    } else if (data === '\x1b[A') { // Up arrow
+       if (commandHistory.length > 0 && historyIndex > 0) {
+          historyIndex--;
+          const cmd = commandHistory[historyIndex];
+          // Clear current line
+          while (inputBuffer.length > 0) {
+            term.write('\b \b');
+            inputBuffer = inputBuffer.slice(0, -1);
+          }
+          term.write(cmd);
+          inputBuffer = cmd;
+       }
+    } else if (data === '\x1b[B') { // Down arrow
+       if (historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          const cmd = commandHistory[historyIndex];
+          // Clear current line
+          while (inputBuffer.length > 0) {
+            term.write('\b \b');
+            inputBuffer = inputBuffer.slice(0, -1);
+          }
+          term.write(cmd);
+          inputBuffer = cmd;
+       } else if (historyIndex === commandHistory.length - 1) {
+          historyIndex++;
+           while (inputBuffer.length > 0) {
+            term.write('\b \b');
+            inputBuffer = inputBuffer.slice(0, -1);
+          }
+       }
+    } else if (ord < 32) {
+       // Ignore other control characters for now
+    } else {
+      term.write(data);
+      inputBuffer += data;
+    }
+  });
+
+  async function executeCode(code) {
+    if (!code.trim()) {
+       prompt();
+       return;
+    }
+    
+    try {
+      // Check for complete statement is hard without more complex logic, 
+      // so we just try to run it.
+      // For a true REPL we would need to check if more input is expected.
+      // Here we assume single statements or simple blocks.
+      
+      let result = await pyodide.runPythonAsync(code);
+      if (result !== undefined) {
+         term.write(result + '\r\n');
+      }
+    } catch (err) {
+       term.write('\x1b[31m' + err + '\x1b[0m\r\n');
+    }
+    prompt();
+  }
+
+  // Start
+  initPyodide();
+
+</script>
+
+
+    </main>
+  </body>
+</html>
