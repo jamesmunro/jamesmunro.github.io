@@ -1,0 +1,73 @@
+<h1>Gemini Project Context: jamesmunro.github.io</h1>
+<h2>Project Overview</h2>
+<p>This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.</p>
+<h2>Tech Stack</h2>
+<ul>
+<li><strong>Static Site Generator:</strong> <a href="https://www.11ty.dev/">Eleventy (11ty)</a></li>
+<li><strong>Templating:</strong> Nunjucks (<code>.njk</code>) and Markdown (<code>.md</code>)</li>
+<li><strong>Runtime (Build):</strong> Node.js 20+</li>
+<li><strong>Interactive Tools:</strong> Vanilla JavaScript</li>
+<li><strong>Data Analysis/Notebooks:</strong> Python 3.12+, Jupyter Lite</li>
+<li><strong>Package Management:</strong> <code>npm</code> (Node), <code>pip</code> (Python)</li>
+</ul>
+<h2>Project Structure</h2>
+<ul>
+<li><strong><code>_includes/</code></strong>: Nunjucks layouts and partials.</li>
+<li><strong><code>_data/</code></strong>: Global site data files (e.g., <code>site.json</code>).</li>
+<li><strong><code>tools/</code></strong>: Contains individual interactive tools. Each tool usually has its own subdirectory with an <code>index.md</code> and associated scripts.
+<ul>
+<li><strong><code>tools/tools.json</code></strong>: Directory data file applying <code>layouts/tool.njk</code> to all tools.</li>
+<li><strong><code>tools/jwt-reader/</code></strong>: Example tool with client-side JS and tests.</li>
+</ul>
+</li>
+<li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy.</li>
+<li><strong><code>package.json</code></strong>: Node dependencies and scripts.</li>
+<li><strong><code>requirements.txt</code></strong>: Python dependencies for Jupyter Lite.</li>
+</ul>
+<h2>Development Workflows</h2>
+<h3>Setup</h3>
+<ol>
+<li>Install Node.js dependencies: <code>npm install</code></li>
+<li>Setup Python virtual environment:<pre><code class="language-sh">python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+</code></pre>
+</li>
+</ol>
+<h3>Running Locally</h3>
+<ul>
+<li>Start the development server (Eleventy):<pre><code class="language-sh">npm run dev
+</code></pre>
+Access at <code>http://localhost:8080</code>.</li>
+</ul>
+<h3>Building</h3>
+<ul>
+<li>Full build (Site + Jupyter Lite):<pre><code class="language-sh">npm run build
+</code></pre>
+</li>
+<li><strong>Note:</strong> Jupyter Lite build can be slow. For content-only changes, <code>eleventy</code> (or <code>npm run dev</code>) is sufficient.</li>
+</ul>
+<h3>Testing</h3>
+<ul>
+<li>Run unit tests (currently for JS tools):<pre><code class="language-sh">npm test
+</code></pre>
+Uses Node's built-in test runner (<code>node --test</code>).</li>
+</ul>
+<h2>Conventions &amp; Guidelines</h2>
+<h3>Adding a New Tool</h3>
+<ol>
+<li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>).</li>
+<li>Add an <code>index.md</code> with front matter title.</li>
+<li>Add necessary JavaScript/CSS assets in that folder.</li>
+<li>If logic is complex, add a <code>.test.js</code> file and update <code>scripts.test</code> in <code>package.json</code> to include it (or ensure the test glob picks it up).</li>
+</ol>
+<h3>Code Style</h3>
+<ul>
+<li><strong>JavaScript:</strong> Use modern ES6+ syntax. No compilation step for client scripts (currently), so keep it browser-compatible or update build pipeline.</li>
+<li><strong>Templates:</strong> Prefer Nunjucks for logic/layouts.</li>
+<li><strong>Paths:</strong> Be mindful of relative paths in Eleventy. Use the <code>url</code> filter for internal links.</li>
+</ul>
+<h3>Jupyter Lite</h3>
+<ul>
+<li>Python dependencies for the <em>browser</em> environment must be handled within the Jupyter Lite configuration or pre-installed in the build step if custom packages are needed.</li>
+</ul>
