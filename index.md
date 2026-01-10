@@ -37,7 +37,3 @@ hero_subtitle: Fast, client-side utilities. Everything runs locally in your brow
     </a>
   </div>
 </section>
-
-<footer>
-  Built for quick diagnostics.
-</footer>
