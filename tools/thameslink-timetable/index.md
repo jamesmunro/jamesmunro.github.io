@@ -1,5 +1,5 @@
 ---
-layout: layouts/default.njk
+footer_text: Built for quick commuting checks.
 title: Thameslink Timetable
 hero_subtitle: Live Thameslink departures alongside the latest service updates.
 ---
@@ -40,7 +40,6 @@ hero_subtitle: Live Thameslink departures alongside the latest service updates.
 </style>
 
 <section class="card" aria-labelledby="thameslink-timetable-title">
-  <div class="breadcrumb"><a href="../../">← Back to tool index</a></div>
   <div class="tool-header">
     <h2 id="thameslink-timetable-title">Thameslink timetable + service updates</h2>
     <span class="status">Harpenden → St Pancras defaults</span>
@@ -85,8 +84,5 @@ hero_subtitle: Live Thameslink departures alongside the latest service updates.
   </ul>
 </section>
 
-<footer>
-  Built for quick commuting checks.
-</footer>
 
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
