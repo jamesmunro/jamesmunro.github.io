@@ -18,6 +18,7 @@
 <ul>
 <li><strong><code>tools/tools.json</code></strong>: Directory data file applying <code>layouts/tool.njk</code> to all tools.</li>
 <li><strong><code>tools/jwt-reader/</code></strong>: Example tool with client-side JS and tests.</li>
+<li><strong><code>tools/pyodide-terminal/</code></strong>: Python REPL using Pyodide (WASM) and xterm.js.</li>
 </ul>
 </li>
 <li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy.</li>
@@ -49,9 +50,9 @@ Access at <code>http://localhost:8080</code>.</li>
 </ul>
 <h3>Testing</h3>
 <ul>
-<li>Run unit tests (currently for JS tools):<pre><code class="language-sh">npm test
+<li>Run unit and structural tests:<pre><code class="language-sh">npm test
 </code></pre>
-Uses Node's built-in test runner (<code>node --test</code>).</li>
+Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.js</code> files in <code>tools/</code>.</li>
 </ul>
 <h2>Conventions &amp; Guidelines</h2>
 <h3>Adding a New Tool</h3>

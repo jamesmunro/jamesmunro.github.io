@@ -17,7 +17,11 @@ pip install -r requirements.txt
 <pre><code class="language-sh"># Ensure your virtual environment is active
 npm run dev
 </code></pre>
-<p>Then open <code>http://localhost:8080</code> in your browser.</p>
+<p>The server listens on <code>0.0.0.0:8080</code>, making it accessible from:</p>
+<ul>
+<li><strong>Localhost:</strong> <code>http://localhost:8080</code></li>
+<li><strong>WSL Host / Network:</strong> <code>http://&lt;YOUR_IP&gt;:8080</code> (e.g., from Windows via WSL IP)</li>
+</ul>
 <h3>Tests</h3>
 <pre><code class="language-sh">npm test
 </code></pre>
