@@ -20,13 +20,6 @@ title: Web Tools
       </div>
       <span aria-hidden="true">→</span>
     </a>
-    <a href="tools/thameslink-timetable/">
-      <div class="tool-meta">
-        <span>Thameslink Timetable</span>
-        <span>OTRL timetable with Harpenden → St Pancras defaults plus live updates.</span>
-      </div>
-      <span aria-hidden="true">→</span>
-    </a>
     <a href="tools/jupyter-lite/">
       <div class="tool-meta">
         <span>Jupyter Lite</span>
