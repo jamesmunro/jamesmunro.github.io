@@ -27,5 +27,12 @@ title: Web Tools
       </div>
       <span aria-hidden="true">→</span>
     </a>
+    <a href="tools/pyodide-terminal/">
+      <div class="tool-meta">
+        <span>Pyodide Terminal</span>
+        <span>Full Python REPL running in the browser with xterm.js.</span>
+      </div>
+      <span aria-hidden="true">→</span>
+    </a>
   </div>
 </section>
