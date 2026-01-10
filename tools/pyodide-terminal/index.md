@@ -48,6 +48,24 @@ hero_subtitle: A full Python REPL in your browser, powered by WebAssembly.
 <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 
 <script>
+  // Global error handler to catch issues early
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errorMsg = `\x1b[31m[Error] ${message} (${source ? source.split('/').pop() : 'unknown'}:${lineno})\x1b[0m\r\n`;
+    if (window.term) {
+        term.write(errorMsg);
+    } else {
+        // If term isn't ready, try to append to container if possible or just console
+        console.error(message);
+        const container = document.getElementById('terminal-container');
+        if (container) {
+            const errDiv = document.createElement('div');
+            errDiv.style.color = 'red';
+            errDiv.textContent = message;
+            container.appendChild(errDiv);
+        }
+    }
+  };
+
   // Terminal setup
   const term = new Terminal({
     cursorBlink: true,
