@@ -1,0 +1,13 @@
+{
+  "name": "jamesmunro.github.io",
+  "private": true,
+  "scripts": {
+    "build": "eleventy",
+    "dev": "eleventy --serve",
+    "test": "node --test tools/jwt-reader/jwt-reader.test.js",
+    "lint": "node --check tools/jwt-reader/jwt-reader.js"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^2.0.1"
+  }
+}
