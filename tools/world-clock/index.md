@@ -4,41 +4,106 @@ hero_subtitle: Large, multi-timezone clock with second-by-second updates.
 ---
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
   .clock-grid {
-    display: grid;
-    gap: 20px;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
   }
 
   .clock-tile {
-    background: #f6f8ff;
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid #d4d9e6;
+    background: linear-gradient(145deg, #1a1a2e, #16162a);
+    border-radius: 12px;
+    padding: 32px 40px;
+    border: 2px solid #2a2a4a;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    width: fit-content;
+  }
+
+  .clock-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.3), transparent);
   }
 
   .clock-city {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
   }
 
   .clock-time {
-    font-size: 2.4rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 4rem;
+    font-weight: 400;
     margin: 0;
+    color: #ff6b6b;
+    text-shadow:
+      0 0 20px rgba(255, 107, 107, 0.6),
+      0 0 40px rgba(255, 107, 107, 0.3);
+    letter-spacing: 0.05em;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    display: inline-block;
   }
 
   .clock-date {
-    margin: 8px 0 0;
-    color: #56637e;
-    font-size: 0.95rem;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 20px 0 0;
+    color: #6b7aa1;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+  }
+
+  .clock-indicator {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    background: #00ff88;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 
   .timezone-note {
-    margin-top: 16px;
+    margin-top: 20px;
     color: #56637e;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 600px) {
+    .clock-time {
+      font-size: 2.4rem;
+    }
+    .clock-tile {
+      padding: 20px 24px;
+    }
+    .clock-time-segment {
+      padding: 6px 8px;
+    }
   }
 </style>
 
@@ -103,6 +168,9 @@ hero_subtitle: Large, multi-timezone clock with second-by-second updates.
     const tile = document.createElement("div");
     tile.className = "clock-tile";
 
+    const indicator = document.createElement("div");
+    indicator.className = "clock-indicator";
+
     const city = document.createElement("p");
     city.className = "clock-city";
     city.textContent = clock.label;
@@ -113,7 +181,7 @@ hero_subtitle: Large, multi-timezone clock with second-by-second updates.
     const date = document.createElement("p");
     date.className = "clock-date";
 
-    tile.append(city, time, date);
+    tile.append(indicator, city, time, date);
     clockGrid.appendChild(tile);
 
     return { time, date, ...clock };
