@@ -29,8 +29,16 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          pip install -r requirements.txt
 
       - name: Build site
         run: npm run build
