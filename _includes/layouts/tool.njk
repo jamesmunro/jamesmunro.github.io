@@ -1,0 +1,10 @@
+---
+layout: layouts/default.njk
+---
+<div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+{{ content | safe }}
+
+<footer>
+  {{ footer_text | default("Built for quick diagnostics.") }}
+</footer>
