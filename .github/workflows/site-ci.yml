@@ -2,8 +2,8 @@ name: Site CI
 
 on:
   push:
-    branches-ignore:
-      - gh-pages
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -57,22 +57,11 @@ jobs:
             (cd gh-pages && git commit --allow-empty -m "Initialize gh-pages")
           fi
 
-          if [ "$BRANCH_NAME" = "main" ]; then
-            target_dir="."
-            find gh-pages -mindepth 1 -maxdepth 1 ! -name preview ! -name .git -exec rm -rf {} +
-          else
-            target_dir="preview/$BRANCH_NAME"
-            rm -rf "gh-pages/$target_dir"
-            mkdir -p "gh-pages/$target_dir"
-          fi
+          find gh-pages -mindepth 1 -maxdepth 1 ! -name pr-preview ! -name .git -exec rm -rf {} +
 
           touch gh-pages/.nojekyll
 
-          if [ "$target_dir" = "." ]; then
-            rsync -av --delete --exclude ".git" --exclude "preview" _site/ gh-pages/
-          else
-            rsync -av --delete _site/ "gh-pages/$target_dir/"
-          fi
+          rsync -av --delete --exclude ".git" --exclude "pr-preview" _site/ gh-pages/
 
           cd gh-pages
           git add -A
