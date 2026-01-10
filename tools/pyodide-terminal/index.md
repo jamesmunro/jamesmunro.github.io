@@ -68,7 +68,7 @@ title: Pyodide Terminal
 <script src="../../assets/libs/xterm/xterm.js"></script>
 <script src="../../assets/libs/xterm/xterm-addon-fit.js"></script>
 <!-- Load Pyodide -->
-<script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+<script src="../../assets/libs/pyodide/pyodide.js"></script>
 
 <script>
   // Global error handler to catch issues early
@@ -120,7 +120,7 @@ title: Pyodide Terminal
   // Initialize Pyodide
   async function initPyodide() {
     try {
-      pyodide = await loadPyodide();
+      pyodide = await loadPyodide({ indexURL: "../../assets/libs/pyodide/" });
       
       // Redirect stdout/stderr
       pyodide.setStdout({

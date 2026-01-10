@@ -8,8 +8,8 @@ test('Pyodide Terminal structure', async (t) => {
   const indexPath = path.join(__dirname, 'index.md');
   const content = fs.readFileSync(indexPath, 'utf8');
 
-  await t.test('should contain Pyodide CDN script', () => {
-    assert.match(content, /src="https:\/\/cdn\.jsdelivr\.net\/pyodide\/v0\.25\.0\/full\/pyodide\.js"/);
+  await t.test('should contain local Pyodide script', () => {
+    assert.match(content, /src="\.\.\/\.\.\/assets\/libs\/pyodide\/pyodide\.js"/);
   });
 
   await t.test('should contain local xterm script', () => {
