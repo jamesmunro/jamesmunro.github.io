@@ -38,23 +38,28 @@ This repository hosts a personal website and portfolio built as a static site. I
   ```sh
   npm run dev
   ```
-  Access at `http://localhost:8080`.
+  Access at `http://localhost:8080`. The server is configured to bind to `0.0.0.0` to support access from WSL hosts or other devices on the network.
 
 ### Building
 - Full build (Site + Jupyter Lite):
   ```sh
+  source .venv/bin/activate
   npm run build
   ```
-- **Note:** Jupyter Lite build can be slow. For content-only changes, `eleventy` (or `npm run dev`) is sufficient.
+- **Note:** Jupyter Lite build requires an active Python virtual environment and can be slow. For content-only changes, `eleventy` (or `npm run dev`) is sufficient.
 
 ### Testing
 - Run unit and structural tests:
   ```sh
   npm test
   ```
-  Uses Node's built-in test runner (`node --test`) to run all `*.test.js` files in `tools/`.
+  Uses Node's built-in test runner (`node --test`) to run all `*.test.js` files in `tools/`. This includes structural and syntax verification for tools like Pyodide Terminal.
 
 ## Conventions & Guidelines
+
+### External Libraries & Self-Hosting
+- **Prefer self-hosting:** Install libraries via `npm` and use `eleventyConfig.addPassthroughCopy` in `.eleventy.js` to mirror them into `assets/libs/`. 
+- **Example:** `xterm.js` and `Pyodide` are self-hosted to ensure offline reliability and performance on GitHub Pages.
 
 ### Adding a New Tool
 1.  Create a directory in `tools/` (e.g., `tools/my-new-tool/`).
