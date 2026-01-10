@@ -1,0 +1,25 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "This site is a Jekyll project configured to match GitHub Pages.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test tools/**/*.test.js",
+    "build": "eleventy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamesmunro/jamesmunro.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/jamesmunro/jamesmunro.github.io/issues"
+  },
+  "homepage": "https://github.com/jamesmunro/jamesmunro.github.io#readme",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2"
+  }
+}
