@@ -1,0 +1,518 @@
+---
+title: Commute Dashboard
+hero_subtitle: Real-time train times, tube status, and weather for your commute.
+---
+
+<style>
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .direction-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .direction-toggle select {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #d4d9e6;
+    background: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  .last-updated {
+    color: #56637e;
+    font-size: 0.9rem;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .dashboard-panel {
+    background: #f6f8ff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #d4d9e6;
+  }
+
+  .panel-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .departure-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .departure-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e4e8f0;
+  }
+
+  .departure-item:last-child {
+    border-bottom: none;
+  }
+
+  .departure-time {
+    font-weight: 600;
+    font-size: 1.1rem;
+    min-width: 50px;
+  }
+
+  .departure-info {
+    flex: 1;
+    margin: 0 12px;
+  }
+
+  .departure-destination {
+    font-weight: 500;
+  }
+
+  .departure-platform {
+    color: #56637e;
+    font-size: 0.85rem;
+  }
+
+  .departure-status {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .status-ontime {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .status-delayed {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .tube-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .tube-status.good {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .tube-status.issue {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .tube-status.severe {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .tube-arrivals {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tube-arrival {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e4e8f0;
+  }
+
+  .tube-arrival:last-child {
+    border-bottom: none;
+  }
+
+  .arrival-time {
+    font-weight: 600;
+    color: #1f2a44;
+  }
+
+  .weather-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .weather-day {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e4e8f0;
+  }
+
+  .weather-label {
+    font-weight: 600;
+  }
+
+  .weather-details {
+    text-align: right;
+  }
+
+  .weather-temp {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .weather-desc {
+    color: #56637e;
+    font-size: 0.9rem;
+  }
+
+  .messages-panel {
+    grid-column: 1 / -1;
+  }
+
+  .message-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .message-item {
+    padding: 10px 14px;
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+  }
+
+  .message-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .no-messages {
+    color: #56637e;
+    font-style: italic;
+  }
+
+  .loading {
+    color: #56637e;
+    font-style: italic;
+  }
+
+  .error-state {
+    color: #991b1b;
+    padding: 12px;
+    background: #fee2e2;
+    border-radius: 8px;
+  }
+
+  .retry-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #1f2a44;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .retry-btn:hover {
+    background: #3559a2;
+  }
+</style>
+
+<section class="card" aria-labelledby="dashboard-title">
+  <div class="dashboard-header">
+    <div class="direction-toggle">
+      <label for="direction-select">Direction:</label>
+      <select id="direction-select">
+        <option value="toLondon">To London</option>
+        <option value="toHome">To Harpenden</option>
+      </select>
+    </div>
+    <span class="last-updated" id="last-updated">Loading...</span>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-panel" id="train-panel">
+      <h2 class="panel-title">Thameslink</h2>
+      <div id="train-content" class="loading">Loading train times...</div>
+    </div>
+
+    <div class="dashboard-panel" id="tube-panel">
+      <h2 class="panel-title">Piccadilly Line</h2>
+      <div id="tube-content" class="loading">Loading tube status...</div>
+    </div>
+
+    <div class="dashboard-panel" id="weather-panel">
+      <h2 class="panel-title">Weather</h2>
+      <div id="weather-content" class="loading">Loading weather...</div>
+    </div>
+
+    <div class="dashboard-panel messages-panel" id="messages-panel">
+      <h2 class="panel-title">Service Messages</h2>
+      <div id="messages-content" class="loading">Checking for announcements...</div>
+    </div>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="dashboard-notes">
+  <h2 id="dashboard-notes">Notes</h2>
+  <ul>
+    <li>Train data from National Rail via Huxley 2. Tube data from TfL Unified API.</li>
+    <li>Weather forecast from Open-Meteo for Harpenden area.</li>
+    <li>Direction auto-selects based on time: morning = to London, afternoon = home.</li>
+    <li>Data refreshes every 60 seconds. Cached locally to reduce API calls.</li>
+  </ul>
+</section>
+
+<script type="module">
+  import {
+    getDefaultDirection,
+    getNextBusinessDay,
+    formatTime,
+    formatDelay,
+    fetchTrainDepartures,
+    fetchLineStatus,
+    fetchTubeArrivals,
+    fetchWeather,
+    weatherCodeToDescription,
+    getRouteConfig
+  } from './commute-dashboard.js';
+
+  const directionSelect = document.getElementById('direction-select');
+  const lastUpdated = document.getElementById('last-updated');
+  const trainContent = document.getElementById('train-content');
+  const tubeContent = document.getElementById('tube-content');
+  const weatherContent = document.getElementById('weather-content');
+  const messagesContent = document.getElementById('messages-content');
+
+  let currentDirection = getDefaultDirection();
+  let allMessages = [];
+
+  // Set initial direction
+  directionSelect.value = currentDirection;
+
+  directionSelect.addEventListener('change', (e) => {
+    currentDirection = e.target.value;
+    refreshAll();
+  });
+
+  function updateTimestamp() {
+    const now = new Date();
+    lastUpdated.textContent = `Updated ${formatTime(now)}`;
+  }
+
+  function renderError(container, message, retryFn) {
+    container.innerHTML = `
+      <div class="error-state">
+        ${message}
+        <button class="retry-btn" onclick="this.closest('.error-state').innerHTML='Loading...'; (${retryFn.name || 'refreshAll'})()">Retry</button>
+      </div>
+    `;
+  }
+
+  async function loadTrains() {
+    const route = getRouteConfig(currentDirection);
+    trainContent.innerHTML = '<span class="loading">Loading train times...</span>';
+
+    try {
+      const data = await fetchTrainDepartures(route.rail.from, route.rail.to);
+
+      if (data.departures.length === 0) {
+        trainContent.innerHTML = '<p class="no-messages">No departures found</p>';
+        return;
+      }
+
+      // Collect messages
+      if (data.messages && data.messages.length > 0) {
+        allMessages = [...allMessages, ...data.messages.map(m => m.value || m)];
+      }
+
+      trainContent.innerHTML = `
+        <p class="departure-platform" style="margin-bottom:12px">${route.railLabel}</p>
+        <ul class="departure-list">
+          ${data.departures.map(dep => {
+            let statusClass = 'status-ontime';
+            let statusText = dep.expectedTime || 'On time';
+
+            if (dep.isCancelled) {
+              statusClass = 'status-cancelled';
+              statusText = 'Cancelled';
+            } else if (dep.expectedTime && dep.expectedTime !== 'On time' && dep.expectedTime !== dep.scheduledTime) {
+              statusClass = 'status-delayed';
+            }
+
+            return `
+              <li class="departure-item">
+                <span class="departure-time">${dep.scheduledTime}</span>
+                <span class="departure-info">
+                  <span class="departure-destination">${dep.destination}</span>
+                  <span class="departure-platform">Platform ${dep.platform}</span>
+                </span>
+                <span class="departure-status ${statusClass}">${statusText}</span>
+              </li>
+            `;
+          }).join('')}
+        </ul>
+      `;
+    } catch (err) {
+      console.error('Train fetch error:', err);
+      renderError(trainContent, 'Unable to load train times', loadTrains);
+    }
+  }
+
+  async function loadTube() {
+    const route = getRouteConfig(currentDirection);
+    tubeContent.innerHTML = '<span class="loading">Loading tube status...</span>';
+
+    try {
+      const [status, arrivals] = await Promise.all([
+        fetchLineStatus('piccadilly'),
+        fetchTubeArrivals(route.tube.station, 'piccadilly')
+      ]);
+
+      let statusClass = 'good';
+      if (status.status.includes('Delay') || status.status.includes('Minor')) {
+        statusClass = 'issue';
+      } else if (status.status.includes('Severe') || status.status.includes('Suspended') || status.status.includes('Closed')) {
+        statusClass = 'severe';
+      }
+
+      // Add status reason to messages if present
+      if (status.reason) {
+        allMessages = [...allMessages, status.reason];
+      }
+
+      tubeContent.innerHTML = `
+        <p class="departure-platform" style="margin-bottom:12px">${route.tubeLabel}</p>
+        <div class="tube-status ${statusClass}">
+          <span>Line Status: ${status.status}</span>
+        </div>
+        ${arrivals.length > 0 ? `
+          <ul class="tube-arrivals">
+            ${arrivals.map(arr => `
+              <li class="tube-arrival">
+                <span>${arr.destination}</span>
+                <span class="arrival-time">${arr.timeToStation} min</span>
+              </li>
+            `).join('')}
+          </ul>
+        ` : '<p class="no-messages">No arrivals data</p>'}
+      `;
+    } catch (err) {
+      console.error('Tube fetch error:', err);
+      renderError(tubeContent, 'Unable to load tube status', loadTube);
+    }
+  }
+
+  async function loadWeather() {
+    weatherContent.innerHTML = '<span class="loading">Loading weather...</span>';
+
+    try {
+      const forecast = await fetchWeather();
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      // Find today and next business day
+      const todayForecast = forecast.find(f => f.date === todayStr);
+      const nextBusinessDay = getNextBusinessDay(today);
+      const nextBusinessDayStr = nextBusinessDay.toISOString().split('T')[0];
+      const nextForecast = forecast.find(f => f.date === nextBusinessDayStr);
+
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      weatherContent.innerHTML = `
+        <div class="weather-grid">
+          ${todayForecast ? `
+            <div class="weather-day">
+              <span class="weather-label">Today (${dayNames[today.getDay()]})</span>
+              <div class="weather-details">
+                <span class="weather-temp">${todayForecast.tempMax}/${todayForecast.tempMin}C</span>
+                <span class="weather-desc">${weatherCodeToDescription(todayForecast.weatherCode)}, ${todayForecast.precipProb}% rain</span>
+              </div>
+            </div>
+          ` : ''}
+          ${nextForecast ? `
+            <div class="weather-day">
+              <span class="weather-label">${dayNames[nextBusinessDay.getDay()]}</span>
+              <div class="weather-details">
+                <span class="weather-temp">${nextForecast.tempMax}/${nextForecast.tempMin}C</span>
+                <span class="weather-desc">${weatherCodeToDescription(nextForecast.weatherCode)}, ${nextForecast.precipProb}% rain</span>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    } catch (err) {
+      console.error('Weather fetch error:', err);
+      renderError(weatherContent, 'Unable to load weather', loadWeather);
+    }
+  }
+
+  function renderMessages() {
+    if (allMessages.length === 0) {
+      messagesContent.innerHTML = '<p class="no-messages">No service messages</p>';
+      return;
+    }
+
+    // Deduplicate and limit messages
+    const uniqueMessages = [...new Set(allMessages)].slice(0, 5);
+
+    messagesContent.innerHTML = `
+      <ul class="message-list">
+        ${uniqueMessages.map(msg => `<li class="message-item">${msg}</li>`).join('')}
+      </ul>
+    `;
+  }
+
+  async function refreshAll() {
+    allMessages = [];
+    updateTimestamp();
+
+    // Load all panels in parallel
+    await Promise.all([
+      loadTrains(),
+      loadTube(),
+      loadWeather()
+    ]);
+
+    renderMessages();
+  }
+
+  // Initial load
+  refreshAll();
+
+  // Auto-refresh every 60 seconds
+  setInterval(refreshAll, 60 * 1000);
+</script>
