@@ -1,0 +1,27 @@
+<h1><a href="https://jamesmunro.github.io">jamesmunro.github.io</a></h1>
+<h2>Local development</h2>
+<p>This site is built with <a href="https://www.11ty.dev/">Eleventy</a>.</p>
+<h3>Prerequisites</h3>
+<ul>
+<li>Node.js 20+</li>
+<li>Python 3.12+</li>
+</ul>
+<h3>Install dependencies</h3>
+<pre><code class="language-sh">npm install
+# Setup Python environment for Jupyter Lite
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+</code></pre>
+<h3>Build and preview locally</h3>
+<pre><code class="language-sh"># Ensure your virtual environment is active
+npm run dev
+</code></pre>
+<p>The server listens on <code>0.0.0.0:8080</code>, making it accessible from:</p>
+<ul>
+<li><strong>Localhost:</strong> <code>http://localhost:8080</code></li>
+<li><strong>WSL Host / Network:</strong> <code>http://&lt;YOUR_IP&gt;:8080</code> (e.g., from Windows via WSL IP)</li>
+</ul>
+<h3>Tests</h3>
+<pre><code class="language-sh">npm test
+</code></pre>
