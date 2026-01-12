@@ -8,8 +8,57 @@
       :root {
         color-scheme: light;
         font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-        background: #f5f7fb;
-        color: #1f2a44;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
       }
 
       body {
@@ -18,10 +67,11 @@
       }
 
       header {
-        background: linear-gradient(120deg, #1f3f7a, #3559a2);
-        color: #fff;
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
         padding: 56px 24px 64px;
-        box-shadow: 0 12px 30px rgba(31, 63, 122, 0.25);
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
       }
 
       header h1 {
@@ -35,6 +85,33 @@
         opacity: 0.9;
       }
 
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
       main {
         max-width: 1080px;
         margin: -32px auto 64px;
@@ -42,10 +119,10 @@
       }
 
       .card {
-        background: #fff;
+        background: var(--bg-card);
         border-radius: 16px;
-        box-shadow: 0 16px 40px rgba(31, 42, 68, 0.08);
-        border: 1px solid rgba(153, 176, 234, 0.3);
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
         padding: 28px;
         margin-bottom: 32px;
       }
@@ -60,7 +137,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 18px 20px;
-        background: #f4f6fb;
+        background: var(--bg-secondary);
         border-radius: 12px;
         text-decoration: none;
         color: inherit;
@@ -69,9 +146,9 @@
       }
 
       .tool-index a:hover {
-        border-color: #99b0ea;
-        background: #eef2fb;
-        box-shadow: 0 10px 18px rgba(53, 89, 162, 0.12);
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
         transform: translateY(-2px);
       }
 
@@ -82,7 +159,7 @@
       }
 
       .tool-meta span:last-child {
-        color: #5b6884;
+        color: var(--text-secondary);
         font-size: 0.95rem;
       }
 
@@ -92,7 +169,7 @@
       }
 
       .breadcrumb a {
-        color: #3559a2;
+        color: var(--link-color);
         text-decoration: none;
       }
 
@@ -112,15 +189,17 @@
         width: 100%;
         min-height: 140px;
         border-radius: 12px;
-        border: 1px solid #d4d9e6;
+        border: 1px solid var(--border-color);
         padding: 12px;
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
         resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
       }
 
       .helper {
         margin: 12px 0 0;
-        color: #56637e;
+        color: var(--text-tertiary);
         font-size: 0.95rem;
       }
 
@@ -128,14 +207,14 @@
         background: none;
         border: 0;
         padding: 0;
-        color: #3559a2;
+        color: var(--link-color);
         text-decoration: underline;
         cursor: pointer;
         font: inherit;
       }
 
       .link-button:hover {
-        color: #2b4a89;
+        color: var(--link-hover);
       }
 
       .tool-grid {
@@ -146,27 +225,32 @@
       }
 
       .output {
-        background: #f6f8ff;
+        background: var(--bg-output);
         border-radius: 12px;
         padding: 12px;
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
         min-height: 140px;
         white-space: pre-wrap;
         word-break: break-word;
+        color: var(--text-primary);
       }
 
       .status {
-        color: #56637e;
+        color: var(--text-tertiary);
         font-size: 0.95rem;
       }
 
       .error {
-        color: #b42318;
+        color: var(--error-color);
       }
     </style>
   </head>
   <body>
     <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
       <h1>JWT Reader</h1>
       
       <p>Decode JSON Web Tokens right in the browser. Signatures are not validated, but the header and payload are decoded for quick inspection.</p>
@@ -261,5 +345,40 @@
 
 
     </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
   </body>
 </html>
