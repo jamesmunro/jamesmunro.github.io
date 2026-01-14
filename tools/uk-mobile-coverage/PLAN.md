@@ -1,7 +1,16 @@
 # UK Mobile Network Coverage Route Analyzer - Implementation Plan
 
 ## Overview
-A fully client-side tool for visualizing mobile network coverage (EE, Vodafone, O2, Three) along a route using a 1D line chart showing signal strength vs. distance.
+A fully client-side tool for visualizing mobile network **data coverage** (EE, Vodafone, O2, Three) along a route using a 1D line chart showing data signal strength vs. distance.
+
+**Primary use case**: Finding the best network for daily commutes.
+
+**Key design decisions**:
+- ✅ **Data coverage only** (3G/4G/5G data) - voice coverage ignored
+- ✅ **Postcode-only input** - simple UK-specific approach
+- ✅ **Fixed 500m sampling** - no user configuration needed
+- ✅ **Fail fast** - clear error messages, no silent failures
+- ✅ **Step-by-step progress** - detailed status updates during analysis
 
 ## Research Findings
 
@@ -37,12 +46,27 @@ tools/uk-mobile-coverage/
 
 ## User Flow
 
-1. **Input**: User enters start/end locations (addresses or postcodes)
-2. **Routing**: Fetch route from OpenRouteService API (returns GeoJSON)
-3. **Sampling**: Sample points every 500m-1km along route using haversine distance
-4. **Geocoding**: Convert coordinates → postcodes using Postcodes.io
-5. **Coverage**: Query coverage data for each postcode (with rate limiting)
-6. **Visualization**: Display 1D plot showing signal quality along route
+1. **Input**: User enters start/end postcodes (e.g., "SW1A 1AA" → "EC2N 2DB")
+2. **Validation**: Validate postcode format, convert to coordinates via Postcodes.io
+3. **Routing**: Fetch route from OpenRouteService API (returns GeoJSON)
+4. **Sampling**: Sample points every 500m (fixed) along route using haversine distance
+5. **Geocoding**: Convert sampled coordinates → postcodes using Postcodes.io
+6. **Coverage**: Query **data coverage** (3G/4G/5G) for each postcode (with rate limiting)
+7. **Visualization**: Display 1D plot showing data signal quality along route
+
+**Progress feedback at each step**:
+- ✓ Validating postcodes... Done
+- ✓ Converting postcodes to coordinates... Done
+- ✓ Fetching route from OpenRouteService... Done
+- ✓ Sampling 47 points along route... Done
+- ⏳ Getting coverage data... 23/47 postcodes
+
+**Error handling**: Fail fast with specific errors:
+- "Invalid postcode format: SW1A1AA (missing space)"
+- "Postcode not found: XY99 9ZZ"
+- "OpenRouteService API key required"
+- "Route not found between these postcodes"
+- "Coverage data unavailable for postcode NE1 4ST"
 
 ## Coverage Data Strategy
 
@@ -69,17 +93,18 @@ const coverageAdapter = {
 
 **1D Line Chart** using Chart.js:
 - **X-axis**: Distance along route (km)
-- **Y-axis**: Signal strength categorical (None / 3G / 4G / 5G)
+- **Y-axis**: **Data coverage** categorical (No Data / 3G Data / 4G Data / 5G Data)
 - **4 Lines**: One per network (color-coded)
 - **Interactive**: Hover to see location, postcode, exact coverage
+- **Note**: Voice coverage is **ignored** - focus is on data connectivity for smartphones
 
 ```
-5G  ████████░░░░░░░░████████  ← EE (blue)
-4G  ███████████░░░███████████  ← Vodafone (red)
-3G  ████████████████████░░░░░  ← O2 (cyan)
-None ░░░░█████████░░░░░░█████  ← Three (purple)
-    |-------|-------|-------|
-    0km    10km    20km    30km
+5G Data  ████████░░░░░░░░████████  ← EE (#00a0dc - blue)
+4G Data  ███████████░░░███████████  ← Vodafone (#e60000 - red)
+3G Data  ████████████████████░░░░░  ← O2 (#0019a5 - dark blue)
+No Data  ░░░░█████████░░░░░░█████  ← Three (#8a00b8 - purple)
+         |-------|-------|-------|
+         0km    10km    20km    30km
 ```
 
 ## Key Technical Components
@@ -218,10 +243,10 @@ const chartConfig = {
       },
       y: {
         type: 'category',
-        labels: ['No Signal', '3G', '4G', '5G'],
+        labels: ['No Data', '3G Data', '4G Data', '5G Data'],
         title: {
           display: true,
-          text: 'Signal Type'
+          text: 'Data Coverage Type'
         }
       }
     },
@@ -253,19 +278,21 @@ const chartConfig = {
 <div class="coverage-tool">
   <form id="route-form">
     <div class="form-group">
-      <label for="start">Start Location</label>
-      <input type="text" id="start" placeholder="Enter address or postcode" required>
+      <label for="start">Start Postcode</label>
+      <input type="text" id="start" placeholder="e.g., SW1A 1AA" required pattern="[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}">
+      <small>UK postcode format (e.g., SW1A 1AA)</small>
     </div>
 
     <div class="form-group">
-      <label for="end">End Location</label>
-      <input type="text" id="end" placeholder="Enter address or postcode" required>
+      <label for="end">End Postcode</label>
+      <input type="text" id="end" placeholder="e.g., EC2N 2DB" required pattern="[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}">
+      <small>UK postcode format (e.g., EC2N 2DB)</small>
     </div>
 
     <div class="form-group">
       <label for="ors-api-key">OpenRouteService API Key</label>
-      <input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org">
-      <small>Free tier: 2,000 requests/day</small>
+      <input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org" required>
+      <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank">Sign up</a></small>
     </div>
 
     <div class="form-group">
@@ -275,21 +302,19 @@ const chartConfig = {
         <option value="proxy">Custom Proxy (requires setup)</option>
         <option value="ofcom-direct">Direct Ofcom API (may not work due to CORS)</option>
       </select>
-    </div>
-
-    <div class="form-group">
-      <label for="sample-interval">Sample Interval (meters)</label>
-      <input type="number" id="sample-interval" value="500" min="100" max="5000" step="100">
-      <small>Smaller = more accurate but slower</small>
+      <small>Sample interval: 500m (fixed)</small>
     </div>
 
     <button type="submit" class="btn-primary">Analyze Route Coverage</button>
   </form>
 
-  <!-- Progress Indicator -->
+  <!-- Step-by-Step Progress Indicator -->
   <div id="progress" class="progress-container" style="display:none">
+    <div id="progress-steps">
+      <!-- Dynamically populated with steps -->
+    </div>
     <progress id="progress-bar" max="100" value="0"></progress>
-    <span id="progress-text">Analyzing route...</span>
+    <span id="progress-text">Initializing...</span>
   </div>
 
   <!-- Chart Canvas -->
@@ -302,25 +327,31 @@ const chartConfig = {
 
   <!-- Network Comparison Summary -->
   <div id="summary" style="display:none">
-    <h3>Route Coverage Summary</h3>
+    <h3>Route Coverage Summary (Data Only)</h3>
     <table class="coverage-table">
       <thead>
         <tr>
           <th>Network</th>
-          <th>5G Coverage</th>
-          <th>4G Coverage</th>
-          <th>3G+ Coverage</th>
-          <th>Overall Score</th>
+          <th>5G Data</th>
+          <th>4G Data</th>
+          <th>3G+ Data</th>
+          <th>Best Network?</th>
         </tr>
       </thead>
       <tbody id="summary-body">
-        <!-- Populated dynamically -->
+        <!-- Populated dynamically with percentages -->
       </tbody>
     </table>
+    <p><small>Voice coverage not shown - focusing on data connectivity for smartphones</small></p>
   </div>
 
-  <!-- Error Display -->
-  <div id="error" class="error-message" style="display:none"></div>
+  <!-- Error Display (Fail Fast) -->
+  <div id="error" class="error-message" style="display:none">
+    <!-- Shows specific error messages like:
+         "Invalid postcode format: SW1A1AA (missing space)"
+         "Route not found between these postcodes"
+         etc. -->
+  </div>
 </div>
 ```
 
@@ -410,33 +441,56 @@ export default {
 
 ## Demo Data Structure
 
+**Data coverage only** - voice fields removed for simplicity:
+
 ```json
 {
   "SW1A 1AA": {
     "postcode": "SW1A 1AA",
     "networks": {
       "EE": {
-        "voice": true,
         "data3G": true,
         "data4G": true,
         "data5G": true
       },
       "Vodafone": {
-        "voice": true,
         "data3G": true,
         "data4G": true,
         "data5G": false
       },
       "O2": {
-        "voice": true,
         "data3G": true,
         "data4G": true,
         "data5G": true
       },
       "Three": {
-        "voice": true,
         "data3G": true,
         "data4G": false,
+        "data5G": false
+      }
+    }
+  },
+  "EC2N 2DB": {
+    "postcode": "EC2N 2DB",
+    "networks": {
+      "EE": {
+        "data3G": true,
+        "data4G": true,
+        "data5G": true
+      },
+      "Vodafone": {
+        "data3G": true,
+        "data4G": true,
+        "data5G": true
+      },
+      "O2": {
+        "data3G": true,
+        "data4G": true,
+        "data5G": false
+      },
+      "Three": {
+        "data3G": true,
+        "data4G": true,
         "data5G": false
       }
     }
@@ -456,18 +510,20 @@ The tool will generate:
 ## Implementation Tasks
 
 - [ ] Create tool directory structure
-- [ ] Implement route input form with start/end locations
+- [ ] Implement postcode-only input form with validation
+- [ ] Integrate Postcodes.io for postcode → coordinate conversion
 - [ ] Integrate OpenRouteService for routing
-- [ ] Implement route sampling algorithm (haversine, interpolation)
-- [ ] Integrate Postcodes.io for coordinate-to-postcode conversion
-- [ ] Create coverage data adapter with proxy/mock support
-- [ ] Implement 1D chart visualization with Chart.js
-- [ ] Add loading states and progress indicators
-- [ ] Add error handling and user feedback
-- [ ] Write unit tests for algorithms
-- [ ] Create example proxy function for Ofcom API
-- [ ] Test and optimize performance
-- [ ] Document setup instructions (API keys, etc.)
+- [ ] Implement route sampling algorithm (fixed 500m, haversine, interpolation)
+- [ ] Integrate Postcodes.io for coordinate → postcode conversion (reverse geocoding)
+- [ ] Create coverage data adapter with proxy/mock/direct support (data coverage only)
+- [ ] Create demo data for testing (data coverage only, no voice)
+- [ ] Implement 1D chart visualization with Chart.js (data coverage Y-axis)
+- [ ] Add step-by-step progress indicators with detailed status
+- [ ] Add fail-fast error handling with clear, specific messages
+- [ ] Write unit tests for core algorithms (haversine, sampling)
+- [ ] Create example Cloudflare Workers proxy for Ofcom API
+- [ ] Test end-to-end and optimize performance
+- [ ] Document setup instructions (API keys, postcode format, etc.)
 
 ## API Keys Required
 
@@ -485,11 +541,13 @@ The tool will generate:
 
 ## Performance Considerations
 
-- **Route sampling**: Balance accuracy vs. API calls (default 500m is reasonable)
+- **Route sampling**: Fixed 500m interval - good balance for typical UK commutes (10-30km)
 - **Rate limiting**: Batch requests and add delays to respect API limits
-- **Caching**: Cache postcode lookups (many points may share postcodes)
-- **Progress feedback**: Keep user informed during long processing
-- **Error recovery**: Handle API failures gracefully with retries
+- **Caching**: Cache postcode lookups (many points may share same postcode)
+- **Progress feedback**: Detailed step-by-step updates (validating → routing → sampling → coverage)
+- **Error handling**: Fail fast with specific error messages - no silent failures or partial results
+- **Input validation**: Validate postcode format before making any API calls
+- **Data focus**: Query data coverage only (3G/4G/5G) - ignore voice for simplicity
 
 ## Future Enhancements
 
