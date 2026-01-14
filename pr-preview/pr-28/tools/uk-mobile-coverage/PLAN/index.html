@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> | jamesmunro.github.io</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1></h1>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<h1>UK Mobile Network Coverage Route Analyzer - Implementation Plan</h1>
+<h2>Overview</h2>
+<p>A fully client-side tool for visualizing mobile network coverage (EE, Vodafone, O2, Three) along a route using a 1D line chart showing signal strength vs. distance.</p>
+<h2>Research Findings</h2>
+<h3>✅ CORS-Enabled APIs (Client-Side Ready)</h3>
+<ul>
+<li>
+<p><strong>Postcodes.io</strong> - Free, CORS-enabled, no auth required</p>
+<ul>
+<li>https://postcodes.io/</li>
+<li>Reverse geocoding: lat/lng → postcode</li>
+</ul>
+</li>
+<li>
+<p><strong>OpenRouteService</strong> - Free tier, CORS-enabled, requires API key</p>
+<ul>
+<li>https://openrouteservice.org/</li>
+<li>Routing API returns GeoJSON with route coordinates</li>
+</ul>
+</li>
+</ul>
+<h3>⚠️ CORS Challenge: Ofcom API</h3>
+<ul>
+<li><strong>Ofcom API</strong> - Uses Azure API Management, CORS support uncertain
+<ul>
+<li>https://api.ofcom.org.uk/</li>
+<li>Most examples show server-side usage</li>
+<li><strong>Solution</strong>: Provide multiple data source options (direct/proxy/demo)</li>
+</ul>
+</li>
+</ul>
+<h2>Project Structure</h2>
+<pre><code>tools/uk-mobile-coverage/
+├── index.md                    # Tool page with form inputs and description
+├── coverage-analyzer.js        # Main application logic
+├── route-sampler.js           # Route sampling algorithms (haversine, interpolation)
+├── coverage-adapter.js        # Data source adapter (Ofcom/mock/proxy)
+├── chart-renderer.js          # 1D visualization with Chart.js
+├── coverage-analyzer.test.js  # Unit tests
+├── proxy-example.js           # Example Cloudflare Worker proxy code
+├── demo-data.json             # Mock coverage data for demo/testing
+└── PLAN.md                    # This file
+</code></pre>
+<h2>User Flow</h2>
+<ol>
+<li><strong>Input</strong>: User enters start/end locations (addresses or postcodes)</li>
+<li><strong>Routing</strong>: Fetch route from OpenRouteService API (returns GeoJSON)</li>
+<li><strong>Sampling</strong>: Sample points every 500m-1km along route using haversine distance</li>
+<li><strong>Geocoding</strong>: Convert coordinates → postcodes using Postcodes.io</li>
+<li><strong>Coverage</strong>: Query coverage data for each postcode (with rate limiting)</li>
+<li><strong>Visualization</strong>: Display 1D plot showing signal quality along route</li>
+</ol>
+<h2>Coverage Data Strategy</h2>
+<pre><code class="language-javascript">// Flexible adapter pattern to support multiple data sources
+const coverageAdapter = {
+  async getCoverage(postcode) {
+    switch(config.dataSource) {
+      case 'proxy':
+        // User-deployed proxy server with CORS headers
+        return await fetchFromProxy(postcode);
+      case 'demo':
+        // Local mock data for testing
+        return getDemoData(postcode);
+      case 'ofcom-direct':
+        // Direct Ofcom API (may fail due to CORS)
+        return await fetchOfcomDirect(postcode);
+    }
+  }
+};
+</code></pre>
+<h2>Visualization Design</h2>
+<p><strong>1D Line Chart</strong> using Chart.js:</p>
+<ul>
+<li><strong>X-axis</strong>: Distance along route (km)</li>
+<li><strong>Y-axis</strong>: Signal strength categorical (None / 3G / 4G / 5G)</li>
+<li><strong>4 Lines</strong>: One per network (color-coded)</li>
+<li><strong>Interactive</strong>: Hover to see location, postcode, exact coverage</li>
+</ul>
+<pre><code>5G  ████████░░░░░░░░████████  ← EE (blue)
+4G  ███████████░░░███████████  ← Vodafone (red)
+3G  ████████████████████░░░░░  ← O2 (cyan)
+None ░░░░█████████░░░░░░█████  ← Three (purple)
+    |-------|-------|-------|
+    0km    10km    20km    30km
+</code></pre>
+<h2>Key Technical Components</h2>
+<h3>1. Route Sampling Algorithm</h3>
+<pre><code class="language-javascript">// Haversine distance + linear interpolation
+function sampleRoute(coordinates, intervalMeters = 500) {
+  const points = [];
+  let distanceAlongRoute = 0;
+
+  for (let i = 0; i &lt; coordinates.length - 1; i++) {
+    const [p1, p2] = [coordinates[i], coordinates[i + 1]];
+    const segmentDist = haversineDistance(p1, p2);
+    const numSamples = Math.ceil(segmentDist / intervalMeters);
+
+    for (let j = 0; j &lt; numSamples; j++) {
+      const fraction = j / numSamples;
+      points.push({
+        lat: p1[1] + (p2[1] - p1[1]) * fraction,
+        lng: p1[0] + (p2[0] - p1[0]) * fraction,
+        distance: distanceAlongRoute + segmentDist * fraction
+      });
+    }
+    distanceAlongRoute += segmentDist;
+  }
+  return points;
+}
+
+function haversineDistance(point1, point2) {
+  const [lon1, lat1] = point1;
+  const [lon2, lat2] = point2;
+  const R = 6371000; // Earth radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c; // Distance in meters
+}
+</code></pre>
+<h3>2. Batch Processing with Rate Limiting</h3>
+<pre><code class="language-javascript">async function processPoints(points) {
+  const BATCH_SIZE = 10;
+  const DELAY_MS = 1000;
+  const results = [];
+
+  for (let i = 0; i &lt; points.length; i += BATCH_SIZE) {
+    const batch = points.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map(p =&gt; getCoverageForPoint(p))
+    );
+    results.push(...batchResults);
+
+    // Progress update
+    updateProgress((i / points.length) * 100);
+
+    // Rate limiting
+    if (i + BATCH_SIZE &lt; points.length) {
+      await sleep(DELAY_MS);
+    }
+  }
+  return results;
+}
+
+function sleep(ms) {
+  return new Promise(resolve =&gt; setTimeout(resolve, ms));
+}
+</code></pre>
+<h3>3. Chart Configuration</h3>
+<pre><code class="language-javascript">const chartConfig = {
+  type: 'line',
+  data: {
+    datasets: [
+      {
+        label: 'EE',
+        data: eeDataPoints, // [{x: distance, y: signalStrength}]
+        borderColor: '#00a0dc',
+        backgroundColor: 'rgba(0, 160, 220, 0.1)',
+        tension: 0.1,
+        stepped: true // Makes signal changes look clearer
+      },
+      {
+        label: 'Vodafone',
+        data: vodafoneDataPoints,
+        borderColor: '#e60000',
+        backgroundColor: 'rgba(230, 0, 0, 0.1)',
+        tension: 0.1,
+        stepped: true
+      },
+      {
+        label: 'O2',
+        data: o2DataPoints,
+        borderColor: '#0019a5',
+        backgroundColor: 'rgba(0, 25, 165, 0.1)',
+        tension: 0.1,
+        stepped: true
+      },
+      {
+        label: 'Three',
+        data: threeDataPoints,
+        borderColor: '#8a00b8',
+        backgroundColor: 'rgba(138, 0, 184, 0.1)',
+        tension: 0.1,
+        stepped: true
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        type: 'linear',
+        title: {
+          display: true,
+          text: 'Distance (km)'
+        },
+        ticks: {
+          callback: function(value) {
+            return (value / 1000).toFixed(1); // Convert meters to km
+          }
+        }
+      },
+      y: {
+        type: 'category',
+        labels: ['No Signal', '3G', '4G', '5G'],
+        title: {
+          display: true,
+          text: 'Signal Type'
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          afterLabel: function(context) {
+            // Show postcode and exact location in tooltip
+            const point = context.raw;
+            return `Postcode: ${point.postcode}\nLat: ${point.lat.toFixed(4)}, Lng: ${point.lng.toFixed(4)}`;
+          }
+        }
+      },
+      legend: {
+        display: true,
+        position: 'top'
+      }
+    }
+  }
+};
+</code></pre>
+<h2>UI Components</h2>
+<h3>HTML Structure</h3>
+<pre><code class="language-html">&lt;!-- Input Form --&gt;
+&lt;div class=&quot;coverage-tool&quot;&gt;
+  &lt;form id=&quot;route-form&quot;&gt;
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;start&quot;&gt;Start Location&lt;/label&gt;
+      &lt;input type=&quot;text&quot; id=&quot;start&quot; placeholder=&quot;Enter address or postcode&quot; required&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;end&quot;&gt;End Location&lt;/label&gt;
+      &lt;input type=&quot;text&quot; id=&quot;end&quot; placeholder=&quot;Enter address or postcode&quot; required&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;ors-api-key&quot;&gt;OpenRouteService API Key&lt;/label&gt;
+      &lt;input type=&quot;text&quot; id=&quot;ors-api-key&quot; placeholder=&quot;Get free key at openrouteservice.org&quot;&gt;
+      &lt;small&gt;Free tier: 2,000 requests/day&lt;/small&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;data-source&quot;&gt;Coverage Data Source&lt;/label&gt;
+      &lt;select id=&quot;data-source&quot;&gt;
+        &lt;option value=&quot;demo&quot; selected&gt;Demo Mode (mock data)&lt;/option&gt;
+        &lt;option value=&quot;proxy&quot;&gt;Custom Proxy (requires setup)&lt;/option&gt;
+        &lt;option value=&quot;ofcom-direct&quot;&gt;Direct Ofcom API (may not work due to CORS)&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;form-group&quot;&gt;
+      &lt;label for=&quot;sample-interval&quot;&gt;Sample Interval (meters)&lt;/label&gt;
+      &lt;input type=&quot;number&quot; id=&quot;sample-interval&quot; value=&quot;500&quot; min=&quot;100&quot; max=&quot;5000&quot; step=&quot;100&quot;&gt;
+      &lt;small&gt;Smaller = more accurate but slower&lt;/small&gt;
+    &lt;/div&gt;
+
+    &lt;button type=&quot;submit&quot; class=&quot;btn-primary&quot;&gt;Analyze Route Coverage&lt;/button&gt;
+  &lt;/form&gt;
+
+  &lt;!-- Progress Indicator --&gt;
+  &lt;div id=&quot;progress&quot; class=&quot;progress-container&quot; style=&quot;display:none&quot;&gt;
+    &lt;progress id=&quot;progress-bar&quot; max=&quot;100&quot; value=&quot;0&quot;&gt;&lt;/progress&gt;
+    &lt;span id=&quot;progress-text&quot;&gt;Analyzing route...&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Chart Canvas --&gt;
+  &lt;div id=&quot;chart-container&quot; style=&quot;display:none&quot;&gt;
+    &lt;h3&gt;Coverage Along Route&lt;/h3&gt;
+    &lt;div style=&quot;height: 400px;&quot;&gt;
+      &lt;canvas id=&quot;coverage-chart&quot;&gt;&lt;/canvas&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Network Comparison Summary --&gt;
+  &lt;div id=&quot;summary&quot; style=&quot;display:none&quot;&gt;
+    &lt;h3&gt;Route Coverage Summary&lt;/h3&gt;
+    &lt;table class=&quot;coverage-table&quot;&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th&gt;Network&lt;/th&gt;
+          &lt;th&gt;5G Coverage&lt;/th&gt;
+          &lt;th&gt;4G Coverage&lt;/th&gt;
+          &lt;th&gt;3G+ Coverage&lt;/th&gt;
+          &lt;th&gt;Overall Score&lt;/th&gt;
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody id=&quot;summary-body&quot;&gt;
+        &lt;!-- Populated dynamically --&gt;
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Error Display --&gt;
+  &lt;div id=&quot;error&quot; class=&quot;error-message&quot; style=&quot;display:none&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<h2>External Dependencies</h2>
+<h3>Chart.js</h3>
+<p>Add to <code>package.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;dependencies&quot;: {
+    &quot;chart.js&quot;: &quot;^4.4.0&quot;
+  }
+}
+</code></pre>
+<p>Add passthrough copy in <code>.eleventy.js</code>:</p>
+<pre><code class="language-javascript">eleventyConfig.addPassthroughCopy({
+  &quot;node_modules/chart.js/dist/chart.min.js&quot;: &quot;assets/libs/chart.js/chart.min.js&quot;
+});
+</code></pre>
+<p>Include in <code>index.md</code>:</p>
+<pre><code class="language-html">&lt;script src=&quot;/assets/libs/chart.js/chart.min.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+<h2>Example Proxy (Optional for Real Data)</h2>
+<p>Users who want real Ofcom data can deploy this Cloudflare Workers proxy:</p>
+<pre><code class="language-javascript">// proxy-example.js - Deploy to Cloudflare Workers
+// Instructions: https://developers.cloudflare.com/workers/
+
+export default {
+  async fetch(request) {
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+      });
+    }
+
+    const url = new URL(request.url);
+    const postcode = url.searchParams.get('postcode');
+
+    if (!postcode) {
+      return new Response('Missing postcode parameter', { status: 400 });
+    }
+
+    // Fetch from Ofcom API
+    const ofcomUrl = `https://api.ofcom.org.uk/mobile-coverage/v1/coverage?postcode=${encodeURIComponent(postcode)}`;
+
+    try {
+      const response = await fetch(ofcomUrl, {
+        headers: {
+          'Ocp-Apim-Subscription-Key': 'YOUR_OFCOM_API_KEY_HERE'
+        }
+      });
+
+      const data = await response.json();
+
+      return new Response(JSON.stringify(data), {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
+        }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+  }
+};
+</code></pre>
+<h2>Demo Data Structure</h2>
+<pre><code class="language-json">{
+  &quot;SW1A 1AA&quot;: {
+    &quot;postcode&quot;: &quot;SW1A 1AA&quot;,
+    &quot;networks&quot;: {
+      &quot;EE&quot;: {
+        &quot;voice&quot;: true,
+        &quot;data3G&quot;: true,
+        &quot;data4G&quot;: true,
+        &quot;data5G&quot;: true
+      },
+      &quot;Vodafone&quot;: {
+        &quot;voice&quot;: true,
+        &quot;data3G&quot;: true,
+        &quot;data4G&quot;: true,
+        &quot;data5G&quot;: false
+      },
+      &quot;O2&quot;: {
+        &quot;voice&quot;: true,
+        &quot;data3G&quot;: true,
+        &quot;data4G&quot;: true,
+        &quot;data5G&quot;: true
+      },
+      &quot;Three&quot;: {
+        &quot;voice&quot;: true,
+        &quot;data3G&quot;: true,
+        &quot;data4G&quot;: false,
+        &quot;data5G&quot;: false
+      }
+    }
+  }
+}
+</code></pre>
+<h2>Expected Output</h2>
+<p>The tool will generate:</p>
+<ol>
+<li><strong>Interactive line chart</strong> showing all 4 networks simultaneously</li>
+<li><strong>Clear visualization</strong> of coverage gaps and transitions</li>
+<li><strong>Summary table</strong> with percentage statistics per network</li>
+<li><strong>Hover tooltips</strong> showing exact location and postcode</li>
+<li><strong>Ability to export</strong> data (future enhancement)</li>
+</ol>
+<h2>Implementation Tasks</h2>
+<ul>
+<li>[ ] Create tool directory structure</li>
+<li>[ ] Implement route input form with start/end locations</li>
+<li>[ ] Integrate OpenRouteService for routing</li>
+<li>[ ] Implement route sampling algorithm (haversine, interpolation)</li>
+<li>[ ] Integrate Postcodes.io for coordinate-to-postcode conversion</li>
+<li>[ ] Create coverage data adapter with proxy/mock support</li>
+<li>[ ] Implement 1D chart visualization with Chart.js</li>
+<li>[ ] Add loading states and progress indicators</li>
+<li>[ ] Add error handling and user feedback</li>
+<li>[ ] Write unit tests for algorithms</li>
+<li>[ ] Create example proxy function for Ofcom API</li>
+<li>[ ] Test and optimize performance</li>
+<li>[ ] Document setup instructions (API keys, etc.)</li>
+</ul>
+<h2>API Keys Required</h2>
+<h3>For Users</h3>
+<ol>
+<li>
+<p><strong>OpenRouteService API Key</strong> (required)</p>
+<ul>
+<li>Free tier: 2,000 requests/day</li>
+<li>Sign up: https://openrouteservice.org/dev/#/signup</li>
+</ul>
+</li>
+<li>
+<p><strong>Ofcom API Key</strong> (optional, only if using direct/proxy mode)</p>
+<ul>
+<li>Sign up: https://api.ofcom.org.uk/</li>
+</ul>
+</li>
+</ol>
+<h3>No Keys Needed</h3>
+<ul>
+<li>Postcodes.io - completely free, no auth</li>
+<li>Demo mode - uses local mock data</li>
+</ul>
+<h2>Performance Considerations</h2>
+<ul>
+<li><strong>Route sampling</strong>: Balance accuracy vs. API calls (default 500m is reasonable)</li>
+<li><strong>Rate limiting</strong>: Batch requests and add delays to respect API limits</li>
+<li><strong>Caching</strong>: Cache postcode lookups (many points may share postcodes)</li>
+<li><strong>Progress feedback</strong>: Keep user informed during long processing</li>
+<li><strong>Error recovery</strong>: Handle API failures gracefully with retries</li>
+</ul>
+<h2>Future Enhancements</h2>
+<ul>
+<li>[ ] Add map visualization showing route with coverage overlay</li>
+<li>[ ] Export results as CSV/JSON</li>
+<li>[ ] Compare multiple routes side-by-side</li>
+<li>[ ] Save/load routes for later analysis</li>
+<li>[ ] Add indoor vs. outdoor coverage option</li>
+<li>[ ] Support for walking/cycling routes (not just driving)</li>
+<li>[ ] Historical coverage data comparison</li>
+</ul>
+<h2>References</h2>
+<h3>APIs</h3>
+<ul>
+<li>Ofcom API: https://api.ofcom.org.uk/</li>
+<li>Postcodes.io: https://postcodes.io/</li>
+<li>OpenRouteService: https://openrouteservice.org/</li>
+</ul>
+<h3>Documentation</h3>
+<ul>
+<li>Azure API Management CORS: https://learn.microsoft.com/en-us/azure/api-management/cors-policy</li>
+<li>OpenRouteService JavaScript Client: https://github.com/GIScience/openrouteservice-js</li>
+<li>Chart.js Documentation: https://www.chartjs.org/docs/</li>
+</ul>
+<h3>Related Tools</h3>
+<ul>
+<li>Ofcom Map Your Mobile: https://www.ofcom.org.uk/mobile-coverage-checker</li>
+<li>UK Mobile Coverage: https://ukmobilecoverage.co.uk/</li>
+</ul>
+
+
+    </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>
