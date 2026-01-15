@@ -4,7 +4,8 @@ module.exports = function (eleventyConfig) {
     "node_modules/xterm/css/xterm.css": "assets/libs/xterm/xterm.css",
     "node_modules/xterm/lib/xterm.js": "assets/libs/xterm/xterm.js",
     "node_modules/xterm-addon-fit/lib/xterm-addon-fit.js": "assets/libs/xterm/xterm-addon-fit.js",
-    "node_modules/pyodide": "assets/libs/pyodide"
+    "node_modules/pyodide": "assets/libs/pyodide",
+    "node_modules/chart.js/dist/chart.umd.js": "assets/libs/chart.js/chart.min.js"
   });
 
   eleventyConfig.setServerOptions({
