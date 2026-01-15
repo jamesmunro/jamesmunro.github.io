@@ -3,6 +3,8 @@
  * Run with: npm test
  */
 
+const { describe, test } = require('node:test');
+const assert = require('node:assert');
 const { haversineDistance, sampleRoute, getTotalDistance } = require('./route-sampler.js');
 
 describe('Route Sampler', () => {
@@ -16,14 +18,14 @@ describe('Route Sampler', () => {
       const distance = haversineDistance(london, manchester);
 
       // Expected distance is approximately 262 km (262000 meters)
-      expect(distance).toBeGreaterThan(260000);
-      expect(distance).toBeLessThan(265000);
+      assert.ok(distance > 260000, 'Distance should be greater than 260km');
+      assert.ok(distance < 265000, 'Distance should be less than 265km');
     });
 
     test('returns 0 for same point', () => {
       const point = [-0.1276, 51.5074];
       const distance = haversineDistance(point, point);
-      expect(distance).toBe(0);
+      assert.strictEqual(distance, 0);
     });
 
     test('returns same distance regardless of direction', () => {
@@ -33,28 +35,28 @@ describe('Route Sampler', () => {
       const dist1 = haversineDistance(point1, point2);
       const dist2 = haversineDistance(point2, point1);
 
-      expect(dist1).toBeCloseTo(dist2, 0);
+      assert.ok(Math.abs(dist1 - dist2) < 0.01, 'Distances should be equal in both directions');
     });
   });
 
   describe('sampleRoute', () => {
     test('samples a straight route at 500m intervals', () => {
-      // Create a simple route (approx 5km)
+      // Create a simple route (approx 3km)
       const route = [
         [-0.1276, 51.5074],  // London
-        [-0.0876, 51.5074]   // ~4km east
+        [-0.0876, 51.5074]   // ~3km east
       ];
 
       const sampled = sampleRoute(route, 500);
 
-      // Should have roughly 8-10 points (5000m / 500m = 10)
-      expect(sampled.length).toBeGreaterThan(7);
-      expect(sampled.length).toBeLessThan(12);
+      // Should have roughly 5-8 points (3000m / 500m = 6)
+      assert.ok(sampled.length > 4, 'Should have more than 4 points');
+      assert.ok(sampled.length < 10, 'Should have fewer than 10 points');
 
       // First point should match start
-      expect(sampled[0].lng).toBeCloseTo(route[0][0], 4);
-      expect(sampled[0].lat).toBeCloseTo(route[0][1], 4);
-      expect(sampled[0].distance).toBe(0);
+      assert.ok(Math.abs(sampled[0].lng - route[0][0]) < 0.0001, 'First point longitude should match');
+      assert.ok(Math.abs(sampled[0].lat - route[0][1]) < 0.0001, 'First point latitude should match');
+      assert.strictEqual(sampled[0].distance, 0, 'First point distance should be 0');
     });
 
     test('handles multi-segment routes', () => {
@@ -66,18 +68,19 @@ describe('Route Sampler', () => {
 
       const sampled = sampleRoute(route, 100);
 
-      expect(sampled.length).toBeGreaterThan(10);
+      assert.ok(sampled.length > 10, 'Should have more than 10 points');
 
       // Distances should be monotonically increasing
       for (let i = 1; i < sampled.length; i++) {
-        expect(sampled[i].distance).toBeGreaterThanOrEqual(sampled[i-1].distance);
+        assert.ok(sampled[i].distance >= sampled[i-1].distance,
+          `Distance at index ${i} should be >= previous`);
       }
     });
 
     test('throws error for invalid input', () => {
-      expect(() => sampleRoute([], 500)).toThrow('at least 2 points');
-      expect(() => sampleRoute([[-0.1276, 51.5074]], 500)).toThrow('at least 2 points');
-      expect(() => sampleRoute(null, 500)).toThrow('at least 2 points');
+      assert.throws(() => sampleRoute([], 500), /at least 2 points/);
+      assert.throws(() => sampleRoute([[-0.1276, 51.5074]], 500), /at least 2 points/);
+      assert.throws(() => sampleRoute(null, 500), /at least 2 points/);
     });
 
     test('skips zero-length segments', () => {
@@ -90,7 +93,7 @@ describe('Route Sampler', () => {
       const sampled = sampleRoute(route, 100);
 
       // Should not crash and should produce valid output
-      expect(sampled.length).toBeGreaterThan(0);
+      assert.ok(sampled.length > 0, 'Should produce at least one point');
     });
 
     test('distance property increases correctly', () => {
@@ -103,12 +106,15 @@ describe('Route Sampler', () => {
 
       // Each point should have increasing distance
       for (let i = 1; i < sampled.length; i++) {
-        expect(sampled[i].distance).toBeGreaterThan(sampled[i-1].distance);
+        assert.ok(sampled[i].distance > sampled[i-1].distance,
+          'Each point should have greater distance than previous');
       }
 
       // Last point distance should be close to total route distance
       const totalDist = getTotalDistance(route);
-      expect(sampled[sampled.length - 1].distance).toBeCloseTo(totalDist, -2);
+      const lastDist = sampled[sampled.length - 1].distance;
+      assert.ok(Math.abs(lastDist - totalDist) < 100,
+        'Last point distance should be close to total distance');
     });
   });
 
@@ -116,39 +122,21 @@ describe('Route Sampler', () => {
     test('calculates total distance for multi-segment route', () => {
       const route = [
         [-0.1276, 51.5074],  // London
-        [-0.0876, 51.5074],  // ~4km east
+        [-0.0876, 51.5074],  // ~3km east
         [-0.0876, 51.5474]   // ~4.5km north
       ];
 
       const total = getTotalDistance(route);
 
-      // Should be approximately 8.5km (8500m)
-      expect(total).toBeGreaterThan(8000);
-      expect(total).toBeLessThan(9000);
+      // Should be approximately 7.5km (7500m)
+      assert.ok(total > 7000, 'Total distance should be > 7000m');
+      assert.ok(total < 8000, 'Total distance should be < 8000m');
     });
 
     test('returns 0 for single point', () => {
       const route = [[-0.1276, 51.5074]];
       const total = getTotalDistance(route);
-      expect(total).toBe(0);
+      assert.strictEqual(total, 0);
     });
-  });
-});
-
-describe('Coverage Adapter', () => {
-  // Note: Coverage adapter tests would require mocking fetch
-  // Skipping for now as this is basic unit testing
-
-  test.skip('generates consistent mock data for same postcode', () => {
-    // This would test the generateMockCoverage function
-  });
-});
-
-describe('Chart Renderer', () => {
-  // Note: Chart renderer tests would require DOM mocking
-  // Skipping for now as this is basic unit testing
-
-  test.skip('correctly determines signal level', () => {
-    // This would test the getSignalLevel function
   });
 });
