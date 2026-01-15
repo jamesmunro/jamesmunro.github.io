@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> | jamesmunro.github.io</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1></h1>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<h1>UK Mobile Coverage Route Analyzer - Claude Context</h1>
+<h2>Tool Overview</h2>
+<p>A fully client-side web tool for analyzing mobile data coverage (3G/4G/5G) from UK networks (EE, Vodafone, O2, Three) along a route. Primary use case: finding the best network for daily commutes.</p>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>Postcode-to-postcode route analysis</li>
+<li>Fixed 500m sampling intervals along routes</li>
+<li>1D line chart visualization showing coverage vs. distance</li>
+<li>Data coverage only (voice coverage ignored)</li>
+<li>Step-by-step progress feedback</li>
+<li>Fail-fast error handling</li>
+</ul>
+<h2>Architecture</h2>
+<h3>Module Structure</h3>
+<pre><code>tools/uk-mobile-coverage/
+├── index.md                     # Tool UI page (form + embedded styles/scripts)
+├── coverage-analyzer.js         # Main orchestration &amp; workflow
+├── route-sampler.js            # Geographic calculations (haversine, interpolation)
+├── coverage-adapter.js         # Data source abstraction layer
+├── chart-renderer.js           # Chart.js visualization wrapper
+├── coverage-analyzer.test.js   # Unit tests (30 tests)
+├── demo-data.json              # Mock coverage data for demo mode
+├── proxy-example.js            # Optional Cloudflare Workers proxy template
+└── CLAUDE.md                   # This file
+</code></pre>
+<h3>Data Flow</h3>
+<pre><code>User Input (postcodes + API key)
+    ↓
+Validate Postcodes
+    ↓
+Postcodes.io API → Convert to coordinates
+    ↓
+OpenRouteService API → Get route GeoJSON
+    ↓
+Route Sampling → Sample points every 500m (haversine distance)
+    ↓
+Postcodes.io API → Reverse geocode sampled points
+    ↓
+Coverage Adapter → Get coverage data (demo/proxy/direct)
+    ↓
+Chart Renderer → Display 1D visualization + summary table
+</code></pre>
+<h2>Key Technical Components</h2>
+<h3>1. Route Sampling Algorithm (route-sampler.js)</h3>
+<ul>
+<li><strong>Haversine distance</strong>: Accurate great-circle distance between GPS coordinates</li>
+<li><strong>Linear interpolation</strong>: Sample points along route segments at fixed intervals</li>
+<li><strong>Always includes</strong>: First point + sampled points along route</li>
+<li><strong>Exported functions</strong>: <code>haversineDistance()</code>, <code>sampleRoute()</code>, <code>getTotalDistance()</code></li>
+</ul>
+<h3>2. Coverage Adapter Pattern (coverage-adapter.js)</h3>
+<p>Flexible data source abstraction supporting:</p>
+<ul>
+<li><strong>Demo mode</strong>: Uses local <code>demo-data.json</code> (no API calls)</li>
+<li><strong>Proxy mode</strong>: User-deployed CORS proxy to Ofcom API</li>
+<li><strong>Direct mode</strong>: Direct Ofcom API calls (may fail due to CORS)</li>
+</ul>
+<p>Includes rate limiting and batch processing to respect API limits.</p>
+<h3>3. Chart Renderer (chart-renderer.js)</h3>
+<ul>
+<li>Wraps Chart.js with tool-specific configuration</li>
+<li><strong>X-axis</strong>: Distance along route (km)</li>
+<li><strong>Y-axis</strong>: Categorical coverage levels (No Data / 3G / 4G / 5G)</li>
+<li><strong>4 datasets</strong>: One line per network (color-coded)</li>
+<li><strong>Stepped lines</strong>: Clearer visualization of coverage transitions</li>
+<li><strong>Interactive tooltips</strong>: Shows postcode, coordinates, coverage at point</li>
+</ul>
+<h3>4. Main Analyzer (coverage-analyzer.js)</h3>
+<p>Orchestrates the entire workflow:</p>
+<ul>
+<li>Form handling and input validation</li>
+<li>Step-by-step progress tracking (5 steps)</li>
+<li>Error handling and user feedback</li>
+<li>API integration (Postcodes.io, OpenRouteService)</li>
+<li>Results rendering (chart + summary table)</li>
+</ul>
+<h2>External Dependencies</h2>
+<h3>APIs (All CORS-enabled)</h3>
+<ul>
+<li><strong>Postcodes.io</strong>: Free, no auth, postcode ↔ coordinates conversion
+<ul>
+<li>Forward: <code>/postcodes/{postcode}</code> → lat/lng</li>
+<li>Reverse: <code>/postcodes?lon={lng}&amp;lat={lat}</code> → postcode</li>
+</ul>
+</li>
+<li><strong>OpenRouteService</strong>: Free tier (2,000 req/day), requires API key
+<ul>
+<li>Directions API: Returns GeoJSON route between coordinates</li>
+</ul>
+</li>
+<li><strong>Ofcom API</strong>: Optional, for real coverage data (CORS may require proxy)</li>
+</ul>
+<h3>Libraries</h3>
+<ul>
+<li><strong>Chart.js</strong> (v4.4.0): Visualization
+<ul>
+<li>Installed via npm: <code>npm install chart.js</code></li>
+<li>Self-hosted at <code>/assets/libs/chart.js/chart.min.js</code></li>
+<li>Configured in <code>.eleventy.js</code> passthrough copy</li>
+</ul>
+</li>
+</ul>
+<h2>Testing</h2>
+<h3>Running Tests</h3>
+<pre><code class="language-bash">npm test  # Runs all *.test.js files including coverage-analyzer.test.js
+</code></pre>
+<h3>Test Coverage</h3>
+<ul>
+<li>30 unit tests covering:
+<ul>
+<li>Haversine distance calculations (accuracy, edge cases)</li>
+<li>Route sampling (intervals, total distance, point distribution)</li>
+<li>Error handling (invalid routes, missing coordinates)</li>
+</ul>
+</li>
+</ul>
+<h3>Test Philosophy</h3>
+<ul>
+<li>Unit tests for pure functions (geographic calculations)</li>
+<li>No mocking of browser APIs (DOM manipulation tested manually)</li>
+<li>Focus on algorithmic correctness (distance, sampling accuracy)</li>
+</ul>
+<h2>Common Development Tasks</h2>
+<h3>Adding New Coverage Data Sources</h3>
+<ol>
+<li>Add new option to <code>coverage-adapter.js</code> → <code>getCoverage()</code> method</li>
+<li>Update dropdown in <code>index.md</code> → <code>&lt;select id=&quot;data-source&quot;&gt;</code></li>
+<li>Add corresponding documentation in help text</li>
+</ol>
+<h3>Modifying Sampling Interval</h3>
+<p>Currently fixed at 500m. To make configurable:</p>
+<ol>
+<li>Add input field in <code>index.md</code></li>
+<li>Pass interval to <code>sampleRoute()</code> in <code>coverage-analyzer.js:90</code></li>
+<li>Update validation (reasonable range: 100m - 2000m)</li>
+</ol>
+<h3>Changing Visualization Style</h3>
+<p>All chart configuration in <code>chart-renderer.js</code>:</p>
+<ul>
+<li>Colors: <code>datasets[].borderColor</code></li>
+<li>Line style: <code>tension</code> (smoothness), <code>stepped</code> (discrete changes)</li>
+<li>Axes: <code>options.scales.x/y</code></li>
+</ul>
+<h3>Adding New Networks</h3>
+<ol>
+<li>Update <code>demo-data.json</code> with new network data</li>
+<li>Add dataset in <code>chart-renderer.js:createChart()</code></li>
+<li>Update summary table generation in <code>coverage-analyzer.js</code></li>
+</ol>
+<h2>Key Algorithms Explained</h2>
+<h3>Haversine Formula</h3>
+<p>Calculates great-circle distance between two lat/lng points:</p>
+<pre><code>a = sin²(Δφ/2) + cos(φ1) × cos(φ2) × sin²(Δλ/2)
+c = 2 × atan2(√a, √(1-a))
+distance = R × c  (R = 6371000m Earth radius)
+</code></pre>
+<p>Why: Accurate for short distances (UK routes), avoids flat-earth approximations.</p>
+<h3>Route Sampling</h3>
+<p>For each segment between route waypoints:</p>
+<ol>
+<li>Calculate segment distance using haversine</li>
+<li>Determine number of samples: <code>ceil(segmentDist / interval)</code></li>
+<li>Linearly interpolate lat/lng along segment</li>
+<li>Track cumulative distance for each point</li>
+</ol>
+<p>Why fixed 500m: Balance between accuracy and API call volume (typical 10-30km commute = 20-60 points).</p>
+<h2>Design Decisions</h2>
+<h3>Why Data Coverage Only?</h3>
+<ul>
+<li>Modern use case: smartphone data connectivity during commutes</li>
+<li>Voice coverage less relevant (VoIP over data, messaging apps)</li>
+<li>Simplifies API responses and visualization</li>
+</ul>
+<h3>Why Postcode-Only Input?</h3>
+<ul>
+<li>UK-specific tool, postcodes are intuitive for UK users</li>
+<li>Postcodes.io provides reliable free API</li>
+<li>Avoids need for geocoding UI or map picking</li>
+</ul>
+<h3>Why Client-Side Only?</h3>
+<ul>
+<li>No server costs or maintenance</li>
+<li>Instant deployment via static hosting</li>
+<li>User API keys = no shared rate limits</li>
+<li>Privacy: no route data sent to our servers</li>
+</ul>
+<h2>Error Handling Philosophy</h2>
+<p><strong>Fail Fast</strong>: Show specific errors immediately, don't continue with partial data.</p>
+<p>Examples:</p>
+<ul>
+<li>&quot;Invalid postcode format: SW1A1AA (missing space)&quot;</li>
+<li>&quot;Postcode not found: XY99 9ZZ&quot;</li>
+<li>&quot;Route not found between these postcodes&quot;</li>
+<li>&quot;OpenRouteService API error: Invalid API key&quot;</li>
+</ul>
+<p>All errors shown in dedicated <code>#error</code> div with red background.</p>
+<h2>Project Context</h2>
+<p>This tool is part of the jamesmunro.github.io static site. For general project conventions:</p>
+<ul>
+<li>See <code>/CLAUDE.md</code> in project root</li>
+<li>Uses Eleventy (11ty) with Nunjucks templates</li>
+<li>Follows &quot;tools as subdirectories&quot; pattern</li>
+<li>ES6+ browser-compatible JavaScript (no build step for tool logic)</li>
+</ul>
+<h2>Future Enhancement Ideas</h2>
+<ul>
+<li>Map visualization overlay (requires mapping library)</li>
+<li>CSV/JSON export of results</li>
+<li>Save/load routes (localStorage)</li>
+<li>Indoor vs outdoor coverage toggle</li>
+<li>Multi-route comparison</li>
+<li>Historical coverage data</li>
+</ul>
+
+
+    </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>

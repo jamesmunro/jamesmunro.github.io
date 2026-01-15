@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobile Coverage Tool | jamesmunro.github.io</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1>Mobile Coverage Tool</h1>
+      
+      <p>Visualize and sample mobile signal coverage along your route.</p>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<style>
+  .coverage-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .map-container {
+    position: relative;
+    height: 500px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #d4d9e6;
+  }
+
+  #coverage-map {
+    width: 100%;
+    height: 100%;
+  }
+
+  .controls-panel {
+    background: #f6f8ff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #d4d9e6;
+  }
+
+  .control-group {
+    margin-bottom: 16px;
+  }
+
+  .control-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .control-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1f2a44;
+  }
+
+  .control-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d4d9e6;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-primary {
+    background: #3559a2;
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #1f2a44;
+  }
+
+  .btn-secondary {
+    background: #e4e8f0;
+    color: #1f2a44;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #d4d9e6;
+  }
+
+  .btn-success {
+    background: #10b981;
+    color: white;
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: #059669;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .route-info {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #e4e8f0;
+  }
+
+  .route-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    color: #1f2a44;
+  }
+
+  .route-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    font-size: 0.9rem;
+  }
+
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    color: #56637e;
+  }
+
+  .stat-value {
+    font-weight: 600;
+    color: #1f2a44;
+  }
+
+  .results-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #d4d9e6;
+  }
+
+  .results-panel h3 {
+    margin: 0 0 16px 0;
+    color: #1f2a44;
+  }
+
+  .coverage-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    background: #f6f8ff;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .summary-label {
+    font-size: 0.85rem;
+    color: #56637e;
+    margin-bottom: 4px;
+  }
+
+  .summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2a44;
+  }
+
+  .coverage-excellent {
+    color: #10b981;
+  }
+
+  .coverage-good {
+    color: #3b82f6;
+  }
+
+  .coverage-fair {
+    color: #f59e0b;
+  }
+
+  .coverage-poor {
+    color: #ef4444;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 24px;
+    background: #e4e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3559a2, #3b82f6);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .status-message {
+    text-align: center;
+    color: #56637e;
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+<section class="card" aria-labelledby="coverage-title">
+  <div class="coverage-container">
+    <div class="map-container">
+      <div id="coverage-map"></div>
+    </div>
+<p><div class="controls-panel">
+<div class="control-group">
+<label>Instructions:</label>
+<p style="margin: 0; color: #56637e; font-size: 0.9rem;">
+Click on the map to add waypoints for your route. The route is visualized as you build it. Add at least 2 points, then review the route details and click &quot;Confirm Route &amp; Start Sampling&quot;.
+</p>
+</div></p>
+<p><div id="route-info-container" class="hidden">
+<div class="route-info">
+<h3>Route Details</h3>
+<div class="route-stats">
+<div class="stat-item">
+<span>Waypoints:</span>
+<span class="stat-value" id="waypoint-count">0</span>
+</div>
+<div class="stat-item">
+<span>Distance:</span>
+<span class="stat-value" id="route-distance">0 km</span>
+</div>
+<div class="stat-item">
+<span>Sample Points:</span>
+<span class="stat-value">150</span>
+</div>
+<div class="stat-item">
+<span>Sample Spacing:</span>
+<span class="stat-value" id="sample-spacing">~0 m</span>
+</div>
+</div>
+</div>
+</div></p>
+<p><div class="button-group">
+<button class="btn btn-primary" id="confirm-route-btn" disabled>Confirm Route &amp; Start Sampling</button>
+<button class="btn btn-secondary" id="clear-route-btn">Clear Route</button>
+</div>
+</div></p>
+<p><div id="results-container" class="hidden">
+<div class="results-panel">
+<h3>Coverage Results</h3></p>
+<p><div id="sampling-progress" class="hidden">
+<div class="progress-bar">
+<div class="progress-fill" id="progress-fill">0%</div>
+</div>
+<p class="status-message" id="progress-status">Initializing...</p>
+</div></p>
+<p><div id="coverage-results" class="hidden">
+<div class="coverage-summary">
+<div class="summary-card">
+<div class="summary-label">Excellent</div>
+<div class="summary-value coverage-excellent" id="excellent-count">0</div>
+</div>
+<div class="summary-card">
+<div class="summary-label">Good</div>
+<div class="summary-value coverage-good" id="good-count">0</div>
+</div>
+<div class="summary-card">
+<div class="summary-label">Fair</div>
+<div class="summary-value coverage-fair" id="fair-count">0</div>
+</div>
+<div class="summary-card">
+<div class="summary-label">Poor</div>
+<div class="summary-value coverage-poor" id="poor-count">0</div>
+</div>
+</div>
+<p style="color: #56637e; font-size: 0.9rem; margin: 16px 0 0;">
+Coverage quality is visualized on the map with color-coded markers.
+</p>
+</div>
+</div>
+</div></p>
+  </div>
+</section>
+<section class="card" aria-labelledby="coverage-notes">
+  <h2 id="coverage-notes">Notes</h2>
+  <ul>
+    <li><strong>Route Creation:</strong> Click on the map to add waypoints to your route. The route is visualized in real-time so you can verify it before sampling.</li>
+    <li><strong>Adaptive Sampling:</strong> The tool generates exactly 150 sample points along your route, regardless of length. Sample spacing adapts automatically (short routes = closer samples, long routes = wider spacing).</li>
+    <li><strong>Preview First:</strong> Review the route visualization and sample spacing before clicking "Confirm Route & Start Sampling".</li>
+    <li><strong>Coverage Data:</strong> Coverage data is simulated for demonstration purposes. Integrate with real APIs for production use.</li>
+    <li><strong>Color Coding:</strong> Green (Excellent), Blue (Good), Orange (Fair), Red (Poor).</li>
+  </ul>
+</section>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+  import {
+    calculateRouteDistance,
+    interpolateRoute,
+    simulateCoverageSample
+  } from './mobile-coverage.js';
+
+  // Initialize map
+  const map = L.map('coverage-map').setView([51.505, -0.09], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // State
+  let waypoints = [];
+  let waypointMarkers = [];
+  let routeLine = null;
+  let sampleMarkers = [];
+  let isConfirmed = false;
+
+  // DOM elements
+  const confirmBtn = document.getElementById('confirm-route-btn');
+  const clearBtn = document.getElementById('clear-route-btn');
+  const routeInfoContainer = document.getElementById('route-info-container');
+  const waypointCount = document.getElementById('waypoint-count');
+  const routeDistance = document.getElementById('route-distance');
+  const sampleSpacing = document.getElementById('sample-spacing');
+  const resultsContainer = document.getElementById('results-container');
+  const samplingProgress = document.getElementById('sampling-progress');
+  const coverageResults = document.getElementById('coverage-results');
+  const progressFill = document.getElementById('progress-fill');
+  const progressStatus = document.getElementById('progress-status');
+
+  // Add waypoint on map click
+  map.on('click', (e) => {
+    if (isConfirmed) return;
+
+    const { lat, lng } = e.latlng;
+    waypoints.push([lat, lng]);
+
+    // Add marker
+    const marker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: 'waypoint-marker',
+        html: `<div style="background: #3559a2; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">${waypoints.length}</div>`,
+        iconSize: [28, 28]
+      })
+    }).addTo(map);
+    waypointMarkers.push(marker);
+
+    updateRoute();
+  });
+
+  function updateRoute() {
+    // Remove old route line
+    if (routeLine) {
+      map.removeLayer(routeLine);
+    }
+
+    if (waypoints.length >= 2) {
+      // Draw route line
+      routeLine = L.polyline(waypoints, {
+        color: '#3559a2',
+        weight: 4,
+        opacity: 0.7
+      }).addTo(map);
+
+      // Calculate distance
+      const distance = calculateRouteDistance(waypoints);
+
+      // Calculate adaptive sample spacing (distance between samples)
+      const spacingKm = distance / 150;
+      const spacingM = spacingKm * 1000;
+      const spacingText = spacingM >= 1000
+        ? `~${(spacingKm).toFixed(2)} km`
+        : `~${Math.round(spacingM)} m`;
+
+      // Update UI
+      routeInfoContainer.classList.remove('hidden');
+      waypointCount.textContent = waypoints.length;
+      routeDistance.textContent = `${distance.toFixed(2)} km`;
+      sampleSpacing.textContent = spacingText;
+      confirmBtn.disabled = false;
+
+      // Fit map to route
+      map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+    } else {
+      routeInfoContainer.classList.add('hidden');
+      confirmBtn.disabled = true;
+    }
+  }
+
+  function clearRoute() {
+    // Remove markers
+    waypointMarkers.forEach(marker => map.removeLayer(marker));
+    waypointMarkers = [];
+
+    // Remove route line
+    if (routeLine) {
+      map.removeLayer(routeLine);
+      routeLine = null;
+    }
+
+    // Remove sample markers
+    sampleMarkers.forEach(marker => map.removeLayer(marker));
+    sampleMarkers = [];
+
+    // Reset state
+    waypoints = [];
+    isConfirmed = false;
+    routeInfoContainer.classList.add('hidden');
+    resultsContainer.classList.add('hidden');
+    confirmBtn.disabled = true;
+  }
+
+  async function startSampling() {
+    isConfirmed = true;
+    confirmBtn.disabled = true;
+    clearBtn.disabled = true;
+    resultsContainer.classList.remove('hidden');
+    samplingProgress.classList.remove('hidden');
+    coverageResults.classList.add('hidden');
+
+    // Generate 150 sample points using linear interpolation
+    const samplePoints = interpolateRoute(waypoints, 150);
+
+    // Coverage counters
+    const coverageCounts = {
+      excellent: 0,
+      good: 0,
+      fair: 0,
+      poor: 0
+    };
+
+    // Sample coverage at each point
+    for (let i = 0; i < samplePoints.length; i++) {
+      const point = samplePoints[i];
+      const coverage = simulateCoverageSample(point);
+
+      // Update counter
+      coverageCounts[coverage.quality]++;
+
+      // Add marker with color based on quality
+      const colors = {
+        excellent: '#10b981',
+        good: '#3b82f6',
+        fair: '#f59e0b',
+        poor: '#ef4444'
+      };
+
+      const marker = L.circleMarker(point, {
+        radius: 4,
+        fillColor: colors[coverage.quality],
+        color: 'white',
+        weight: 1,
+        fillOpacity: 0.8
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <strong>Sample ${i + 1}</strong><br>
+        Signal: ${coverage.signal} dBm<br>
+        Quality: ${coverage.quality.charAt(0).toUpperCase() + coverage.quality.slice(1)}
+      `);
+
+      sampleMarkers.push(marker);
+
+      // Update progress
+      const progress = Math.round(((i + 1) / samplePoints.length) * 100);
+      progressFill.style.width = `${progress}%`;
+      progressFill.textContent = `${progress}%`;
+      progressStatus.textContent = `Sampling point ${i + 1} of ${samplePoints.length}...`;
+
+      // Small delay for visualization (remove in production)
+      if (i % 10 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+
+    // Show results
+    samplingProgress.classList.add('hidden');
+    coverageResults.classList.remove('hidden');
+    document.getElementById('excellent-count').textContent = coverageCounts.excellent;
+    document.getElementById('good-count').textContent = coverageCounts.good;
+    document.getElementById('fair-count').textContent = coverageCounts.fair;
+    document.getElementById('poor-count').textContent = coverageCounts.poor;
+
+    clearBtn.disabled = false;
+  }
+
+  // Event listeners
+  confirmBtn.addEventListener('click', startSampling);
+  clearBtn.addEventListener('click', clearRoute);
+</script>
+
+
+    </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>
