@@ -121,6 +121,17 @@ export function interpolateRoute(waypoints, numSamples = 150) {
 }
 
 /**
+ * Calculate adaptive sample spacing for a route
+ * @param {Array<[number, number]>} waypoints - Array of waypoints [lat, lng]
+ * @param {number} numSamples - Number of samples (default: 150)
+ * @returns {number} Distance between samples in kilometers
+ */
+export function calculateSampleSpacing(waypoints, numSamples = 150) {
+  const totalDistance = calculateRouteDistance(waypoints);
+  return totalDistance / numSamples;
+}
+
+/**
  * Simulate mobile coverage sampling at a point
  * In production, this would call a real coverage API
  * @param {[number, number]} point - [lat, lng]

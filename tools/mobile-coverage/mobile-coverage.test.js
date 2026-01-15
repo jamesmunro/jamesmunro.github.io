@@ -5,6 +5,7 @@ import {
   calculateRouteDistance,
   linearInterpolate,
   interpolateRoute,
+  calculateSampleSpacing,
   simulateCoverageSample
 } from './mobile-coverage.js';
 
@@ -185,6 +186,60 @@ describe('Mobile Coverage Tool', () => {
 
       // Second segment should have significantly more samples
       assert.ok(secondSegmentSamples > firstSegmentSamples * 3);
+    });
+  });
+
+  describe('calculateSampleSpacing', () => {
+    it('should return 0 for routes with less than 2 waypoints', () => {
+      const spacing1 = calculateSampleSpacing([]);
+      const spacing2 = calculateSampleSpacing([[51.5, -0.1]]);
+
+      assert.strictEqual(spacing1, 0);
+      assert.strictEqual(spacing2, 0);
+    });
+
+    it('should calculate spacing for a simple two-point route', () => {
+      const waypoints = [[51.5, -0.1], [51.6, -0.2]];
+      const spacing = calculateSampleSpacing(waypoints, 150);
+
+      // Distance is roughly 14-15 km, so spacing should be ~0.09-0.10 km
+      assert.ok(spacing > 0.08);
+      assert.ok(spacing < 0.12);
+    });
+
+    it('should adapt spacing based on route length', () => {
+      // Short route
+      const shortRoute = [[51.5, -0.1], [51.51, -0.11]];
+      const shortSpacing = calculateSampleSpacing(shortRoute, 150);
+
+      // Long route
+      const longRoute = [[51.5, -0.1], [52.0, -0.5]];
+      const longSpacing = calculateSampleSpacing(longRoute, 150);
+
+      // Long route should have much larger spacing
+      assert.ok(longSpacing > shortSpacing * 10);
+    });
+
+    it('should scale inversely with number of samples', () => {
+      const waypoints = [[51.5, -0.1], [51.6, -0.2]];
+
+      const spacing50 = calculateSampleSpacing(waypoints, 50);
+      const spacing150 = calculateSampleSpacing(waypoints, 150);
+
+      // With fewer samples, spacing should be larger
+      assert.ok(spacing50 > spacing150 * 2.5);
+    });
+
+    it('should handle multi-segment routes', () => {
+      const waypoints = [
+        [51.5, -0.1],
+        [51.6, -0.2],
+        [51.7, -0.3]
+      ];
+      const spacing = calculateSampleSpacing(waypoints, 150);
+
+      // Should return positive spacing
+      assert.ok(spacing > 0);
     });
   });
 

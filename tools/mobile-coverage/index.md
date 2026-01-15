@@ -116,7 +116,7 @@ hero_subtitle: Visualize and sample mobile signal coverage along your route.
 
   .route-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
     font-size: 0.9rem;
   }
@@ -229,7 +229,7 @@ hero_subtitle: Visualize and sample mobile signal coverage along your route.
       <div class="control-group">
         <label>Instructions:</label>
         <p style="margin: 0; color: #56637e; font-size: 0.9rem;">
-          Click on the map to add waypoints for your route. Add at least 2 points to create a route.
+          Click on the map to add waypoints for your route. The route is visualized as you build it. Add at least 2 points, then review the route details and click "Confirm Route & Start Sampling".
         </p>
       </div>
 
@@ -248,6 +248,10 @@ hero_subtitle: Visualize and sample mobile signal coverage along your route.
             <div class="stat-item">
               <span>Sample Points:</span>
               <span class="stat-value">150</span>
+            </div>
+            <div class="stat-item">
+              <span>Sample Spacing:</span>
+              <span class="stat-value" id="sample-spacing">~0 m</span>
             </div>
           </div>
         </div>
@@ -301,10 +305,11 @@ hero_subtitle: Visualize and sample mobile signal coverage along your route.
 <section class="card" aria-labelledby="coverage-notes">
   <h2 id="coverage-notes">Notes</h2>
   <ul>
-    <li>Click on the map to add waypoints to your route.</li>
-    <li>The tool will generate 150 evenly-spaced sample points along your route using linear interpolation.</li>
-    <li>Coverage data is simulated for demonstration purposes. Integrate with real APIs for production use.</li>
-    <li>Color coding: Green (Excellent), Blue (Good), Orange (Fair), Red (Poor).</li>
+    <li><strong>Route Creation:</strong> Click on the map to add waypoints to your route. The route is visualized in real-time so you can verify it before sampling.</li>
+    <li><strong>Adaptive Sampling:</strong> The tool generates exactly 150 sample points along your route, regardless of length. Sample spacing adapts automatically (short routes = closer samples, long routes = wider spacing).</li>
+    <li><strong>Preview First:</strong> Review the route visualization and sample spacing before clicking "Confirm Route & Start Sampling".</li>
+    <li><strong>Coverage Data:</strong> Coverage data is simulated for demonstration purposes. Integrate with real APIs for production use.</li>
+    <li><strong>Color Coding:</strong> Green (Excellent), Blue (Good), Orange (Fair), Red (Poor).</li>
   </ul>
 </section>
 
@@ -337,6 +342,7 @@ hero_subtitle: Visualize and sample mobile signal coverage along your route.
   const routeInfoContainer = document.getElementById('route-info-container');
   const waypointCount = document.getElementById('waypoint-count');
   const routeDistance = document.getElementById('route-distance');
+  const sampleSpacing = document.getElementById('sample-spacing');
   const resultsContainer = document.getElementById('results-container');
   const samplingProgress = document.getElementById('sampling-progress');
   const coverageResults = document.getElementById('coverage-results');
@@ -380,10 +386,18 @@ hero_subtitle: Visualize and sample mobile signal coverage along your route.
       // Calculate distance
       const distance = calculateRouteDistance(waypoints);
 
+      // Calculate adaptive sample spacing (distance between samples)
+      const spacingKm = distance / 150;
+      const spacingM = spacingKm * 1000;
+      const spacingText = spacingM >= 1000
+        ? `~${(spacingKm).toFixed(2)} km`
+        : `~${Math.round(spacingM)} m`;
+
       // Update UI
       routeInfoContainer.classList.remove('hidden');
       waypointCount.textContent = waypoints.length;
       routeDistance.textContent = `${distance.toFixed(2)} km`;
+      sampleSpacing.textContent = spacingText;
       confirmBtn.disabled = false;
 
       // Fit map to route
