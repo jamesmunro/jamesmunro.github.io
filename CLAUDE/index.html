@@ -46,10 +46,45 @@ pip install -r requirements.txt
 <h3>Adding a New Tool</h3>
 <ol>
 <li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>)</li>
-<li>Add an <code>index.md</code> with front matter title and <code>hero_subtitle</code></li>
+<li>Add an <code>index.md</code> with front matter including:
+<ul>
+<li><code>title</code>: The tool's display name</li>
+<li><code>hero_subtitle</code>: A brief description (shown on tool page and used in README)</li>
+</ul>
+</li>
 <li>Add JavaScript/CSS inline or as separate files</li>
 <li>Add a <code>.test.js</code> file for unit tests if logic is complex</li>
+<li><strong>Update the tools index in <code>README.md</code></strong> - Add a new entry to the &quot;Interactive Tools&quot; section with:
+<ul>
+<li>Tool name as a link to its live URL</li>
+<li>Description from the <code>hero_subtitle</code></li>
+<li>Keep the list alphabetically sorted</li>
+</ul>
+</li>
 </ol>
+<h3>Removing a Tool</h3>
+<ol>
+<li>Delete the tool's directory from <code>tools/</code></li>
+<li><strong>Update the tools index in <code>README.md</code></strong> - Remove the corresponding entry from the &quot;Interactive Tools&quot; section</li>
+<li>If the tool had external dependencies, consider cleaning up references in:
+<ul>
+<li><code>.eleventy.js</code> (passthrough copies)</li>
+<li><code>package.json</code> or <code>requirements.txt</code> (if dependencies are no longer needed)</li>
+</ul>
+</li>
+</ol>
+<h3>Maintaining the Tools Index</h3>
+<p>The &quot;Interactive Tools&quot; section in <code>README.md</code> serves as the canonical index of all tools on the site. This index must be kept synchronized whenever tools are added, removed, or their descriptions change.</p>
+<p><strong>When to update the index:</strong></p>
+<ul>
+<li>Adding a new tool → Add entry with link and description</li>
+<li>Removing a tool → Delete the corresponding entry</li>
+<li>Changing a tool's title → Update the link text</li>
+<li>Changing a tool's <code>hero_subtitle</code> → Update the description</li>
+</ul>
+<p><strong>Index format:</strong></p>
+<pre><code class="language-markdown">- **[Tool Name](https://jamesmunro.github.io/tools/tool-slug/)** - Description from hero_subtitle
+</code></pre>
 <h3>External Libraries</h3>
 <p>Prefer self-hosting: Install via <code>npm</code> and use <code>eleventyConfig.addPassthroughCopy</code> in <code>.eleventy.js</code> to mirror into <code>assets/libs/</code>.</p>
 <h3>Code Style</h3>
