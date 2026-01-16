@@ -5,7 +5,7 @@
 
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { haversineDistance, sampleRoute, getTotalDistance } = require('./route-sampler.js');
+const { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance } = require('./route-sampler.js');
 
 describe('Route Sampler', () => {
   describe('haversineDistance', () => {
@@ -137,6 +137,92 @@ describe('Route Sampler', () => {
       const route = [[-0.1276, 51.5074]];
       const total = getTotalDistance(route);
       assert.strictEqual(total, 0);
+    });
+  });
+
+  describe('sampleRouteByCount', () => {
+    test('samples exactly 150 points by default', () => {
+      const route = [
+        [-0.1276, 51.5074],  // London
+        [-0.0876, 51.5074]   // ~3km east
+      ];
+
+      const sampled = sampleRouteByCount(route);
+
+      assert.strictEqual(sampled.length, 150, 'Should have exactly 150 samples');
+    });
+
+    test('samples requested number of points', () => {
+      const route = [
+        [-0.1276, 51.5074],
+        [-0.0876, 51.5074]
+      ];
+
+      const sampled = sampleRouteByCount(route, 50);
+
+      assert.strictEqual(sampled.length, 50, 'Should have exactly 50 samples');
+    });
+
+    test('first and last points match route endpoints', () => {
+      const route = [
+        [-0.1276, 51.5074],
+        [-0.0876, 51.5074]
+      ];
+
+      const sampled = sampleRouteByCount(route, 100);
+
+      // First point
+      assert.ok(Math.abs(sampled[0].lng - route[0][0]) < 0.0001, 'First point longitude should match');
+      assert.ok(Math.abs(sampled[0].lat - route[0][1]) < 0.0001, 'First point latitude should match');
+
+      // Last point
+      assert.ok(Math.abs(sampled[99].lng - route[1][0]) < 0.0001, 'Last point longitude should match');
+      assert.ok(Math.abs(sampled[99].lat - route[1][1]) < 0.0001, 'Last point latitude should match');
+    });
+
+    test('points are evenly spaced', () => {
+      const route = [
+        [-0.1276, 51.5074],
+        [-0.0876, 51.5074]
+      ];
+
+      const sampled = sampleRouteByCount(route, 10);
+      const totalDistance = getTotalDistance(route);
+      const expectedInterval = totalDistance / 9; // 9 intervals for 10 points
+
+      // Check distances between consecutive points
+      for (let i = 1; i < sampled.length; i++) {
+        const actualInterval = sampled[i].distance - sampled[i-1].distance;
+        const tolerance = expectedInterval * 0.01; // 1% tolerance
+        assert.ok(
+          Math.abs(actualInterval - expectedInterval) < tolerance,
+          `Interval ${i} should be approximately ${expectedInterval}m, got ${actualInterval}m`
+        );
+      }
+    });
+
+    test('handles multi-segment routes', () => {
+      const route = [
+        [-0.1276, 51.5074],
+        [-0.1176, 51.5074],
+        [-0.1076, 51.5074]
+      ];
+
+      const sampled = sampleRouteByCount(route, 100);
+
+      assert.strictEqual(sampled.length, 100, 'Should have exactly 100 samples');
+
+      // Distances should be monotonically increasing
+      for (let i = 1; i < sampled.length; i++) {
+        assert.ok(sampled[i].distance >= sampled[i-1].distance,
+          `Distance at index ${i} should be >= previous`);
+      }
+    });
+
+    test('throws error for invalid input', () => {
+      assert.throws(() => sampleRouteByCount([], 150), /at least 2 points/);
+      assert.throws(() => sampleRouteByCount([[-0.1276, 51.5074]], 150), /at least 2 points/);
+      assert.throws(() => sampleRouteByCount(null, 150), /at least 2 points/);
     });
   });
 });

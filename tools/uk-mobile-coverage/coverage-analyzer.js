@@ -87,7 +87,7 @@ class CoverageAnalyzer {
 
       // Step 4: Sample route
       this.setStep(3);
-      const sampledPoints = sampleRoute(route.coordinates, 500);
+      const sampledPoints = sampleRouteByCount(route.coordinates, 150);
       this.updateProgress(40, `Sampling ${sampledPoints.length} points along route...`);
       this.completeStep(3);
 
