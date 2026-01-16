@@ -1,0 +1,95 @@
+<h1>Claude Project Context: jamesmunro.github.io</h1>
+<h2>Project Overview</h2>
+<p>This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.</p>
+<h2>Tech Stack</h2>
+<ul>
+<li><strong>Static Site Generator:</strong> Eleventy (11ty)</li>
+<li><strong>Templating:</strong> Nunjucks (<code>.njk</code>) and Markdown (<code>.md</code>)</li>
+<li><strong>Runtime (Build):</strong> Node.js 20+</li>
+<li><strong>Interactive Tools:</strong> Vanilla JavaScript (ES6+, no build step)</li>
+<li><strong>Data Analysis/Notebooks:</strong> Python 3.12+, Jupyter Lite</li>
+<li><strong>Package Management:</strong> <code>npm</code> (Node), <code>pip</code> (Python)</li>
+</ul>
+<h2>Project Structure</h2>
+<ul>
+<li><strong><code>_includes/</code></strong>: Nunjucks layouts and partials</li>
+<li><strong><code>_data/</code></strong>: Global site data files (e.g., <code>site.json</code>)</li>
+<li><strong><code>tools/</code></strong>: Contains individual interactive tools. Each tool has its own subdirectory with an <code>index.md</code> and associated scripts
+<ul>
+<li><strong><code>tools/tools.json</code></strong>: Directory data file applying <code>layouts/tool.njk</code> to all tools</li>
+</ul>
+</li>
+<li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy</li>
+<li><strong><code>package.json</code></strong>: Node dependencies and scripts</li>
+<li><strong><code>requirements.txt</code></strong>: Python dependencies for Jupyter Lite</li>
+<li><strong><code>assets/libs/</code></strong>: Self-hosted external libraries</li>
+</ul>
+<h2>Key Commands</h2>
+<ul>
+<li><code>npm install</code> - Install Node dependencies</li>
+<li><code>npm run dev</code> - Start dev server at localhost:8080</li>
+<li><code>npm run build</code> - Full build (requires Python venv active)</li>
+<li><code>npm test</code> - Run unit tests (*.test.js files)</li>
+</ul>
+<h2>Development Workflow</h2>
+<h3>Setup</h3>
+<pre><code class="language-sh">npm install
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+</code></pre>
+<h3>Running Locally</h3>
+<pre><code class="language-sh">npm run dev
+</code></pre>
+<p>Server binds to <code>0.0.0.0:8080</code> to support WSL and network access.</p>
+<h2>Conventions</h2>
+<h3>Adding a New Tool</h3>
+<ol>
+<li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>)</li>
+<li>Add an <code>index.md</code> with front matter including:
+<ul>
+<li><code>title</code>: The tool's display name</li>
+<li><code>hero_subtitle</code>: A brief description (shown on tool page and used in README)</li>
+</ul>
+</li>
+<li>Add JavaScript/CSS inline or as separate files</li>
+<li>Add a <code>.test.js</code> file for unit tests if logic is complex</li>
+<li><strong>Update the tools index in <code>README.md</code></strong> - Add a new entry to the &quot;Interactive Tools&quot; section with:
+<ul>
+<li>Tool name as a link to its live URL</li>
+<li>Description from the <code>hero_subtitle</code></li>
+<li>Keep the list alphabetically sorted</li>
+</ul>
+</li>
+</ol>
+<h3>Removing a Tool</h3>
+<ol>
+<li>Delete the tool's directory from <code>tools/</code></li>
+<li><strong>Update the tools index in <code>README.md</code></strong> - Remove the corresponding entry from the &quot;Interactive Tools&quot; section</li>
+<li>If the tool had external dependencies, consider cleaning up references in:
+<ul>
+<li><code>.eleventy.js</code> (passthrough copies)</li>
+<li><code>package.json</code> or <code>requirements.txt</code> (if dependencies are no longer needed)</li>
+</ul>
+</li>
+</ol>
+<h3>Maintaining the Tools Index</h3>
+<p>The &quot;Interactive Tools&quot; section in <code>README.md</code> serves as the canonical index of all tools on the site. This index must be kept synchronized whenever tools are added, removed, or their descriptions change.</p>
+<p><strong>When to update the index:</strong></p>
+<ul>
+<li>Adding a new tool → Add entry with link and description</li>
+<li>Removing a tool → Delete the corresponding entry</li>
+<li>Changing a tool's title → Update the link text</li>
+<li>Changing a tool's <code>hero_subtitle</code> → Update the description</li>
+</ul>
+<p><strong>Index format:</strong></p>
+<pre><code class="language-markdown">- **[Tool Name](https://jamesmunro.github.io/tools/tool-slug/)** - Description from hero_subtitle
+</code></pre>
+<h3>External Libraries</h3>
+<p>Prefer self-hosting: Install via <code>npm</code> and use <code>eleventyConfig.addPassthroughCopy</code> in <code>.eleventy.js</code> to mirror into <code>assets/libs/</code>.</p>
+<h3>Code Style</h3>
+<ul>
+<li>ES6+ JavaScript, browser-compatible (no transpilation)</li>
+<li>Prefer Nunjucks for layouts, Markdown for content</li>
+<li>Use the <code>url</code> filter for internal links in templates</li>
+</ul>
