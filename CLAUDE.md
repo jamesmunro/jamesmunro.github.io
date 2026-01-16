@@ -47,9 +47,36 @@ Server binds to `0.0.0.0:8080` to support WSL and network access.
 
 ### Adding a New Tool
 1. Create a directory in `tools/` (e.g., `tools/my-new-tool/`)
-2. Add an `index.md` with front matter title and `hero_subtitle`
+2. Add an `index.md` with front matter including:
+   - `title`: The tool's display name
+   - `hero_subtitle`: A brief description (shown on tool page and used in README)
 3. Add JavaScript/CSS inline or as separate files
 4. Add a `.test.js` file for unit tests if logic is complex
+5. **Update the tools index in `README.md`** - Add a new entry to the "Interactive Tools" section with:
+   - Tool name as a link to its live URL
+   - Description from the `hero_subtitle`
+   - Keep the list alphabetically sorted
+
+### Removing a Tool
+1. Delete the tool's directory from `tools/`
+2. **Update the tools index in `README.md`** - Remove the corresponding entry from the "Interactive Tools" section
+3. If the tool had external dependencies, consider cleaning up references in:
+   - `.eleventy.js` (passthrough copies)
+   - `package.json` or `requirements.txt` (if dependencies are no longer needed)
+
+### Maintaining the Tools Index
+The "Interactive Tools" section in `README.md` serves as the canonical index of all tools on the site. This index must be kept synchronized whenever tools are added, removed, or their descriptions change.
+
+**When to update the index:**
+- Adding a new tool → Add entry with link and description
+- Removing a tool → Delete the corresponding entry
+- Changing a tool's title → Update the link text
+- Changing a tool's `hero_subtitle` → Update the description
+
+**Index format:**
+```markdown
+- **[Tool Name](https://jamesmunro.github.io/tools/tool-slug/)** - Description from hero_subtitle
+```
 
 ### External Libraries
 Prefer self-hosting: Install via `npm` and use `eleventyConfig.addPassthroughCopy` in `.eleventy.js` to mirror into `assets/libs/`.
