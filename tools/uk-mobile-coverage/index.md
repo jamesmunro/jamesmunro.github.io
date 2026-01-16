@@ -35,7 +35,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
         <option value="proxy">Custom Proxy (requires setup)</option>
         <option value="ofcom-direct">Direct Ofcom API (may not work due to CORS)</option>
       </select>
-      <small>Sample interval: 500m (fixed)</small>
+      <small>Route sampled at 150 evenly-spaced points</small>
     </div>
 
     <button type="submit" class="btn-primary">Analyze Route Coverage</button>
