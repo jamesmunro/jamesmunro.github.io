@@ -1,4 +1,9 @@
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
+// Tile cache directory for dev server
+const TILE_CACHE_DIR = path.join(__dirname, '.tile-cache');
 
 module.exports = function (eleventyConfig) {
   // Cache-busting filter for JS files
@@ -32,7 +37,7 @@ module.exports = function (eleventyConfig) {
     // Access the server locally or from the network
     host: "0.0.0.0",
 
-    // CORS proxy middleware for Ofcom tile API
+    // CORS proxy middleware for Ofcom tile API with file-based caching
     middleware: [
       function(req, res, next) {
         // Proxy requests to /api/tiles/* to ofcom.europa.uk.com
@@ -40,9 +45,33 @@ module.exports = function (eleventyConfig) {
           const targetPath = req.url.replace('/api/tiles/', '/tiles/');
           const targetUrl = `https://ofcom.europa.uk.com${targetPath}`;
 
+          // Create cache key from URL path (sanitize for filesystem)
+          const cacheKey = targetPath.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+          const cachePath = path.join(TILE_CACHE_DIR, cacheKey);
+
+          // Check if cached file exists
+          if (fs.existsSync(cachePath)) {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Content-Type', 'image/png');
+            res.setHeader('X-Cache', 'HIT');
+            fs.createReadStream(cachePath).pipe(res);
+            return;
+          }
+
+          // Ensure cache directory exists
+          if (!fs.existsSync(TILE_CACHE_DIR)) {
+            fs.mkdirSync(TILE_CACHE_DIR, { recursive: true });
+          }
+
+          // Fetch from upstream and cache
           https.get(targetUrl, (proxyRes) => {
             res.setHeader('Access-Control-Allow-Origin', '*');
             res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/png');
+            res.setHeader('X-Cache', 'MISS');
+
+            // Write to cache file while streaming to response
+            const cacheStream = fs.createWriteStream(cachePath);
+            proxyRes.pipe(cacheStream);
             proxyRes.pipe(res);
           }).on('error', (err) => {
             console.error('Proxy error:', err);

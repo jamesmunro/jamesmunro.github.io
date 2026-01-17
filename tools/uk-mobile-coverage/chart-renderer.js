@@ -168,9 +168,9 @@ class ChartRenderer {
       const adequate = levels.filter(l => l >= 1).length;
 
       summary[network] = {
-        'Excellent': total > 0 ? ((excellent / total) * 100).toFixed(1) : '0.0',
-        'Good': total > 0 ? ((good / total) * 100).toFixed(1) : '0.0',
-        'Adequate': total > 0 ? ((adequate / total) * 100).toFixed(1) : '0.0',
+        'Excellent': total > 0 ? Math.round((excellent / total) * 100) : 0,
+        'Good': total > 0 ? Math.round((good / total) * 100) : 0,
+        'Adequate': total > 0 ? Math.round((adequate / total) * 100) : 0,
         avgLevel: total > 0 ? (levels.reduce((a, b) => a + b, 0) / total) : 0
       };
     });
@@ -191,21 +191,86 @@ class ChartRenderer {
       throw new Error(`Table body element ${tableBodyId} not found`);
     }
 
-    // Clear existing rows
+    // Store summary data for sorting
+    this.summaryData = summary;
+    this.tableBodyId = tableBodyId;
+    this.currentSort = { column: 'avgLevel', descending: true };
+
+    // Setup sortable headers
+    this.setupSortableHeaders(tbody);
+
+    // Initial render sorted by best coverage
+    this.renderSummaryRows(summary, tbody, 'avgLevel', true);
+  }
+
+  /**
+   * Setup click handlers for sortable column headers
+   */
+  setupSortableHeaders(tbody) {
+    const table = tbody.closest('table');
+    if (!table) return;
+
+    const headers = table.querySelectorAll('th');
+    const sortableColumns = {
+      1: 'Excellent',
+      2: 'Good',
+      3: 'Adequate'
+    };
+
+    headers.forEach((th, index) => {
+      if (sortableColumns[index]) {
+        th.style.cursor = 'pointer';
+        th.title = 'Click to sort';
+        th.onclick = () => {
+          const column = sortableColumns[index];
+          const descending = this.currentSort.column === column ? !this.currentSort.descending : true;
+          this.currentSort = { column, descending };
+          this.renderSummaryRows(this.summaryData, tbody, column, descending);
+          this.updateSortIndicators(headers, index, descending);
+        };
+      }
+    });
+  }
+
+  /**
+   * Update sort indicators on headers
+   */
+  updateSortIndicators(headers, activeIndex, descending) {
+    headers.forEach((th, index) => {
+      // Remove existing indicators
+      th.textContent = th.textContent.replace(/ [▲▼]$/, '');
+      if (index === activeIndex) {
+        th.textContent += descending ? ' ▼' : ' ▲';
+      }
+    });
+  }
+
+  /**
+   * Render summary table rows with sorting
+   */
+  renderSummaryRows(summary, tbody, sortColumn, descending) {
     tbody.innerHTML = '';
 
-    // Sort networks by average level (best first)
-    const networksSorted = Object.entries(summary)
-      .sort((a, b) => b[1].avgLevel - a[1].avgLevel);
+    // Find the best network (highest avgLevel)
+    const bestNetwork = Object.entries(summary)
+      .sort((a, b) => b[1].avgLevel - a[1].avgLevel)[0][0];
 
-    networksSorted.forEach(([network, stats], index) => {
+    // Sort networks by specified column
+    const networksSorted = Object.entries(summary)
+      .sort((a, b) => {
+        const aVal = a[1][sortColumn];
+        const bVal = b[1][sortColumn];
+        return descending ? bVal - aVal : aVal - bVal;
+      });
+
+    networksSorted.forEach(([network, stats]) => {
       const row = tbody.insertRow();
       row.innerHTML = `
         <td><strong>${network}</strong></td>
         <td>${stats['Excellent']}%</td>
         <td>${stats['Good']}%</td>
         <td>${stats['Adequate']}%</td>
-        <td>${index === 0 ? '✓ Best' : ''}</td>
+        <td>${network === bestNetwork ? '✓ Best' : ''}</td>
       `;
     });
   }
