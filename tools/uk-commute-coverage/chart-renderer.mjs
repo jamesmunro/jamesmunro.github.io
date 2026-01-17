@@ -90,7 +90,13 @@ class ChartRenderer {
       throw new Error(`Canvas element ${this.canvasId} not found`);
     }
 
-    // Destroy existing chart if it exists
+    // Check for and destroy any existing chart instance on this canvas
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+
+    // Also destroy the instance tracked by this class, just in case
     if (this.chart) {
       this.chart.destroy();
     }

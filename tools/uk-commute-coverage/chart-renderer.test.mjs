@@ -16,6 +16,7 @@ global.document = dom.window.document;
 global.Chart = class MockChart {
   constructor() {}
   destroy() {}
+  static getChart() { return null; }
 };
 
 import { ChartRenderer } from './chart-renderer.mjs';
