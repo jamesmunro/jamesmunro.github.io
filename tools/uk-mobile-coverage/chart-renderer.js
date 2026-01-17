@@ -31,10 +31,10 @@ class ChartRenderer {
   prepareChartData(coverageResults) {
     const networks = ['EE', 'Vodafone', 'O2', 'Three'];
     const colors = {
-      EE: '#00a0dc',
+      EE: '#009a9a',
       Vodafone: '#e60000',
       O2: '#0019a5',
-      Three: '#8a00b8'
+      Three: '#333333'
     };
 
     const datasets = networks.map(network => {
