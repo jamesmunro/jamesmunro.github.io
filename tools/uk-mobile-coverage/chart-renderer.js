@@ -114,7 +114,7 @@ class ChartRenderer {
             ticks: {
               stepSize: 1,
               callback: function(value) {
-                const labels = ['No Coverage', 'Variable', 'Good Outdoor', 'Mixed', 'Excellent'];
+                const labels = ['Poor/None', 'Variable', 'Good', 'Good (Var In)', 'Good (In & Out)'];
                 return labels[value] || '';
               }
             }
@@ -128,7 +128,7 @@ class ChartRenderer {
                 return `Distance: ${point.x.toFixed(2)} km`;
               },
               label: function(context) {
-                const labels = ['No Coverage', 'Variable Outdoor', 'Good Outdoor', 'Good Outdoor (Variable In-Home)', 'Excellent (In & Out)'];
+                const labels = ['Poor to none outdoor', 'Variable outdoor', 'Good outdoor', 'Good outdoor, variable in-home', 'Good outdoor and in-home'];
                 const levelLabel = labels[context.parsed.y] || 'Unknown';
                 return `${context.dataset.label}: ${levelLabel}`;
               },
