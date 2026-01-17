@@ -54,6 +54,10 @@ This repository hosts a personal website and portfolio built as a static site. I
   npm test
   ```
   Uses Node's built-in test runner (`node --test`) to run all `*.test.js` files in `tools/`. This includes structural and syntax verification for tools like Pyodide Terminal.
+- Run linting checks:
+  ```sh
+  npm run lint
+  ```
 
 ## Conventions & Guidelines
 
