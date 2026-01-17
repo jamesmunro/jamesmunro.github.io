@@ -175,7 +175,7 @@ export class CoverageAnalyzer {
       // Step 5: Get coverage data
       this.setStep(5);
       this.coverageAdapter = new TileCoverageAdapter();
-      const coverageResults = await this.getCoverageData(sampledPoints);
+      const coverageResults = await this.getCoverageData(sampledPoints, startPostcode, endPostcode);
       this.completeStep(5);
 
       // Render results
@@ -249,7 +249,7 @@ export class CoverageAnalyzer {
     });
   }
 
-  async getCoverageData(sampledPoints) {
+  async getCoverageData(sampledPoints, startPostcode, endPostcode) {
     const results = [];
     const BATCH_SIZE = 5;
     const DELAY_MS = 500;
@@ -263,7 +263,17 @@ export class CoverageAnalyzer {
         this.logger.warn(`Failed to get coverage for point ${i}:`, error);
         coverage = { latitude: point.lat, longitude: point.lng, error: error.message, networks: {} };
       }
-      results.push({ point, coverage });
+      
+      const result = { point, coverage };
+      
+      // Attach postcodes to start and end points if provided
+      if (i === 0 && startPostcode) {
+        result.postcode = startPostcode;
+      } else if (i === sampledPoints.length - 1 && endPostcode) {
+        result.postcode = endPostcode;
+      }
+      
+      results.push(result);
 
       const progress = 40 + (i / sampledPoints.length) * 55;
       this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} points`);
