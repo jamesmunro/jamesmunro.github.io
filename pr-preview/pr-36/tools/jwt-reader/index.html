@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JWT Reader | jamesmunro.github.io</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1>JWT Reader</h1>
+      
+      <p>Decode JSON Web Tokens right in the browser. Signatures are not validated, but the header and payload are decoded for quick inspection.</p>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<section class="card" aria-labelledby="jwt-reader-title">
+  <div class="tool-header">
+    <h2 id="jwt-reader-title">Decode a token</h2>
+    <span class="status" id="jwt-status">Paste a token to decode the header and payload.</span>
+  </div>
+  <label for="jwt-input">JWT Token</label>
+  <textarea id="jwt-input" placeholder="eyJhbGciOi..." spellcheck="false"></textarea>
+  <p class="helper">
+    Need a sample? <button class="link-button" type="button" id="jwt-example-button">Load example token</button>
+  </p>
+  <div class="tool-grid">
+    <div>
+      <h3>Header</h3>
+      <div class="output" id="jwt-header"></div>
+    </div>
+    <div>
+      <h3>Payload</h3>
+      <div class="output" id="jwt-payload"></div>
+    </div>
+  </div>
+</section>
+<section class="card" aria-labelledby="jwt-notes">
+  <h2 id="jwt-notes">Notes</h2>
+  <ul>
+    <li>Decoding happens entirely in your browser.</li>
+    <li>Signatures are not verified here—use your auth stack for validation.</li>
+    <li>Tokens must have two or three sections separated by periods.</li>
+    <li>Use the example token button above to see a sample header and payload.</li>
+  </ul>
+</section>
+<script type="module">
+  import { decodeToken } from "./jwt-reader.js?v=mkifwbik";
+
+  const jwtInput = document.getElementById("jwt-input");
+  const jwtHeader = document.getElementById("jwt-header");
+  const jwtPayload = document.getElementById("jwt-payload");
+  const jwtStatus = document.getElementById("jwt-status");
+  const jwtExampleButton = document.getElementById("jwt-example-button");
+  const exampleToken =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.signature";
+
+  const formatJson = (value) => JSON.stringify(value, null, 2);
+
+  const renderEmpty = () => {
+    jwtHeader.textContent = "";
+    jwtPayload.textContent = "";
+    jwtStatus.textContent = "Paste a token to decode the header and payload.";
+    jwtStatus.classList.remove("error");
+  };
+
+  const renderError = (message) => {
+    jwtHeader.textContent = "";
+    jwtPayload.textContent = "";
+    jwtStatus.textContent = message;
+    jwtStatus.classList.add("error");
+  };
+
+  const handleDecode = () => {
+    const normalizedToken = jwtInput.value.replace(/\s+/g, "");
+    if (!normalizedToken) {
+      renderEmpty();
+      return;
+    }
+
+    try {
+      const { header, payload } = decodeToken(normalizedToken);
+      jwtHeader.textContent = formatJson(header);
+      jwtPayload.textContent = formatJson(payload);
+      jwtStatus.textContent = "Decoded successfully. Signature not validated.";
+      jwtStatus.classList.remove("error");
+    } catch (error) {
+      renderError("Unable to decode this token. Whitespace is ignored; check the formatting and try again.");
+    }
+  };
+
+  jwtInput.addEventListener("input", handleDecode);
+  jwtExampleButton.addEventListener("click", () => {
+    jwtInput.value = exampleToken;
+    handleDecode();
+  });
+  renderEmpty();
+</script>
+
+
+    </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>
