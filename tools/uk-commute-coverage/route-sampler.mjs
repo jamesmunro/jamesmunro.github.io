@@ -34,8 +34,20 @@ function haversineDistance(point1, point2) {
  * @returns {Array} Array of sampled points with {lat, lng, distance}
  */
 function sampleRoute(coordinates, intervalMeters = 500) {
-  if (!coordinates || coordinates.length < 2) {
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 2) {
     throw new Error('Route must have at least 2 points');
+  }
+
+  // Validate and filter coordinates
+  const validCoordinates = coordinates.filter(c => 
+    Array.isArray(c) && 
+    c.length >= 2 && 
+    !isNaN(Number(c[0])) && 
+    !isNaN(Number(c[1]))
+  );
+
+  if (validCoordinates.length < 2) {
+    throw new Error('Route has no valid coordinate pairs');
   }
 
   const points = [];
@@ -43,13 +55,13 @@ function sampleRoute(coordinates, intervalMeters = 500) {
 
   // Always include the first point
   points.push({
-    lat: coordinates[0][1],
-    lng: coordinates[0][0],
+    lat: Number(validCoordinates[0][1]),
+    lng: Number(validCoordinates[0][0]),
     distance: 0
   });
 
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const [p1, p2] = [coordinates[i], coordinates[i + 1]];
+  for (let i = 0; i < validCoordinates.length - 1; i++) {
+    const [p1, p2] = [validCoordinates[i], validCoordinates[i + 1]];
     const segmentDist = haversineDistance(p1, p2);
 
     if (segmentDist === 0) continue; // Skip zero-length segments
@@ -93,20 +105,40 @@ function getTotalDistance(coordinates) {
  * @param {number} targetSamples - Target number of sample points (default 500)
  */
 function sampleRouteByCount(coordinates, targetSamples = 500) {
-  if (!coordinates || coordinates.length < 2) {
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 2) {
     throw new Error('Route must have at least 2 points');
+  }
+
+  // Validate coordinates are [lng, lat] pairs of numbers
+  const validCoordinates = coordinates.filter(c => 
+    Array.isArray(c) && 
+    c.length >= 2 && 
+    !isNaN(Number(c[0])) && 
+    !isNaN(Number(c[1]))
+  );
+
+  if (validCoordinates.length < 2) {
+    // If we can't find 2 valid points, but have at least one, return that point
+    if (validCoordinates.length === 1) {
+      return Array(targetSamples).fill(0).map((_, i) => ({
+        lat: Number(validCoordinates[0][1]),
+        lng: Number(validCoordinates[0][0]),
+        distance: 0
+      }));
+    }
+    throw new Error('Route has no valid coordinate pairs');
   }
 
   // Build segments with cumulative distances
   const segments = [];
   let cumulativeDistance = 0;
 
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const segmentDist = haversineDistance(coordinates[i], coordinates[i + 1]);
-    if (segmentDist > 0) {
+  for (let i = 0; i < validCoordinates.length - 1; i++) {
+    const segmentDist = haversineDistance(validCoordinates[i], validCoordinates[i + 1]);
+    if (segmentDist >= 0) {
       segments.push({
-        start: coordinates[i],
-        end: coordinates[i + 1],
+        start: validCoordinates[i],
+        end: validCoordinates[i + 1],
         startDist: cumulativeDistance,
         endDist: cumulativeDistance + segmentDist,
         length: segmentDist

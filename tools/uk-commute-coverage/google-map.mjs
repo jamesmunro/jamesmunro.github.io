@@ -53,6 +53,11 @@ export class GoogleMap {
   addTileOverlay(url, bounds, opacity = 0.5) {
     if (!this.map) return;
 
+    if (!bounds || isNaN(bounds.north) || isNaN(bounds.south) || isNaN(bounds.east) || isNaN(bounds.west)) {
+      this.logger.error("Invalid bounds provided to addTileOverlay:", bounds);
+      return;
+    }
+
     const imageBounds = {
       north: bounds.north,
       south: bounds.south,
@@ -83,16 +88,40 @@ export class GoogleMap {
    * @param {Array} coordinates - Array of [longitude, latitude] pairs
    */
   drawRoute(coordinates) {
+    this.logger.log("drawRoute called with", coordinates?.length, "coordinates");
     if (!this.map) {
-      // If map is not initialized, we can't draw. 
-      // In this version, initMap should be called before drawRoute.
       this.logger.error("Map is not initialized. Cannot draw route.");
       return;
     }
 
-    // Convert coordinates to Google LatLng objects
-    const path = coordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
+    if (!coordinates || !Array.isArray(coordinates) || coordinates.length === 0) {
+      this.logger.warn("No coordinates provided to drawRoute.");
+      return;
+    }
 
+    // Convert coordinates to Google LatLng objects, filtering out invalid ones
+    const path = coordinates
+      .map((coord, idx) => {
+        if (!Array.isArray(coord) || coord.length < 2) {
+          this.logger.warn(`Invalid coordinate format at index ${idx}:`, coord);
+          return null;
+        }
+        const lat = Number(coord[1]);
+        const lng = Number(coord[0]);
+        if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+          this.logger.warn(`Invalid coordinate values at index ${idx}: lat=${coord[1]}, lng=${coord[0]}`);
+          return null;
+        }
+        return { lat, lng };
+      })
+      .filter(p => p !== null);
+
+    if (path.length === 0) {
+      this.logger.error("No valid coordinates to draw route.");
+      return;
+    }
+
+    this.logger.log("Drawing polyline with", path.length, "valid points");
     const polyline = new google.maps.Polyline({
       path: path,
       geodesic: true,
@@ -106,20 +135,28 @@ export class GoogleMap {
     // Fit the map to the bounds of the route
     const bounds = new google.maps.LatLngBounds();
     path.forEach(point => bounds.extend(point));
-    this.map.fitBounds(bounds);
+    
+    if (!bounds.isEmpty()) {
+      this.map.fitBounds(bounds);
+    }
 
-    // Add markers for start and end points
+    // Add markers for start and end points with extra safety
     if (path.length > 0) {
-      new google.maps.Marker({
-        position: path[0],
-        map: this.map,
-        title: 'Start'
-      });
-      new google.maps.Marker({
-        position: path[path.length - 1],
-        map: this.map,
-        title: 'End'
-      });
+      this.logger.log("Adding markers at", path[0], "and", path[path.length - 1]);
+      try {
+        new google.maps.Marker({
+          position: path[0],
+          map: this.map,
+          title: 'Start'
+        });
+        new google.maps.Marker({
+          position: path[path.length - 1],
+          map: this.map,
+          title: 'End'
+        });
+      } catch (e) {
+        this.logger.error("Failed to add start/end markers:", e);
+      }
     }
   }
 
@@ -127,38 +164,76 @@ export class GoogleMap {
    * Show all routes from a directions result
    */
   setDirections(directionsResult) {
+    this.logger.log("setDirections called");
     if (!this.map) return;
     this.clearDirections();
     
+    if (!directionsResult || !directionsResult.routes || directionsResult.routes.length === 0) {
+      this.logger.warn("No valid routes in directionsResult.");
+      return;
+    }
+
     // Create a renderer for each route
-    this.renderers = directionsResult.routes.map((route, index) => {
-      const renderer = new google.maps.DirectionsRenderer({
-        map: this.map,
-        directions: directionsResult,
-        routeIndex: index,
-        suppressMarkers: index > 0,
-        preserveViewport: index > 0,
-        polylineOptions: {
-          strokeColor: index === 0 ? '#4285F4' : '#999999',
-          strokeOpacity: index === 0 ? 0.9 : 0.5,
-          strokeWeight: index === 0 ? 6 : 4,
-          zIndex: index === 0 ? 100 : 1
+    try {
+      this.renderers = directionsResult.routes.map((route, index) => {
+        const renderer = new google.maps.DirectionsRenderer({
+          map: this.map,
+          directions: directionsResult,
+          routeIndex: index,
+          suppressMarkers: index > 0,
+          preserveViewport: index > 0,
+          polylineOptions: {
+            strokeColor: index === 0 ? '#4285F4' : '#999999',
+            strokeOpacity: index === 0 ? 0.9 : 0.5,
+            strokeWeight: index === 0 ? 6 : 4,
+            zIndex: index === 0 ? 100 : 1
+          }
+        });
+        
+        if (index === 0) {
+          this.directionsRenderer = renderer;
         }
+        
+        return renderer;
       });
-      
-      if (index === 0) {
-        this.directionsRenderer = renderer;
+    } catch (e) {
+      this.logger.error("Error creating DirectionsRenderer:", e);
+      // If DirectionsRenderer fails, try to fall back to drawRoute for the first route
+      if (directionsResult.routes[0] && directionsResult.routes[0].overview_path) {
+        this.logger.log("Falling back to drawRoute due to DirectionsRenderer error");
+        const coords = directionsResult.routes[0].overview_path.map(p => [p.lng(), p.lat()]);
+        this.drawRoute(coords);
       }
-      
-      return renderer;
-    });
+      return;
+    }
 
     // Fit bounds to all routes
-    if (directionsResult.routes.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
-      directionsResult.routes.forEach(route => {
-        route.overview_path.forEach(point => bounds.extend(point));
-      });
+    const bounds = new google.maps.LatLngBounds();
+    let hasPoints = false;
+
+    directionsResult.routes.forEach(route => {
+      if (route.overview_path) {
+        route.overview_path.forEach(point => {
+          if (point) {
+            let lat, lng;
+            if (typeof point.lat === 'function') {
+              lat = point.lat();
+              lng = point.lng();
+            } else {
+              lat = point.lat;
+              lng = point.lng;
+            }
+
+            if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+              bounds.extend(point);
+              hasPoints = true;
+            }
+          }
+        });
+      }
+    });
+
+    if (hasPoints && !bounds.isEmpty()) {
       this.map.fitBounds(bounds);
     }
   }

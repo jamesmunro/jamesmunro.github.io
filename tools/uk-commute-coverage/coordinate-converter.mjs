@@ -49,8 +49,19 @@ export async function latLonToBng(lat, lon) {
   if (!proj4) {
     throw new Error('proj4 library is not loaded.');
   }
-  const [easting, northing] = proj4('EPSG:4326', 'EPSG:27700', [lon, lat]);
-  return { easting, northing };
+  
+  const numLat = Number(lat);
+  const numLon = Number(lon);
+  
+  if (isNaN(numLat) || isNaN(numLon)) {
+    return { easting: NaN, northing: NaN };
+  }
+
+  const [easting, northing] = proj4('EPSG:4326', 'EPSG:27700', [numLon, numLat]);
+  return { 
+    easting: typeof easting === 'number' ? easting : NaN, 
+    northing: typeof northing === 'number' ? northing : NaN 
+  };
 }
 
 /**
@@ -143,8 +154,19 @@ export async function bngToLatLon(easting, northing) {
   if (!proj4) {
     throw new Error('proj4 library is not loaded.');
   }
-  const [lon, lat] = proj4('EPSG:27700', 'EPSG:4326', [easting, northing]);
-  return { lat, lon };
+
+  const numEasting = Number(easting);
+  const numNorthing = Number(northing);
+
+  if (isNaN(numEasting) || isNaN(numNorthing)) {
+    return { lat: NaN, lon: NaN };
+  }
+
+  const [lon, lat] = proj4('EPSG:27700', 'EPSG:4326', [numEasting, numNorthing]);
+  return { 
+    lat: typeof lat === 'number' ? lat : NaN, 
+    lon: typeof lon === 'number' ? lon : NaN 
+  };
 }
 
 /**

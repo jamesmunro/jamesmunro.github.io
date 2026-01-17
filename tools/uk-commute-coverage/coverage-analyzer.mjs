@@ -217,9 +217,14 @@ export class CoverageAnalyzer {
       let sampledPoints;
       if (startPostcode === endPostcode) {
         this.updateProgress(40, 'Single postcode - sampling location...');
+        const lat = Number(startCoords.lat());
+        const lng = Number(startCoords.lng());
+        if (isNaN(lat) || isNaN(lng)) {
+          throw new Error('Invalid coordinates for single postcode sampling');
+        }
         sampledPoints = [{
-          lat: startCoords.lat(),
-          lng: startCoords.lng(),
+          lat: lat,
+          lng: lng,
           distance: 0
         }];
       } else {
@@ -263,7 +268,14 @@ export class CoverageAnalyzer {
     return new Promise((resolve, reject) => {
       geocoder.geocode({ address: `${postcode}, UK` }, (results, status) => {
         if (status === 'OK' && results[0]) {
-          resolve(results[0].geometry.location);
+          const location = results[0].geometry.location;
+          const lat = location.lat();
+          const lng = location.lng();
+          if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+            reject(new Error(`Geocoding returned invalid coordinates for ${postcode}`));
+            return;
+          }
+          resolve(location);
         } else {
           reject(new Error(`Geocoding failed for ${postcode}: ${status}`));
         }
@@ -324,6 +336,10 @@ export class CoverageAnalyzer {
       const point = sampledPoints[i];
       let coverage = null;
       try {
+        if (isNaN(point.lat) || isNaN(point.lng)) {
+          throw new Error('Invalid coordinates (NaN)');
+        }
+        
         coverage = await this.coverageAdapter.getCoverageFromCoordinates(point.lat, point.lng);
         
         if (tileNetwork) {

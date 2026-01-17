@@ -57,11 +57,11 @@ class ChartRenderer {
 
     const datasets = networks.map(network => {
       const data = coverageResults.map(result => ({
-        x: result.point.distance / 1000, // Convert to km
+        x: (result.point.distance || 0) / 1000, // Convert to km
         y: this.getSignalLevel(result.coverage?.networks?.[network]),
         postcode: result.postcode,
-        lat: result.point.lat,
-        lng: result.point.lng
+        lat: typeof result.point.lat === 'number' ? result.point.lat : NaN,
+        lng: typeof result.point.lng === 'number' ? result.point.lng : NaN
       }));
 
       return {
@@ -183,7 +183,9 @@ class ChartRenderer {
               afterLabel: function(context) {
                 const point = context.raw;
                 const postcodeLine = point.postcode ? `Postcode: ${point.postcode}\n` : '';
-                return `${postcodeLine}Lat: ${point.lat.toFixed(4)}, Lng: ${point.lng.toFixed(4)}`;
+                const latStr = (typeof point.lat === 'number' && !isNaN(point.lat)) ? point.lat.toFixed(4) : 'N/A';
+                const lngStr = (typeof point.lng === 'number' && !isNaN(point.lng)) ? point.lng.toFixed(4) : 'N/A';
+                return `${postcodeLine}Lat: ${latStr}, Lng: ${lngStr}`;
               }
             }
           },

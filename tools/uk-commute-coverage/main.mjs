@@ -75,7 +75,14 @@ if (previewBtn) {
               
               // Update Analyzer State
               const selectedRoute = route.fullResult.routes[index];
-              const newCoordinates = selectedRoute.overview_path.map(latLng => [latLng.lng(), latLng.lat()]);
+              const newCoordinates = selectedRoute.overview_path
+                .map(latLng => {
+                  const lat = latLng.lat();
+                  const lng = latLng.lng();
+                  return (isNaN(lat) || isNaN(lng)) ? null : [lng, lat];
+                })
+                .filter(c => c !== null);
+              
               analyzer.currentRouteCoordinates = newCoordinates;
               if (analyzer.lastRouteResult) {
                 analyzer.lastRouteResult.coordinates = newCoordinates;
