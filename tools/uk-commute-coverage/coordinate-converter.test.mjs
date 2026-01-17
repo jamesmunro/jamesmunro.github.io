@@ -4,13 +4,22 @@ import * as converter from './coordinate-converter.mjs';
 
 test('Coordinate Converter - Reverse Conversion', async (t) => {
   await t.test('tileToBngBounds should return correct BNG bounds', () => {
-    // Zoom 10, resolution 5.6, tile size 256 -> tile span = 1433.6
+    // Zoom 10, tile span = 1000
     // Tile (300, 400)
+    // ORIGIN_X = -183000, ORIGIN_Y = -122000
     const bounds = converter.tileToBngBounds(300, 400, 10);
-    assert.strictEqual(bounds.west, 300 * 1433.6);
-    assert.strictEqual(bounds.south, 400 * 1433.6);
-    assert.strictEqual(bounds.east, 301 * 1433.6);
-    assert.strictEqual(bounds.north, 401 * 1433.6);
+    assert.strictEqual(bounds.west, 300 * 1000 - 183000);
+    assert.strictEqual(bounds.south, 400 * 1000 - 122000);
+    assert.strictEqual(bounds.east, 301 * 1000 - 183000);
+    assert.strictEqual(bounds.north, 401 * 1000 - 122000);
+  });
+
+  await t.test('latLonToTile should return correct indices for London', async () => {
+    // London: 51.5074, -0.1278
+    // Matches example in GEO.md: { x: 713, y: 302, z: 10 }
+    const tile = await converter.latLonToTile(51.5074, -0.1278, 10);
+    assert.strictEqual(tile.tileX, 713);
+    assert.strictEqual(tile.tileY, 302);
   });
 
   await t.test('bngToLatLon and latLonToBng should be near-reciprocal', async () => {
