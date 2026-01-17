@@ -87,7 +87,70 @@ function getTotalDistance(coordinates) {
   return total;
 }
 
+/**
+ * Sample a specific number of points evenly along a route
+ * @param {Array} coordinates - Array of [longitude, latitude] pairs from route
+ * @param {number} targetSamples - Target number of sample points (default 150)
+ * @returns {Array} Array of sampled points with {lat, lng, distance}
+ */
+function sampleRouteByCount(coordinates, targetSamples = 150) {
+  if (!coordinates || coordinates.length < 2) {
+    throw new Error('Route must have at least 2 points');
+  }
+
+  // Build segments with cumulative distances
+  const segments = [];
+  let cumulativeDistance = 0;
+
+  for (let i = 0; i < coordinates.length - 1; i++) {
+    const segmentDist = haversineDistance(coordinates[i], coordinates[i + 1]);
+    if (segmentDist > 0) {
+      segments.push({
+        start: coordinates[i],
+        end: coordinates[i + 1],
+        startDist: cumulativeDistance,
+        endDist: cumulativeDistance + segmentDist,
+        length: segmentDist
+      });
+      cumulativeDistance += segmentDist;
+    }
+  }
+
+  const totalDistance = cumulativeDistance;
+  const points = [];
+
+  // Sample exactly targetSamples points
+  for (let i = 0; i < targetSamples; i++) {
+    const targetDistance = (i / (targetSamples - 1)) * totalDistance;
+
+    // Find which segment this distance falls into
+    const segment = segments.find(s => targetDistance >= s.startDist && targetDistance <= s.endDist);
+
+    if (segment) {
+      // Interpolate within this segment
+      const distanceIntoSegment = targetDistance - segment.startDist;
+      const fraction = segment.length > 0 ? distanceIntoSegment / segment.length : 0;
+
+      points.push({
+        lat: segment.start[1] + (segment.end[1] - segment.start[1]) * fraction,
+        lng: segment.start[0] + (segment.end[0] - segment.start[0]) * fraction,
+        distance: targetDistance
+      });
+    } else {
+      // Edge case: should only happen for last point at total distance
+      const lastSegment = segments[segments.length - 1];
+      points.push({
+        lat: lastSegment.end[1],
+        lng: lastSegment.end[0],
+        distance: totalDistance
+      });
+    }
+  }
+
+  return points;
+}
+
 // Export for use in other modules and tests
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { haversineDistance, sampleRoute, getTotalDistance };
+  module.exports = { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance };
 }

@@ -276,11 +276,9 @@
 ├── index.md                     # Tool UI page (form + embedded styles/scripts)
 ├── coverage-analyzer.js         # Main orchestration &amp; workflow
 ├── route-sampler.js            # Geographic calculations (haversine, interpolation)
-├── coverage-adapter.js         # Data source abstraction layer
+├── coverage-adapter.js         # Ofcom API integration
 ├── chart-renderer.js           # Chart.js visualization wrapper
-├── coverage-analyzer.test.js   # Unit tests (30 tests)
-├── demo-data.json              # Mock coverage data for demo mode
-├── proxy-example.js            # Optional Cloudflare Workers proxy template
+├── coverage-analyzer.test.js   # Unit tests
 └── CLAUDE.md                   # This file
 </code></pre>
 <h3>Data Flow</h3>
@@ -296,7 +294,7 @@ Route Sampling → Sample points every 500m (haversine distance)
     ↓
 Postcodes.io API → Reverse geocode sampled points
     ↓
-Coverage Adapter → Get coverage data (demo/proxy/direct)
+Ofcom API → Get coverage data for each postcode
     ↓
 Chart Renderer → Display 1D visualization + summary table
 </code></pre>
@@ -308,14 +306,13 @@ Chart Renderer → Display 1D visualization + summary table
 <li><strong>Always includes</strong>: First point + sampled points along route</li>
 <li><strong>Exported functions</strong>: <code>haversineDistance()</code>, <code>sampleRoute()</code>, <code>getTotalDistance()</code></li>
 </ul>
-<h3>2. Coverage Adapter Pattern (coverage-adapter.js)</h3>
-<p>Flexible data source abstraction supporting:</p>
+<h3>2. Coverage Adapter (coverage-adapter.js)</h3>
+<p>Fetches mobile coverage data from the Ofcom API:</p>
 <ul>
-<li><strong>Demo mode</strong>: Uses local <code>demo-data.json</code> (no API calls)</li>
-<li><strong>Proxy mode</strong>: User-deployed CORS proxy to Ofcom API</li>
-<li><strong>Direct mode</strong>: Direct Ofcom API calls (may fail due to CORS)</li>
+<li>Queries <code>https://api.ofcom.org.uk/mobile/coverage?postcode={postcode}</code></li>
+<li>Transforms Ofcom response to normalized format with EE, Vodafone, O2, Three</li>
+<li>Handles errors gracefully with user-friendly messages</li>
 </ul>
-<p>Includes rate limiting and batch processing to respect API limits.</p>
 <h3>3. Chart Renderer (chart-renderer.js)</h3>
 <ul>
 <li>Wraps Chart.js with tool-specific configuration</li>
@@ -348,7 +345,7 @@ Chart Renderer → Display 1D visualization + summary table
 <li>Directions API: Returns GeoJSON route between coordinates</li>
 </ul>
 </li>
-<li><strong>Ofcom API</strong>: Optional, for real coverage data (CORS may require proxy)</li>
+<li><strong>Ofcom API</strong>: Coverage data per postcode</li>
 </ul>
 <h3>Libraries</h3>
 <ul>
@@ -381,12 +378,6 @@ Chart Renderer → Display 1D visualization + summary table
 <li>Focus on algorithmic correctness (distance, sampling accuracy)</li>
 </ul>
 <h2>Common Development Tasks</h2>
-<h3>Adding New Coverage Data Sources</h3>
-<ol>
-<li>Add new option to <code>coverage-adapter.js</code> → <code>getCoverage()</code> method</li>
-<li>Update dropdown in <code>index.md</code> → <code>&lt;select id=&quot;data-source&quot;&gt;</code></li>
-<li>Add corresponding documentation in help text</li>
-</ol>
 <h3>Modifying Sampling Interval</h3>
 <p>Currently fixed at 500m. To make configurable:</p>
 <ol>
@@ -403,7 +394,7 @@ Chart Renderer → Display 1D visualization + summary table
 </ul>
 <h3>Adding New Networks</h3>
 <ol>
-<li>Update <code>demo-data.json</code> with new network data</li>
+<li>Update <code>transformOfcomData()</code> in <code>coverage-adapter.js</code></li>
 <li>Add dataset in <code>chart-renderer.js:createChart()</code></li>
 <li>Update summary table generation in <code>coverage-analyzer.js</code></li>
 </ol>

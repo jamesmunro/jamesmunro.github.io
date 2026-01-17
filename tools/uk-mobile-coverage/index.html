@@ -281,16 +281,8 @@
 <input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org" required autocomplete="off">
 <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a></small>
 </div></p>
-<p><div class="form-group">
-<label for="data-source">Coverage Data Source</label>
-<select id="data-source">
-<option value="demo" selected>Demo Mode (mock data)</option>
-<option value="proxy">Custom Proxy (requires setup)</option>
-<option value="ofcom-direct">Direct Ofcom API (may not work due to CORS)</option>
-</select>
-<small>Sample interval: 500m (fixed)</small>
-</div></p>
-<p><button type="submit" class="btn-primary">Analyze Route Coverage</button></p>
+<p><button type="submit" class="btn-primary">Analyze Route Coverage</button>
+<small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage data</small></p>
   </form>
   <!-- Step-by-Step Progress Indicator -->
   <div id="progress" class="progress-container" style="display:none">
@@ -469,11 +461,11 @@
   margin-bottom: 1rem;
 }
 </style>
-<script src="/assets/libs/chart.js/chart.min.js"></script>
-<script src="route-sampler.js"></script>
-<script src="coverage-adapter.js"></script>
-<script src="chart-renderer.js"></script>
-<script src="coverage-analyzer.js"></script>
+<script src="/assets/libs/chart.js/chart.min.js?v=mki9u8q1"></script>
+<script src="route-sampler.js?v=mki9u8q1"></script>
+<script src="coverage-adapter.js?v=mki9u8q1"></script>
+<script src="chart-renderer.js?v=mki9u8q1"></script>
+<script src="coverage-analyzer.js?v=mki9u8q1"></script>
 
 
     </main>
