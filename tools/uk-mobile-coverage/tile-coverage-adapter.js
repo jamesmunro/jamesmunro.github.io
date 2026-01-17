@@ -3,6 +3,7 @@
  * Fetches coverage data from Ofcom tile API and extracts coverage colors
  */
 
+// Use const in an IIFE to avoid redeclaration errors when script is reloaded
 const TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
 const TILE_VERSION = '42';
 const STANDARD_ZOOM = 10;
@@ -92,9 +93,18 @@ class TileCoverageAdapter {
   async fetchTile(mnoId, tileX, tileY) {
     const cacheKey = `${mnoId}-${STANDARD_ZOOM}-${tileX}-${tileY}-v${TILE_VERSION}`;
 
-    // Check localStorage cache first
-    if (this.tileCache[cacheKey]) {
+    // Check in-memory cache first (actual Blob objects)
+    if (this.tileCache[cacheKey] instanceof Blob) {
       return this.tileCache[cacheKey];
+    }
+
+    // If we have metadata but no blob, try to load from IndexedDB
+    if (this.tileCache[cacheKey] && this.tileCache[cacheKey].timestamp) {
+      const blob = await this.loadTileFromIndexedDB(cacheKey);
+      if (blob) {
+        this.tileCache[cacheKey] = blob; // Update in-memory cache
+        return blob;
+      }
     }
 
     const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`;
@@ -289,6 +299,47 @@ class TileCoverageAdapter {
   }
 
   /**
+   * Load tile blob from IndexedDB by cache key
+   * @param {string} key - Cache key (e.g., "mno1-10-0-0-v42")
+   * @returns {Promise<Blob|null>} Blob if found, null otherwise
+   */
+  loadTileFromIndexedDB(key) {
+    return new Promise((resolve) => {
+      try {
+        if (!window.indexedDB) {
+          resolve(null);
+          return;
+        }
+
+        const request = indexedDB.open('tile-cache', 1);
+
+        request.onerror = () => {
+          resolve(null);
+        };
+
+        request.onsuccess = (event) => {
+          const db = event.target.result;
+          const transaction = db.transaction(['tiles'], 'readonly');
+          const store = transaction.objectStore('tiles');
+          const query = store.get(key);
+
+          query.onsuccess = () => {
+            const result = query.result;
+            resolve(result && result.blob ? result.blob : null);
+          };
+
+          query.onerror = () => {
+            resolve(null);
+          };
+        };
+      } catch (error) {
+        console.warn('Error loading tile from IndexedDB:', error);
+        resolve(null);
+      }
+    });
+  }
+
+  /**
    * Save tile blob to IndexedDB for better storage
    */
   saveTileToIndexedDB(key, blob) {
@@ -339,4 +390,9 @@ class TileCoverageAdapter {
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { TileCoverageAdapter };
+}
+
+// Export to global scope for browser
+if (typeof window !== 'undefined') {
+  window.TileCoverageAdapter = TileCoverageAdapter;
 }

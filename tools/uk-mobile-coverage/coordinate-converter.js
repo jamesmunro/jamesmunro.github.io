@@ -4,10 +4,14 @@
  * Also handles conversion to tile coordinates and pixel positions
  */
 
-// proj4 is imported in the browser via CDN or ES module
-// For Node.js testing, we need to require it
+// Use proj4 from browser CDN or Node.js require
 let proj4;
-if (typeof module !== 'undefined' && module.exports) {
+
+if (typeof window !== 'undefined' && window.proj4) {
+  // Browser environment: use proj4 from CDN
+  proj4 = window.proj4;
+} else if (typeof module !== 'undefined' && module.exports) {
+  // Node.js environment: require proj4
   try {
     proj4 = require('proj4');
   } catch (e) {
