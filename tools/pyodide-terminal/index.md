@@ -65,10 +65,10 @@ title: Pyodide Terminal
 </p>
 
 <!-- Load xterm.js -->
-<script src="../../assets/libs/xterm/xterm.js"></script>
-<script src="../../assets/libs/xterm/xterm-addon-fit.js"></script>
+<script src="{{ '../../assets/libs/xterm/xterm.js' | cacheBust }}"></script>
+<script src="{{ '../../assets/libs/xterm/xterm-addon-fit.js' | cacheBust }}"></script>
 <!-- Load Pyodide -->
-<script src="../../assets/libs/pyodide/pyodide.js"></script>
+<script src="{{ '../../assets/libs/pyodide/pyodide.js' | cacheBust }}"></script>
 
 <script>
   // Global error handler to catch issues early

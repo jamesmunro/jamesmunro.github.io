@@ -37,7 +37,7 @@ hero_subtitle: Decode JSON Web Tokens right in the browser. Signatures are not v
 
 
 <script type="module">
-  import { decodeToken } from "./jwt-reader.js";
+  import { decodeToken } from "{{ './jwt-reader.js' | cacheBust }}";
 
   const jwtInput = document.getElementById("jwt-input");
   const jwtHeader = document.getElementById("jwt-header");
