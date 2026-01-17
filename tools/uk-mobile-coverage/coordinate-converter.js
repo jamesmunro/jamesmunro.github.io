@@ -26,7 +26,19 @@ const RESOLUTIONS = [5734.4, 2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22
 const TILE_SIZE = 256;
 const ORIGIN_X = 0;
 const ORIGIN_Y = 0;
-const STANDARD_ZOOM = 10;
+
+// Resolve STANDARD_ZOOM from shared constants if available (browser global or Node module), fallback to 10
+let STANDARD_ZOOM = 10;
+try {
+  if (typeof window !== 'undefined' && window.UK_MOBILE_COVERAGE_CONSTANTS && window.UK_MOBILE_COVERAGE_CONSTANTS.STANDARD_ZOOM) {
+    STANDARD_ZOOM = window.UK_MOBILE_COVERAGE_CONSTANTS.STANDARD_ZOOM;
+  } else if (typeof require === 'function') {
+    const c = require('./constants');
+    if (c && c.STANDARD_ZOOM) STANDARD_ZOOM = c.STANDARD_ZOOM;
+  }
+} catch (e) {
+  // ignore and use default
+}
 
 /**
  * Define BNG projection for proj4

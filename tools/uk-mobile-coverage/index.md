@@ -216,6 +216,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 <script src="{{ '/assets/libs/chart.js/chart.min.js' | cacheBust }}"></script>
+<script src="{{ 'constants.js' | cacheBust }}"></script>
 <script src="{{ 'coordinate-converter.js' | cacheBust }}"></script>
 <script src="{{ 'pixel-extractor.js' | cacheBust }}"></script>
 <script src="{{ 'route-sampler.js' | cacheBust }}"></script>
