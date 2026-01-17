@@ -14,12 +14,14 @@ export class CoverageAnalyzer {
     this.coverageAdapter = null;
     this.currentStep = 0;
     this.steps = [
+      'Loading Google Maps API',
       'Validating postcodes',
       'Converting postcodes to coordinates',
-      'Fetching route from OpenRouteService',
+      'Fetching route from Google Directions',
       'Sampling points along route',
       'Getting coverage data'
     ];
+    this.googleMapsLoaded = false;
   }
 
   /**
@@ -36,7 +38,7 @@ export class CoverageAnalyzer {
   loadFormValues() {
     const startInput = document.getElementById('start');
     const endInput = document.getElementById('end');
-    const apiKeyInput = document.getElementById('ors-api-key');
+    const apiKeyInput = document.getElementById('google-maps-api-key');
     const profileInput = document.getElementById('route-profile');
 
     if (startInput && localStorage.getItem('route-start')) {
@@ -45,8 +47,8 @@ export class CoverageAnalyzer {
     if (endInput && localStorage.getItem('route-end')) {
       endInput.value = localStorage.getItem('route-end');
     }
-    if (apiKeyInput && localStorage.getItem('ors-api-key')) {
-      apiKeyInput.value = localStorage.getItem('ors-api-key');
+    if (apiKeyInput && localStorage.getItem('google-maps-api-key')) {
+      apiKeyInput.value = localStorage.getItem('google-maps-api-key');
     }
     if (profileInput && localStorage.getItem('route-profile')) {
       profileInput.value = localStorage.getItem('route-profile');
@@ -56,7 +58,7 @@ export class CoverageAnalyzer {
   saveFormValues(startPostcode, endPostcode, apiKey, profile) {
     localStorage.setItem('route-start', startPostcode);
     localStorage.setItem('route-end', endPostcode);
-    localStorage.setItem('ors-api-key', apiKey);
+    localStorage.setItem('google-maps-api-key', apiKey);
     if (profile) localStorage.setItem('route-profile', profile);
   }
 
@@ -69,7 +71,7 @@ export class CoverageAnalyzer {
 
     const startPostcode = document.getElementById('start').value.trim().toUpperCase();
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
-    const apiKey = document.getElementById('ors-api-key').value.trim();
+    const apiKey = document.getElementById('google-maps-api-key').value.trim();
     const profile = document.getElementById('route-profile').value;
 
     this.saveFormValues(startPostcode, endPostcode, apiKey, profile);
@@ -86,21 +88,45 @@ export class CoverageAnalyzer {
     }
   }
 
+  async loadGoogleMapsApi(apiKey) {
+    if (this.googleMapsLoaded && window.google && window.google.maps) {
+      return window.google.maps;
+    }
+
+    if (!apiKey) {
+      throw new Error('Google Maps API key is required');
+    }
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        this.googleMapsLoaded = true;
+        resolve(window.google.maps);
+      };
+      script.onerror = () => reject(new Error('Failed to load Google Maps API. Check your API key.'));
+      document.head.appendChild(script);
+    });
+  }
+
   /**
    * Fetches the route between two postcodes.
-   * This is a separate method so it can be used for visualization before full analysis.
    */
-  async getRoute(startPostcode, endPostcode, apiKey, profile = 'driving-car') {
-    // Step 1: Validate postcodes
+  async getRoute(startPostcode, endPostcode, apiKey, profile = 'DRIVING') {
+    await this.loadGoogleMapsApi(apiKey);
+
+    // Step 2: Validate postcodes
     this.validatePostcode(startPostcode);
     this.validatePostcode(endPostcode);
 
-    // Step 2: Convert postcodes to coordinates
+    // Step 3: Convert postcodes to coordinates
     const startCoords = await this.postcodeToCoordinates(startPostcode);
     const endCoords = await this.postcodeToCoordinates(endPostcode);
 
-    // Step 3: Fetch route
-    return this.fetchRoute(startCoords, endCoords, apiKey, profile);
+    // Step 4: Fetch route
+    return this.fetchRoute(startCoords, endCoords, profile);
   }
 
   async analyzeRoute(startPostcode, endPostcode, apiKey, profile) {
@@ -109,40 +135,48 @@ export class CoverageAnalyzer {
 
     try {
       this.setStep(0);
-      this.updateProgress(10, 'Validating postcodes...');
-      this.completeStep(0); // Visually completes validation step
+      this.updateProgress(5, 'Loading Google Maps API...');
+      await this.loadGoogleMapsApi(apiKey);
+      this.completeStep(0);
 
       this.setStep(1);
-      this.updateProgress(20, 'Converting postcodes to coordinates...');
-      this.completeStep(1); // Visually completes geocoding step
+      this.updateProgress(10, 'Validating postcodes...');
+      this.validatePostcode(startPostcode);
+      this.validatePostcode(endPostcode);
+      this.completeStep(1);
 
       this.setStep(2);
-      this.updateProgress(30, 'Fetching route from OpenRouteService...');
-      const route = await this.getRoute(startPostcode, endPostcode, apiKey, profile);
+      this.updateProgress(20, 'Converting postcodes to coordinates...');
+      const startCoords = await this.postcodeToCoordinates(startPostcode);
+      const endCoords = await this.postcodeToCoordinates(endPostcode);
       this.completeStep(2);
 
-      // Step 4: Sample route
       this.setStep(3);
+      this.updateProgress(30, 'Fetching route from Google Directions...');
+      const route = await this.fetchRoute(startCoords, endCoords, profile);
+      this.completeStep(3);
+
+      // Step 4: Sample route
+      this.setStep(4);
       let sampledPoints;
       if (startPostcode === endPostcode) {
         this.updateProgress(40, 'Single postcode - sampling location...');
-        const startCoords = await this.postcodeToCoordinates(startPostcode);
         sampledPoints = [{
-          lat: startCoords.latitude,
-          lng: startCoords.longitude,
+          lat: startCoords.lat(),
+          lng: startCoords.lng(),
           distance: 0
         }];
       } else {
         sampledPoints = sampleRouteByCount(route.coordinates, ROUTE_SAMPLE_COUNT);
       }
       this.updateProgress(40, `Sampling ${sampledPoints.length} point(s) along route...`);
-      this.completeStep(3);
+      this.completeStep(4);
 
       // Step 5: Get coverage data
-      this.setStep(4);
+      this.setStep(5);
       this.coverageAdapter = new TileCoverageAdapter();
       const coverageResults = await this.getCoverageData(sampledPoints);
-      this.completeStep(4);
+      this.completeStep(5);
 
       // Render results
       this.updateProgress(95, 'Rendering results...');
@@ -170,53 +204,49 @@ export class CoverageAnalyzer {
   }
 
   async postcodeToCoordinates(postcode) {
-    const url = `https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`;
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      if (!response.ok || data.status !== 200) {
-        throw new Error(`Postcode not found: ${postcode}`);
-      }
-      return {
-        longitude: data.result.longitude,
-        latitude: data.result.latitude
-      };
-    } catch (error) {
-      if (error.message.includes('not found')) {
-        throw error;
-      }
-      throw new Error(`Failed to geocode postcode ${postcode}: ${error.message}`);
-    }
+    const geocoder = new google.maps.Geocoder();
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ address: `${postcode}, UK` }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          resolve(results[0].geometry.location);
+        } else {
+          reject(new Error(`Geocoding failed for ${postcode}: ${status}`));
+        }
+      });
+    });
   }
 
-  async fetchRoute(start, end, apiKey, profile = 'driving-car') {
-    if (!apiKey) {
-      throw new Error('OpenRouteService API key required');
-    }
-    const url = `https://api.openrouteservice.org/v2/directions/${profile}?start=${start.longitude},${start.latitude}&end=${end.longitude},${end.latitude}`;
-    try {
-      const response = await fetch(url, {
-        headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' }
+  async fetchRoute(start, end, profile = 'DRIVING') {
+    const directionsService = new google.maps.DirectionsService();
+    
+    // Map internal profile names to Google Travel Modes
+    const modeMap = {
+      'driving-car': google.maps.TravelMode.DRIVING,
+      'driving-hgv': google.maps.TravelMode.DRIVING,
+      'cycling-regular': google.maps.TravelMode.BICYCLING,
+      'cycling-road': google.maps.TravelMode.BICYCLING,
+      'foot-walking': google.maps.TravelMode.WALKING,
+      'foot-hiking': google.maps.TravelMode.WALKING,
+    };
+    
+    const travelMode = modeMap[profile] || google.maps.TravelMode.DRIVING;
+
+    return new Promise((resolve, reject) => {
+      directionsService.route({
+        origin: start,
+        destination: end,
+        travelMode: travelMode,
+      }, (result, status) => {
+        if (status === 'OK') {
+          // overview_path is an array of LatLngs
+          const coordinates = result.routes[0].overview_path.map(latLng => [latLng.lng(), latLng.lat()]);
+          const distance = result.routes[0].legs[0].distance.value; // in meters
+          resolve({ coordinates, distance, fullResult: result });
+        } else {
+          reject(new Error(`Directions request failed: ${status}`));
+        }
       });
-      if (!response.ok) {
-        if (response.status === 401) throw new Error('Invalid OpenRouteService API key');
-        if (response.status === 404) throw new Error('Route not found between these postcodes');
-        throw new Error(`Route request failed: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      if (!data.features || !data.features[0] || !data.features[0].geometry) {
-        throw new Error('Invalid route response from OpenRouteService');
-      }
-      return {
-        coordinates: data.features[0].geometry.coordinates,
-        distance: data.features[0].properties.segments[0].distance
-      };
-    } catch (error) {
-      if (error.message.includes('API key') || error.message.includes('Route not found')) {
-        throw error;
-      }
-      throw new Error(`Failed to fetch route: ${error.message}`);
-    }
+    });
   }
 
   async getCoverageData(sampledPoints) {
@@ -301,13 +331,19 @@ export class CoverageAnalyzer {
 if (typeof document !== 'undefined' && document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.includes('uk-commute-coverage')) {
-      const analyzer = new CoverageAnalyzer();
-      analyzer.init();
+      const form = document.getElementById('route-form');
+      if (form) {
+        const analyzer = new CoverageAnalyzer();
+        analyzer.init();
+      }
     }
   });
 } else if (typeof document !== 'undefined') {
   if (window.location.pathname.includes('uk-commute-coverage')) {
-    const analyzer = new CoverageAnalyzer();
-    analyzer.init();
+    const form = document.getElementById('route-form');
+    if (form) {
+      const analyzer = new CoverageAnalyzer();
+      analyzer.init();
+    }
   }
 }

@@ -3,9 +3,6 @@ title: UK Commute Coverage Analyser
 hero_subtitle: Find the best network for your commute by analysing mobile data coverage along your route
 ---
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
 <div class="coverage-tool">
   <div class="intro">
     <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyse signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
@@ -28,30 +25,16 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
     <div class="form-group">
       <label for="route-profile">Travel Mode</label>
       <select id="route-profile">
-        <optgroup label="Driving">
-          <option value="driving-car">Car</option>
-          <option value="driving-hgv">HGV (Truck)</option>
-        </optgroup>
-        <optgroup label="Cycling">
-          <option value="cycling-regular">Regular Cycle</option>
-          <option value="cycling-road">Road Bike</option>
-          <option value="cycling-mountain">Mountain Bike</option>
-          <option value="cycling-electric">E-Bike</option>
-        </optgroup>
-        <optgroup label="Walking">
-          <option value="foot-walking">Walking</option>
-          <option value="foot-hiking">Hiking</option>
-        </optgroup>
-        <optgroup label="Accessibility">
-          <option value="wheelchair">Wheelchair</option>
-        </optgroup>
+        <option value="driving-car">Driving (Car)</option>
+        <option value="cycling-regular">Cycling</option>
+        <option value="foot-walking">Walking</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="ors-api-key">OpenRouteService API Key</label>
-      <input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org" required autocomplete="off">
-      <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a> | <a href="https://openrouteservice.org/dev/#/login" target="_blank" rel="noopener">Log in</a></small>
+      <label for="google-maps-api-key">Google Maps API Key</label>
+      <input type="text" id="google-maps-api-key" placeholder="Enter your Google Maps API Key" required autocomplete="off">
+      <small>Requires Geocoding, Directions, and Maps JavaScript APIs | <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Get a key here</a></small>
     </div>
 
     <div class="button-group">
