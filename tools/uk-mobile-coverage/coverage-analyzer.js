@@ -86,8 +86,19 @@ class CoverageAnalyzer {
 
       // Step 4: Sample route
       this.setStep(3);
-      const sampledPoints = sampleRouteByCount(route.coordinates, 150);
-      this.updateProgress(40, `Sampling ${sampledPoints.length} points along route...`);
+      // Guard against zero-length routes (same start/end postcode)
+      let sampledPoints;
+      if (startPostcode === endPostcode) {
+        this.updateProgress(40, 'Single postcode - sampling location...');
+        sampledPoints = [{
+          lat: startCoords.latitude,
+          lng: startCoords.longitude,
+          distance: 0
+        }];
+      } else {
+        sampledPoints = sampleRouteByCount(route.coordinates, 150);
+      }
+      this.updateProgress(40, `Sampling ${sampledPoints.length} point(s) along route...`);
       this.completeStep(3);
 
       // Step 5: Get coverage data

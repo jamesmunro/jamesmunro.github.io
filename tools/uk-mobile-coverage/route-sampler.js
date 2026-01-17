@@ -117,6 +117,16 @@ function sampleRouteByCount(coordinates, targetSamples = 150) {
   }
 
   const totalDistance = cumulativeDistance;
+  
+  // Handle zero-length routes (no valid segments)
+  if (segments.length === 0) {
+    return [{
+      lat: coordinates[0][1],
+      lng: coordinates[0][0],
+      distance: 0
+    }];
+  }
+
   const points = [];
 
   // Sample exactly targetSamples points
