@@ -28,17 +28,21 @@ const ORIGIN_X = 0;
 const ORIGIN_Y = 0;
 
 // Resolve STANDARD_ZOOM from shared constants if available (browser global or Node module), fallback to 10
-let STANDARD_ZOOM = 10;
-try {
+function getStandardZoom() {
   if (typeof window !== 'undefined' && window.UK_MOBILE_COVERAGE_CONSTANTS && window.UK_MOBILE_COVERAGE_CONSTANTS.STANDARD_ZOOM) {
-    STANDARD_ZOOM = window.UK_MOBILE_COVERAGE_CONSTANTS.STANDARD_ZOOM;
-  } else if (typeof require === 'function') {
-    const c = require('./constants');
-    if (c && c.STANDARD_ZOOM) STANDARD_ZOOM = c.STANDARD_ZOOM;
+    return window.UK_MOBILE_COVERAGE_CONSTANTS.STANDARD_ZOOM;
   }
-} catch (e) {
-  // ignore and use default
+  try {
+    if (typeof require === 'function') {
+      const c = require('./constants');
+      if (c && c.STANDARD_ZOOM) return c.STANDARD_ZOOM;
+    }
+  } catch (e) {
+    // ignore and use default
+  }
+  return 10;
 }
+const DEFAULT_ZOOM = getStandardZoom();
 
 /**
  * Define BNG projection for proj4
@@ -73,7 +77,7 @@ function latLonToBng(lat, lon) {
  * @param {number} zoom - Zoom level (0-11)
  * @returns {Object} {tileX, tileY, z}
  */
-function bngToTile(easting, northing, zoom = STANDARD_ZOOM) {
+function bngToTile(easting, northing, zoom = DEFAULT_ZOOM) {
   if (zoom < 0 || zoom > 11) {
     throw new Error(`Zoom level must be between 0 and 11, got ${zoom}`);
   }
@@ -94,7 +98,7 @@ function bngToTile(easting, northing, zoom = STANDARD_ZOOM) {
  * @param {number} zoom - Zoom level (0-11)
  * @returns {Object} {tileX, tileY, pixelX, pixelY, z}
  */
-function bngToPixelInTile(easting, northing, zoom = STANDARD_ZOOM) {
+function bngToPixelInTile(easting, northing, zoom = DEFAULT_ZOOM) {
   if (zoom < 0 || zoom > 11) {
     throw new Error(`Zoom level must be between 0 and 11, got ${zoom}`);
   }
@@ -120,7 +124,7 @@ function bngToPixelInTile(easting, northing, zoom = STANDARD_ZOOM) {
  * @param {number} zoom - Zoom level (0-11)
  * @returns {Object} {tileX, tileY, z}
  */
-function latLonToTile(lat, lon, zoom = STANDARD_ZOOM) {
+function latLonToTile(lat, lon, zoom = DEFAULT_ZOOM) {
   const { easting, northing } = latLonToBng(lat, lon);
   return bngToTile(easting, northing, zoom);
 }
@@ -132,7 +136,7 @@ function latLonToTile(lat, lon, zoom = STANDARD_ZOOM) {
  * @param {number} zoom - Zoom level (0-11)
  * @returns {Object} {tileX, tileY, pixelX, pixelY, z}
  */
-function latLonToPixelInTile(lat, lon, zoom = STANDARD_ZOOM) {
+function latLonToPixelInTile(lat, lon, zoom = DEFAULT_ZOOM) {
   const { easting, northing } = latLonToBng(lat, lon);
   return bngToPixelInTile(easting, northing, zoom);
 }
@@ -145,7 +149,7 @@ if (typeof module !== 'undefined' && module.exports) {
     bngToPixelInTile,
     latLonToTile,
     latLonToPixelInTile,
-    STANDARD_ZOOM,
+    DEFAULT_ZOOM,
     RESOLUTIONS,
     TILE_SIZE
   };
