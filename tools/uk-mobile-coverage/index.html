@@ -262,8 +262,8 @@
 
 <div class="coverage-tool">
   <div class="intro">
-    <p>Compare mobile data coverage (3G/4G/5G) from EE, Vodafone, O2, and Three along any UK route. Perfect for finding the best network for your daily commute.</p>
-    <p><strong>Note:</strong> This tool focuses on data coverage only - voice coverage is not analyzed.</p>
+    <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyze signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
+    <p><strong>How it works:</strong> Enter your route, and we'll fetch Ofcom's official coverage data and sample it along your journey. Results show coverage quality levels for each network.</p>
   </div>
   <form id="route-form">
     <div class="form-group">
@@ -282,7 +282,7 @@
 <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a></small>
 </div></p>
 <p><button type="submit" class="btn-primary">Analyze Route Coverage</button>
-<small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage data</small></p>
+<small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small></p>
   </form>
   <!-- Step-by-Step Progress Indicator -->
   <div id="progress" class="progress-container" style="display:none">
@@ -299,14 +299,14 @@
   </div>
   <!-- Network Comparison Summary -->
   <div id="summary" style="display:none">
-    <h3>Route Coverage Summary (Data Only)</h3>
+    <h3>Route Coverage Summary</h3>
     <table class="coverage-table">
       <thead>
         <tr>
           <th>Network</th>
-          <th>5G Data</th>
-          <th>4G Data</th>
-          <th>3G+ Data</th>
+          <th>Excellent</th>
+          <th>Good</th>
+          <th>Adequate</th>
           <th>Best Network?</th>
         </tr>
       </thead>
@@ -314,7 +314,7 @@
         <!-- Populated dynamically with percentages -->
       </tbody>
     </table>
-    <p><small>Voice coverage not shown - focusing on data connectivity for smartphones</small></p>
+    <p><small>Coverage levels based on Ofcom tile coverage data (variable based on location, indoor/outdoor, and network conditions)</small></p>
   </div>
   <!-- Error Display (Fail Fast) -->
   <div id="error" class="error-message" style="display:none"></div>
@@ -461,11 +461,14 @@
   margin-bottom: 1rem;
 }
 </style>
-<script src="/assets/libs/chart.js/chart.min.js?v=mki9u8q1"></script>
-<script src="route-sampler.js?v=mki9u8q1"></script>
-<script src="coverage-adapter.js?v=mki9u8q1"></script>
-<script src="chart-renderer.js?v=mki9u8q1"></script>
-<script src="coverage-analyzer.js?v=mki9u8q1"></script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
+<script src="/assets/libs/chart.js/chart.min.js?v=mkifyy5a"></script>
+<script src="coordinate-converter.js?v=mkifyy5a"></script>
+<script src="pixel-extractor.js?v=mkifyy5a"></script>
+<script src="route-sampler.js?v=mkifyy5a"></script>
+<script src="tile-coverage-adapter.js?v=mkifyy5a"></script>
+<script src="chart-renderer.js?v=mkifyy5a"></script>
+<script src="coverage-analyzer.js?v=mkifyy5a"></script>
 
 
     </main>

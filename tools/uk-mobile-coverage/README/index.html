@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> | jamesmunro.github.io</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1></h1>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<h1>UK Mobile Coverage Analyzer</h1>
+<p>A client-side web tool for analyzing mobile data coverage from UK networks (EE, Vodafone, O2, Three) along any route. Perfect for finding the best network for your daily commute.</p>
+<h2>Features</h2>
+<ul>
+<li><strong>Route Analysis</strong>: Enter any two UK postcodes and analyze coverage along the route</li>
+<li><strong>Multi-Network Comparison</strong>: Compare all 4 major UK networks simultaneously</li>
+<li><strong>Visual Feedback</strong>: Step-by-step progress indicators and real-time error reporting</li>
+<li><strong>Interactive Visualization</strong>: Line chart showing coverage levels across the route</li>
+<li><strong>Summary Statistics</strong>: Table showing best networks with coverage percentages</li>
+<li><strong>Client-Side Processing</strong>: All computations run in your browser—no server-side data storage</li>
+</ul>
+<h2>How to Use</h2>
+<ol>
+<li>Enter your start and end postcodes</li>
+<li>Provide your OpenRouteService API key (free tier available)</li>
+<li>Click &quot;Analyze Route Coverage&quot;</li>
+<li>View interactive chart and summary table showing coverage by network</li>
+</ol>
+<p>The tool samples 150 evenly-spaced points along your route and queries coverage data for each point.</p>
+<h2>Technical Architecture</h2>
+<h3>Modern Tile-Based Approach (2026)</h3>
+<p>The tool uses Ofcom's tile-based coverage API, fetching pre-rendered PNG tiles and extracting coverage information directly from pixel colors:</p>
+<pre><code>User Input (postcodes + API key)
+    ↓
+Validate postcodes
+    ↓
+Postcodes.io → Convert postcodes to coordinates
+    ↓
+OpenRouteService → Get route between coordinates
+    ↓
+Sample 150 points evenly along route
+    ↓
+For each sample point:
+    - Convert WGS84 (lat/lon) → British National Grid coordinates
+    - Calculate tile coordinates (zoom level 10)
+    - Fetch PNG tile for each of 4 operators
+    - Extract pixel color at calculated position
+    - Map color to coverage level (0-4)
+    ↓
+Aggregate coverage across all sampled points
+    ↓
+Render chart and summary table
+</code></pre>
+<h3>Module Structure</h3>
+<pre><code>tools/uk-mobile-coverage/
+├── index.md                          # Tool UI (form + styling + script tags)
+├── coverage-analyzer.js              # Main orchestration &amp; workflow
+├── route-sampler.js                  # Route interpolation (haversine distance)
+├── tile-coverage-adapter.js          # Ofcom tile API integration
+├── coordinate-converter.js           # WGS84 ↔ British National Grid conversion
+├── pixel-extractor.js                # Canvas-based color extraction
+├── chart-renderer.js                 # Chart.js visualization wrapper
+├── coverage-analyzer.test.js         # Route sampler + analyzer tests
+├── tile-api.test.js                  # Coordinate, pixel, color tests
+├── GEO.md                            # Coordinate conversion technical spec
+└── README.md                         # This file
+</code></pre>
+<h3>Key Components</h3>
+<h4>1. Route Sampling (<code>route-sampler.js</code>)</h4>
+<ul>
+<li><strong>Haversine distance</strong>: Great-circle distance calculation between GPS points</li>
+<li><strong>Linear interpolation</strong>: Samples route at fixed intervals or fixed point count</li>
+<li><strong>Functions</strong>: <code>haversineDistance()</code>, <code>sampleRoute()</code>, <code>sampleRouteByCount()</code>, <code>getTotalDistance()</code></li>
+<li><strong>Export</strong>: CommonJS (Node.js testing) + global scope (browser)</li>
+</ul>
+<h4>2. Coordinate Conversion (<code>coordinate-converter.js</code>)</h4>
+<ul>
+<li><strong>WGS84 ↔ BNG</strong>: Converts latitude/longitude to British National Grid coordinates using <code>proj4</code></li>
+<li><strong>Tile coordinates</strong>: Calculates which tile (x, y) at zoom 10 contains a given coordinate</li>
+<li><strong>Pixel position</strong>: Calculates exact pixel within a 256×256 tile</li>
+<li><strong>Precision</strong>: Accurate to ~5.6 meters at zoom level 10</li>
+<li><strong>Dependencies</strong>: <code>proj4</code> library (loads from CDN)</li>
+</ul>
+<h4>3. Tile Coverage Adapter (<code>tile-coverage-adapter.js</code>)</h4>
+<ul>
+<li><strong>Ofcom API</strong>: Fetches PNG tiles from <code>https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2/</code></li>
+<li><strong>Operators</strong>: mno1=Vodafone, mno2=O2, mno3=EE, mno4=Three</li>
+<li><strong>Caching</strong>: Tiles cached in localStorage and IndexedDB to minimize API calls</li>
+<li><strong>Color extraction</strong>: Uses Canvas API to read pixel colors from tiles</li>
+<li><strong>Color matching</strong>: Maps pixel colors to coverage levels (0-4) with ±10 RGB tolerance</li>
+</ul>
+<h4>4. Pixel Extraction (<code>pixel-extractor.js</code>)</h4>
+<ul>
+<li><strong>Canvas API</strong>: Draws PNG to canvas and extracts pixel color data</li>
+<li><strong>Color conversion</strong>: RGB ↔ hex format conversion</li>
+<li><strong>Distance calculation</strong>: Euclidean distance between colors in RGB space</li>
+<li><strong>Tolerance matching</strong>: Matches observed colors to standard coverage colors within tolerance</li>
+</ul>
+<h4>5. Coverage Analyzer (<code>coverage-analyzer.js</code>)</h4>
+<ul>
+<li><strong>Orchestration</strong>: Coordinates entire workflow from user input to results</li>
+<li><strong>Validation</strong>: Validates UK postcode format</li>
+<li><strong>Rate limiting</strong>: Throttles API calls to respect rate limits</li>
+<li><strong>Error handling</strong>: Graceful error messages for API failures</li>
+<li><strong>Progress tracking</strong>: 5-step progress indicator with completion status</li>
+</ul>
+<h4>6. Chart Renderer (<code>chart-renderer.js</code>)</h4>
+<ul>
+<li><strong>Visualization</strong>: Wraps Chart.js for tool-specific configuration</li>
+<li><strong>X-axis</strong>: Distance along route (km)</li>
+<li><strong>Y-axis</strong>: Coverage levels 0-4 (stepped, not interpolated)</li>
+<li><strong>Datasets</strong>: One line per network (color-coded)</li>
+<li><strong>Summary</strong>: Table showing best networks and coverage percentages</li>
+</ul>
+<h2>Coverage Levels</h2>
+<p>The tool returns 5 coverage levels based on Ofcom tile colors:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Hex</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>#7d2093</td>
+<td>Good outdoor and in-home</td>
+</tr>
+<tr>
+<td>3</td>
+<td>#cd7be4</td>
+<td>Good outdoor, variable in-home</td>
+</tr>
+<tr>
+<td>2</td>
+<td>#0081b3</td>
+<td>Good outdoor</td>
+</tr>
+<tr>
+<td>1</td>
+<td>#83e5f6</td>
+<td>Variable outdoor</td>
+</tr>
+<tr>
+<td>0</td>
+<td>#d4d4d4</td>
+<td>Poor to none outdoor</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Color tolerance</strong>: ±10 on RGB values (configurable in <code>tile-coverage-adapter.js</code>)</p>
+<h2>External Dependencies</h2>
+<h3>APIs (All CORS-enabled, free tier available)</h3>
+<ul>
+<li>
+<p><strong>Postcodes.io</strong>: Postcode ↔ coordinates conversion</p>
+<ul>
+<li>No authentication required</li>
+<li>Free tier: Unlimited requests</li>
+</ul>
+</li>
+<li>
+<p><strong>OpenRouteService</strong>: Driving route calculation</p>
+<ul>
+<li>Requires free API key (sign up at https://openrouteservice.org)</li>
+<li>Free tier: 2,000 requests/day</li>
+</ul>
+</li>
+<li>
+<p><strong>Ofcom Tile API</strong>: Coverage tile data</p>
+<ul>
+<li>No authentication required</li>
+<li>Tiles cached locally to minimize requests</li>
+</ul>
+</li>
+</ul>
+<h3>Libraries</h3>
+<ul>
+<li>
+<p><strong>proj4</strong> (v2.11.0): Coordinate system transformations</p>
+<ul>
+<li>Loaded via CDN: <code>https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js</code></li>
+<li>~547k weekly downloads</li>
+</ul>
+</li>
+<li>
+<p><strong>Chart.js</strong> (v4.4.0): Data visualization</p>
+<ul>
+<li>Installed via npm</li>
+<li>Self-hosted at <code>/assets/libs/chart.js/chart.min.js</code></li>
+<li>~30M weekly downloads</li>
+</ul>
+</li>
+</ul>
+<h2>Development</h2>
+<h3>Setup</h3>
+<pre><code class="language-bash">npm install
+</code></pre>
+<h3>Running Tests</h3>
+<pre><code class="language-bash">npm test
+</code></pre>
+<p>Tests verify:</p>
+<ul>
+<li>Route sampling accuracy (haversine distance, point interpolation)</li>
+<li>Coordinate conversion (WGS84 → BNG → tile → pixel)</li>
+<li>Color extraction and matching (RGB/hex conversion, tolerance matching)</li>
+<li>Tile URL construction and cache keys</li>
+<li>Coverage level descriptions</li>
+</ul>
+<p><strong>Test count</strong>: 57 tests, all passing</p>
+<h3>Modifying the Tool</h3>
+<h4>Changing Coverage Levels</h4>
+<p>Update <code>COVERAGE_COLOR_MAP</code> in <code>tile-coverage-adapter.js</code>:</p>
+<pre><code class="language-javascript">const COVERAGE_COLOR_MAP = {
+  4: '#7d2093', // Modify hex colors here
+  3: '#cd7be4',
+  // ...
+};
+</code></pre>
+<h4>Adjusting Color Tolerance</h4>
+<p>In <code>tile-coverage-adapter.js</code>, modify the tolerance parameter:</p>
+<pre><code class="language-javascript">const level = this.mapColorToCoverageLevel(color.hex, 10); // tolerance = 10
+</code></pre>
+<h4>Changing Sampling Density</h4>
+<p>In <code>coverage-analyzer.js</code>, modify the sample count:</p>
+<pre><code class="language-javascript">const sampledPoints = sampleRouteByCount(route.coordinates, 150); // Change 150 to desired count
+</code></pre>
+<h4>Updating Tile API</h4>
+<p>If Ofcom tile API structure changes:</p>
+<ol>
+<li>Update base URL in <code>tile-coverage-adapter.js</code></li>
+<li>Update MNO mapping if operator codes change</li>
+<li>Update color map if color scheme changes</li>
+<li>Run tests to verify tile URL construction</li>
+</ol>
+<h4>Clearing Tile Cache</h4>
+<p>Programmatically in browser console:</p>
+<pre><code class="language-javascript">// Access the adapter instance from global scope if available
+// Or call the method if exposed on window object
+localStorage.removeItem('tile-cache-index');
+</code></pre>
+<h2>Performance</h2>
+<h3>Optimization Techniques</h3>
+<ol>
+<li><strong>Tile Caching</strong>: PNG tiles stored in browser cache (localStorage + IndexedDB)</li>
+<li><strong>Batch Processing</strong>: Multiple tiles fetched with minimal API delays</li>
+<li><strong>Efficient Sampling</strong>: 150 points balances accuracy vs. API load</li>
+<li><strong>Color Matching</strong>: Single-pass tolerance matching for efficiency</li>
+</ol>
+<h3>Typical Performance</h3>
+<ul>
+<li><strong>Route analysis</strong>: 30-60 seconds depending on route length</li>
+<li><strong>Tile fetch</strong>: ~100-150ms per tile (4 operators × 150 points = ~600 requests, but cached)</li>
+<li><strong>Chart rendering</strong>: &lt;1 second</li>
+<li><strong>Cache hit rate</strong>: 70-90% for common routes (London-centric)</li>
+</ul>
+<h2>Limitations &amp; Future Work</h2>
+<h3>Current Limitations</h3>
+<ul>
+<li>Requires internet connection (no offline support)</li>
+<li>OpenRouteService free tier: 2,000 requests/day (typical routes: ~1 request each)</li>
+<li>Ofcom tile API may not cover all UK areas equally</li>
+<li>Coverage levels are approximations based on pixel colors</li>
+</ul>
+<h3>Future Improvements</h3>
+<ul>
+<li>Service worker for offline tile caching</li>
+<li>Predictive tile preloading for common routes</li>
+<li>Export route coverage as KML/GeoJSON</li>
+<li>Batch analysis of multiple routes</li>
+<li>Historical coverage tracking (if Ofcom versioning available)</li>
+<li>3D visualization of coverage over terrain</li>
+</ul>
+<h2>Architecture Notes</h2>
+<h3>Why Tiles Instead of Postcode API?</h3>
+<p>The original tool used a postcode-based API that required reverse-geocoding sampled points back to postcodes. The tile-based approach:</p>
+<ul>
+<li>Eliminates postcode reverse-geocoding step (fewer API calls)</li>
+<li>Provides continuous coverage data (not just per-postcode)</li>
+<li>Uses visual data (colors) directly from Ofcom's public tile server</li>
+<li>Enables more granular coverage representation (5 levels vs. binary)</li>
+</ul>
+<h3>Why Canvas API for Pixel Extraction?</h3>
+<p>Extracts colors directly from PNG data without external image processing library:</p>
+<ul>
+<li>Works in all browsers (no server-side processing needed)</li>
+<li>No dependency on Sharp or other Node.js libraries</li>
+<li>Efficient memory usage (single pixel read, not full image processing)</li>
+<li>Browser-native API (no additional npm packages)</li>
+</ul>
+<h3>Coordinate System Details</h3>
+<p>Uses British National Grid (EPSG:27700) instead of Web Mercator:</p>
+<ul>
+<li>Ofcom tiles use BNG projection (TMS convention)</li>
+<li>More accurate for UK-specific distance calculations</li>
+<li>Requires <code>proj4</code> for accurate transformation</li>
+<li>Tile grid origin: (0, 0) at southwest; Y increases northward</li>
+</ul>
+<h2>Testing Philosophy</h2>
+<ul>
+<li><strong>Unit tests</strong>: Pure functions (distance calculations, color matching)</li>
+<li><strong>Integration tests</strong>: Coordinate conversion pipeline (WGS84 → BNG → tile → pixel)</li>
+<li><strong>No DOM mocking</strong>: Browser APIs tested manually during development</li>
+<li><strong>Focused scope</strong>: Tests verify algorithmic correctness, not UI interactions</li>
+</ul>
+<h2>Browser Compatibility</h2>
+<ul>
+<li><strong>Modern browsers</strong>: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</li>
+<li><strong>Required features</strong>:
+<ul>
+<li>Canvas API (pixel data extraction)</li>
+<li>localStorage/IndexedDB (tile caching)</li>
+<li>Fetch API (tile fetching)</li>
+<li>ES6 JavaScript (arrow functions, template literals)</li>
+</ul>
+</li>
+</ul>
+<h2>Files Reference</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>index.md</code></td>
+<td>HTML/CSS/UI for tool (form, progress, chart container, summary table)</td>
+</tr>
+<tr>
+<td><code>coverage-analyzer.js</code></td>
+<td>Main app controller and workflow orchestration</td>
+</tr>
+<tr>
+<td><code>coverage-analyzer.test.js</code></td>
+<td>Tests for route sampling and analysis</td>
+</tr>
+<tr>
+<td><code>route-sampler.js</code></td>
+<td>Route interpolation using haversine distance</td>
+</tr>
+<tr>
+<td><code>coordinate-converter.js</code></td>
+<td>WGS84 ↔ BNG conversion, tile &amp; pixel calculations</td>
+</tr>
+<tr>
+<td><code>tile-coverage-adapter.js</code></td>
+<td>Ofcom tile API integration and caching</td>
+</tr>
+<tr>
+<td><code>pixel-extractor.js</code></td>
+<td>Canvas-based pixel color extraction</td>
+</tr>
+<tr>
+<td><code>chart-renderer.js</code></td>
+<td>Chart.js wrapper for visualization</td>
+</tr>
+<tr>
+<td><code>tile-api.test.js</code></td>
+<td>Tests for coordinate conversion, color matching, tiles</td>
+</tr>
+<tr>
+<td><code>GEO.md</code></td>
+<td>Technical specification for coordinate transformations</td>
+</tr>
+</tbody>
+</table>
+<h2>License</h2>
+<p>Part of <a href="https://github.com/jamesmunro/jamesmunro.github.io">jamesmunro.github.io</a></p>
+
+
+    </main>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>

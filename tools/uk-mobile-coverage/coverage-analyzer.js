@@ -92,7 +92,7 @@ class CoverageAnalyzer {
 
       // Step 5: Get coverage data
       this.setStep(4);
-      this.coverageAdapter = new CoverageAdapter();
+      this.coverageAdapter = new TileCoverageAdapter();
       const coverageResults = await this.getCoverageData(sampledPoints);
       this.completeStep(4);
 
@@ -198,92 +198,44 @@ class CoverageAnalyzer {
 
   /**
    * Get coverage data for all sampled points
+   * Now works directly with coordinates instead of converting to postcodes
    */
   async getCoverageData(sampledPoints) {
     const results = [];
-    const BATCH_SIZE = 10;
-    const DELAY_MS = 1000;
+    const BATCH_SIZE = 5;
+    const DELAY_MS = 500; // Reduced rate limiting for tile API
 
-    // First, convert all points to postcodes
-    const pointsWithPostcodes = [];
+    // Fetch coverage data for each sampled point
     for (let i = 0; i < sampledPoints.length; i++) {
       const point = sampledPoints[i];
 
-      try {
-        const postcode = await this.coordinatesToPostcode(point.lat, point.lng);
-        pointsWithPostcodes.push({ point, postcode });
-      } catch (error) {
-        // If postcode lookup fails, skip this point
-        console.warn(`Failed to get postcode for ${point.lat}, ${point.lng}:`, error);
-        pointsWithPostcodes.push({ point, postcode: null });
-      }
-
-      // Update progress
-      const progress = 40 + (i / sampledPoints.length) * 20;
-      this.updateProgress(progress, `Getting coverage data... ${i + 1}/${sampledPoints.length} postcodes`);
-
-      // Rate limiting for postcode API
-      if (i < sampledPoints.length - 1 && i % BATCH_SIZE === BATCH_SIZE - 1) {
-        await this.sleep(DELAY_MS);
-      }
-    }
-
-    // Cache for postcodes we've already queried
-    const coverageCache = {};
-
-    // Now fetch coverage data
-    for (let i = 0; i < pointsWithPostcodes.length; i++) {
-      const { point, postcode } = pointsWithPostcodes[i];
-
       let coverage = null;
 
-      if (postcode) {
-        // Check cache first
-        if (coverageCache[postcode]) {
-          coverage = coverageCache[postcode];
-        } else {
-          try {
-            coverage = await this.coverageAdapter.getCoverage(postcode);
-            coverageCache[postcode] = coverage;
-          } catch (error) {
-            console.warn(`Failed to get coverage for ${postcode}:`, error);
-          }
-        }
+      try {
+        coverage = await this.coverageAdapter.getCoverageFromCoordinates(point.lat, point.lng);
+      } catch (error) {
+        console.warn(`Failed to get coverage for point ${i}:`, error);
+        coverage = {
+          latitude: point.lat,
+          longitude: point.lng,
+          error: error.message,
+          networks: {}
+        };
       }
 
-      results.push({ point, postcode, coverage });
+      results.push({ point, coverage });
 
       // Update progress
-      const progress = 60 + (i / pointsWithPostcodes.length) * 35;
-      this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${pointsWithPostcodes.length} points`);
+      const progress = 40 + (i / sampledPoints.length) * 55;
+      this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} points`);
 
-      // Rate limiting for coverage API
-      if (i < pointsWithPostcodes.length - 1 && i % BATCH_SIZE === BATCH_SIZE - 1) {
+      // Rate limiting
+      if (i < sampledPoints.length - 1 && (i + 1) % BATCH_SIZE === 0) {
         await this.sleep(DELAY_MS);
       }
     }
 
     return results;
-  }
-
-  /**
-   * Convert coordinates to postcode using Postcodes.io reverse geocoding
-   */
-  async coordinatesToPostcode(lat, lng) {
-    const url = `https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!response.ok || data.status !== 200 || !data.result || data.result.length === 0) {
-        throw new Error('No postcode found for coordinates');
-      }
-
-      return data.result[0].postcode;
-    } catch (error) {
-      throw new Error(`Failed to reverse geocode: ${error.message}`);
-    }
   }
 
   /**
