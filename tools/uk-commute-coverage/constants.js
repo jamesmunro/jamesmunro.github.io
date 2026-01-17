@@ -1,4 +1,4 @@
-// Shared constants for uk-mobile-coverage tools
+// Shared constants for uk-commute-coverage tools
 const STANDARD_ZOOM = 10;
 const TILE_VERSION = '42';
 const ROUTE_SAMPLE_COUNT = 150;

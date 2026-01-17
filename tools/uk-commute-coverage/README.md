@@ -1,4 +1,4 @@
-# UK Mobile Coverage Analyzer
+# UK Commute Coverage Analyser
 
 A client-side web tool for analyzing mobile data coverage from UK networks (EE, Vodafone, O2, Three) along any route. Perfect for finding the best network for your daily commute.
 
@@ -52,7 +52,7 @@ Render chart and summary table
 ### Module Structure
 
 ```
-tools/uk-mobile-coverage/
+tools/uk-commute-coverage/
 ├── index.md                          # Tool UI (form + styling + script tags)
 ├── coverage-analyzer.js              # Main orchestration & workflow
 ├── route-sampler.js                  # Route interpolation (haversine distance)

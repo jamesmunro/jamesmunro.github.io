@@ -13,9 +13,9 @@ title: Web Tools
       </div>
       <span aria-hidden="true">→</span>
     </a>
-    <a href="tools/uk-mobile-coverage/">
+    <a href="tools/uk-commute-coverage/">
       <div class="tool-meta">
-        <span>UK Mobile Coverage Analyzer</span>
+        <span>UK Commute Coverage Analyser</span>
         <span>Compare mobile data coverage along your route to find the best network for your commute.</span>
       </div>
       <span aria-hidden="true">→</span>

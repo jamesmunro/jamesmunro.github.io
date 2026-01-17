@@ -1,5 +1,5 @@
 ---
-title: UK Mobile Coverage Analyzer
+title: UK Commute Coverage Analyser
 hero_subtitle: Find the best network for your commute by analyzing mobile data coverage along your route
 ---
 
@@ -25,7 +25,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
     <div class="form-group">
       <label for="ors-api-key">OpenRouteService API Key</label>
       <input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org" required autocomplete="off">
-      <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a></small>
+      <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a> | <a href="https://openrouteservice.org/sign-in/" target="_blank" rel="noopener">Log in</a></small>
     </div>
 
     <button type="submit" class="btn-primary">Analyze Route Coverage</button>
