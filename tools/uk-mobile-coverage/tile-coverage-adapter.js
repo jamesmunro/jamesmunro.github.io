@@ -4,27 +4,36 @@
  */
 
 // Resolve shared config (use browser global if present, else fallback)
-let TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
-let TILE_VERSION = '42';
-let STANDARD_ZOOM = 10;
-
-try {
-  if (typeof window !== 'undefined' && window.UK_MOBILE_COVERAGE_CONSTANTS) {
-    const c = window.UK_MOBILE_COVERAGE_CONSTANTS;
-    TILE_API_BASE = c.TILE_API_BASE || TILE_API_BASE;
-    TILE_VERSION = c.TILE_VERSION || TILE_VERSION;
-    STANDARD_ZOOM = c.STANDARD_ZOOM || STANDARD_ZOOM;
-  } else if (typeof require === 'function') {
-    const c = require('./constants');
-    if (c) {
-      TILE_API_BASE = c.TILE_API_BASE || TILE_API_BASE;
-      TILE_VERSION = c.TILE_VERSION || TILE_VERSION;
-      STANDARD_ZOOM = c.STANDARD_ZOOM || STANDARD_ZOOM;
+function getConfig() {
+  const defaults = {
+    TILE_API_BASE: 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2',
+    TILE_VERSION: '42',
+    STANDARD_ZOOM: 10
+  };
+  try {
+    if (typeof window !== 'undefined' && window.UK_MOBILE_COVERAGE_CONSTANTS) {
+      const c = window.UK_MOBILE_COVERAGE_CONSTANTS;
+      return {
+        TILE_API_BASE: c.TILE_API_BASE || defaults.TILE_API_BASE,
+        TILE_VERSION: c.TILE_VERSION || defaults.TILE_VERSION,
+        STANDARD_ZOOM: c.STANDARD_ZOOM || defaults.STANDARD_ZOOM
+      };
+    } else if (typeof require === 'function') {
+      const c = require('./constants');
+      if (c) {
+        return {
+          TILE_API_BASE: c.TILE_API_BASE || defaults.TILE_API_BASE,
+          TILE_VERSION: c.TILE_VERSION || defaults.TILE_VERSION,
+          STANDARD_ZOOM: c.STANDARD_ZOOM || defaults.STANDARD_ZOOM
+        };
+      }
     }
+  } catch (e) {
+    // ignore and use defaults
   }
-} catch (e) {
-  // ignore and use defaults
+  return defaults;
 }
+const CONFIG = getConfig();
 
 // Mobile Network Operator mapping
 const MNO_MAP = {
@@ -64,7 +73,7 @@ class TileCoverageAdapter {
         throw new Error('Coordinate converter not loaded');
       }
 
-      const pixelInfo = window.latLonToPixelInTile(lat, lon, STANDARD_ZOOM);
+      const pixelInfo = window.latLonToPixelInTile(lat, lon, CONFIG.STANDARD_ZOOM);
 
       // Fetch tiles for all 4 operators
       const coverageData = {
@@ -109,7 +118,7 @@ class TileCoverageAdapter {
    * @returns {Promise<Blob>} Tile PNG blob
    */
   async fetchTile(mnoId, tileX, tileY) {
-    const cacheKey = `${mnoId}-${STANDARD_ZOOM}-${tileX}-${tileY}-v${TILE_VERSION}`;
+    const cacheKey = `${mnoId}-${CONFIG.STANDARD_ZOOM}-${tileX}-${tileY}-v${CONFIG.TILE_VERSION}`;
 
     // Check in-memory cache first (actual Blob objects)
     if (this.tileCache[cacheKey] instanceof Blob) {
@@ -125,7 +134,7 @@ class TileCoverageAdapter {
       }
     }
 
-    const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`;
+    const url = `${CONFIG.TILE_API_BASE.replace('{mno}', mnoId)}/${CONFIG.STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${CONFIG.TILE_VERSION}`;
 
     try {
       const response = await fetch(url);
@@ -142,7 +151,7 @@ class TileCoverageAdapter {
 
       return blob;
     } catch (error) {
-      throw new Error(`Failed to fetch tile ${mnoId}/${STANDARD_ZOOM}/${tileX}/${tileY}: ${error.message}`);
+      throw new Error(`Failed to fetch tile ${mnoId}/${CONFIG.STANDARD_ZOOM}/${tileX}/${tileY}: ${error.message}`);
     }
   }
 
@@ -303,7 +312,7 @@ class TileCoverageAdapter {
       index[key] = {
         timestamp: Date.now(),
         size: blob.size,
-        version: TILE_VERSION
+        version: CONFIG.TILE_VERSION
       };
       localStorage.setItem('tile-cache-index', JSON.stringify(index));
 

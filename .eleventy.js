@@ -1,3 +1,5 @@
+const https = require('https');
+
 module.exports = function (eleventyConfig) {
   // Cache-busting filter for JS files
   eleventyConfig.addFilter("cacheBust", function(url) {
@@ -29,6 +31,29 @@ module.exports = function (eleventyConfig) {
 
     // Access the server locally or from the network
     host: "0.0.0.0",
+
+    // CORS proxy middleware for Ofcom tile API
+    middleware: [
+      function(req, res, next) {
+        // Proxy requests to /api/tiles/* to ofcom.europa.uk.com
+        if (req.url.startsWith('/api/tiles/')) {
+          const targetPath = req.url.replace('/api/tiles/', '/tiles/');
+          const targetUrl = `https://ofcom.europa.uk.com${targetPath}`;
+
+          https.get(targetUrl, (proxyRes) => {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/png');
+            proxyRes.pipe(res);
+          }).on('error', (err) => {
+            console.error('Proxy error:', err);
+            res.statusCode = 502;
+            res.end('Proxy error');
+          });
+          return;
+        }
+        next();
+      }
+    ]
   });
 
   return {
