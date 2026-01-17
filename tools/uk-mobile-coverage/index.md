@@ -223,8 +223,8 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 }
 </style>
 
-<script src="/assets/libs/chart.js/chart.min.js"></script>
-<script src="route-sampler.js"></script>
-<script src="coverage-adapter.js"></script>
-<script src="chart-renderer.js"></script>
-<script src="coverage-analyzer.js"></script>
+<script src="{{ '/assets/libs/chart.js/chart.min.js' | cacheBust }}"></script>
+<script src="{{ 'route-sampler.js' | cacheBust }}"></script>
+<script src="{{ 'coverage-adapter.js' | cacheBust }}"></script>
+<script src="{{ 'chart-renderer.js' | cacheBust }}"></script>
+<script src="{{ 'coverage-analyzer.js' | cacheBust }}"></script>

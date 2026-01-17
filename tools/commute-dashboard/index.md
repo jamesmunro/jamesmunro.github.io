@@ -308,7 +308,7 @@ hero_subtitle: Real-time train times, tube status, and weather for your commute.
     fetchWeather,
     weatherCodeToDescription,
     getRouteConfig
-  } from './commute-dashboard.js';
+  } from "{{ './commute-dashboard.js' | cacheBust }}";
 
   const directionSelect = document.getElementById('direction-select');
   const lastUpdated = document.getElementById('last-updated');

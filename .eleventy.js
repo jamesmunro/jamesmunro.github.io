@@ -1,4 +1,11 @@
 module.exports = function (eleventyConfig) {
+  // Cache-busting filter for JS files
+  eleventyConfig.addFilter("cacheBust", function(url) {
+    const version = this.ctx?.build?.version || Date.now().toString(36);
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${version}`;
+  });
+
   eleventyConfig.addPassthroughCopy("tools/**/*.js");
   eleventyConfig.addPassthroughCopy({
     "node_modules/xterm/css/xterm.css": "assets/libs/xterm/xterm.css",
