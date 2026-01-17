@@ -85,7 +85,7 @@ class ChartRenderer {
    * @param {Array} coverageResults - Array of coverage results
    */
   render(coverageResults) {
-    const canvas = document.getElementById(this.canvasId);
+    let canvas = document.getElementById(this.canvasId);
     if (!canvas) {
       throw new Error(`Canvas element ${this.canvasId} not found`);
     }
@@ -96,10 +96,15 @@ class ChartRenderer {
       existingChart.destroy();
     }
 
-    // Also destroy the instance tracked by this class, just in case
+    // Also destroy the instance tracked by this class
     if (this.chart) {
       this.chart.destroy();
     }
+
+    // To be absolutely sure, replace the canvas element to remove any lingering bindings
+    const newCanvas = canvas.cloneNode(true);
+    canvas.parentNode.replaceChild(newCanvas, canvas);
+    canvas = newCanvas;
 
     const ctx = canvas.getContext('2d');
     const datasets = this.prepareChartData(coverageResults);
