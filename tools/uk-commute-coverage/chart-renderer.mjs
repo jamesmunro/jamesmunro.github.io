@@ -72,7 +72,7 @@ class ChartRenderer {
         borderWidth: 2,
         tension: 0,
         stepped: false,
-        pointRadius: 0,
+        pointRadius: 2,
         pointHoverRadius: 5
       };
     });

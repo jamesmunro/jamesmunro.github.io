@@ -90,10 +90,9 @@ function getTotalDistance(coordinates) {
 /**
  * Sample a specific number of points evenly along a route
  * @param {Array} coordinates - Array of [longitude, latitude] pairs from route
- * @param {number} targetSamples - Target number of sample points (default 150)
- * @returns {Array} Array of sampled points with {lat, lng, distance}
+ * @param {number} targetSamples - Target number of sample points (default 500)
  */
-function sampleRouteByCount(coordinates, targetSamples = 150) {
+function sampleRouteByCount(coordinates, targetSamples = 500) {
   if (!coordinates || coordinates.length < 2) {
     throw new Error('Route must have at least 2 points');
   }

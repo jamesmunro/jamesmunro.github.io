@@ -6,7 +6,7 @@ A client-side web tool for analyzing mobile data coverage from UK networks (EE, 
 
 - **Route Analysis**: Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route.
 - **Multi-Network Comparison**: Compare all 4 major UK networks simultaneously.
-- **Smart Sampling**: Samples 150 evenly-spaced points along your journey for accurate coverage mapping.
+- **Smart Sampling**: Samples 500 evenly-spaced points along your journey for accurate coverage mapping.
 - **Visual Feedback**: Step-by-step progress indicators and real-time error reporting.
 - **Interactive Visualization**: Dynamic line chart showing coverage levels across the route.
 - **Summary Statistics**: Table showing best networks with coverage percentages and rankings.
@@ -26,7 +26,7 @@ The tool uses Ofcom's tile-based coverage API, fetching pre-rendered PNG tiles a
 
 1. **Geocoding**: Uses Google Geocoding API to convert postcodes to coordinates.
 2. **Routing**: Uses Google Directions API to calculate the path between points.
-3. **Sampling**: Samples 150 coordinates at regular intervals using the Haversine formula.
+3. **Sampling**: Samples 500 coordinates at regular intervals using the Haversine formula.
 4. **Coordinate Mapping**: Converts geographic coordinates (WGS84) to British National Grid (BNG) to match Ofcom's tile system.
 5. **Tile Analysis**:
    - Fetch PNG tile for each of 4 operators.
@@ -57,7 +57,7 @@ tools/uk-commute-coverage/
 
 #### 1. Route Sampling (`route-sampler.mjs`)
 - **Haversine distance**: Great-circle distance calculation between GPS points.
-- **Linear interpolation**: Samples route at fixed intervals or fixed point count (default 150).
+- **Linear interpolation**: Samples route at fixed intervals or fixed point count (default 500).
 - **Functions**: `haversineDistance()`, `sampleRoute()`, `sampleRouteByCount()`, `getTotalDistance()`.
 
 #### 2. Coordinate Conversion (`coordinate-converter.mjs`)
@@ -127,7 +127,7 @@ mapColorToCoverageLevel(hex, tolerance = COLOR_TOLERANCE)
 #### Changing Sampling Density
 In `constants.mjs`, modify the `ROUTE_SAMPLE_COUNT`:
 ```javascript
-export const ROUTE_SAMPLE_COUNT = 150; // Change to desired count
+export const ROUTE_SAMPLE_COUNT = 500; // Change to desired count
 ```
 
 ## Architecture Notes
