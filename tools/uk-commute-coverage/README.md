@@ -4,7 +4,7 @@ A client-side web tool for analyzing mobile data coverage from UK networks (EE, 
 
 ## Features
 
-- **Route Analysis**: Enter any two UK postcodes and analyze coverage along the route
+- **Route Analysis**: Enter any two UK postcodes and analyse coverage along the route
 - **Multi-Network Comparison**: Compare all 4 major UK networks simultaneously
 - **Visual Feedback**: Step-by-step progress indicators and real-time error reporting
 - **Interactive Visualization**: Line chart showing coverage levels across the route
@@ -15,7 +15,7 @@ A client-side web tool for analyzing mobile data coverage from UK networks (EE, 
 
 1. Enter your start and end postcodes
 2. Provide your OpenRouteService API key (free tier available)
-3. Click "Analyze Route Coverage"
+3. Click "Analyse Route Coverage"
 4. View interactive chart and summary table showing coverage by network
 
 The tool samples 150 evenly-spaced points along your route and queries coverage data for each point.

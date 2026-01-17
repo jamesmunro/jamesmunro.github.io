@@ -1,11 +1,11 @@
 ---
 title: UK Commute Coverage Analyser
-hero_subtitle: Find the best network for your commute by analyzing mobile data coverage along your route
+hero_subtitle: Find the best network for your commute by analysing mobile data coverage along your route
 ---
 
 <div class="coverage-tool">
   <div class="intro">
-    <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyze signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
+    <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyse signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
     <p><strong>How it works:</strong> Enter your route, and we'll fetch Ofcom's official coverage data and sample it along your journey. Results show coverage quality levels for each network.</p>
   </div>
 
@@ -28,7 +28,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
       <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a> | <a href="https://openrouteservice.org/sign-in/" target="_blank" rel="noopener">Log in</a></small>
     </div>
 
-    <button type="submit" class="btn-primary">Analyze Route Coverage</button>
+    <button type="submit" class="btn-primary">Analyse Route Coverage</button>
     <small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small>
   </form>
 

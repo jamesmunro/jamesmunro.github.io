@@ -153,11 +153,11 @@ function bngToPixelInTile(easting, northing, zoom) {
 
 ## Coverage Data Interpretation
 
-The PNG tiles contain color-coded coverage information. Pixel colors indicate:
-- **Presence of color**: Coverage available
+The PNG tiles contain colour-coded coverage information. Pixel colours indicate:
+- **Presence of colour**: Coverage available
 - **Transparency**: No coverage data / out of bounds
 
-Exact color meanings depend on the coverage type being displayed (voice, data, 4G, 5G, etc.).
+Exact colour meanings depend on the coverage type being displayed (voice, data, 4G, 5G, etc.).
 
 ## Leaflet Configuration Reference
 
