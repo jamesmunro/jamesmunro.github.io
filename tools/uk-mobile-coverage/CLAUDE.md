@@ -5,7 +5,7 @@ A fully client-side web tool for analyzing mobile data coverage (3G/4G/5G) from 
 
 **Key Features:**
 - Postcode-to-postcode route analysis
-- Fixed 500m sampling intervals along routes
+- 150 evenly-spaced sample points along routes
 - 1D line chart visualization showing coverage vs. distance
 - Data coverage only (voice coverage ignored)
 - Step-by-step progress feedback
@@ -27,7 +27,7 @@ tools/uk-mobile-coverage/
 
 ### Data Flow
 ```
-User Input (postcodes + API key)
+User Input (postcodes + ORS API key + Ofcom API key)
     ↓
 Validate Postcodes
     ↓
@@ -35,7 +35,7 @@ Postcodes.io API → Convert to coordinates
     ↓
 OpenRouteService API → Get route GeoJSON
     ↓
-Route Sampling → Sample points every 500m (haversine distance)
+Route Sampling → Sample 150 evenly-spaced points (haversine distance)
     ↓
 Postcodes.io API → Reverse geocode sampled points
     ↓
@@ -54,7 +54,10 @@ Chart Renderer → Display 1D visualization + summary table
 
 ### 2. Coverage Adapter (coverage-adapter.js)
 Fetches mobile coverage data from the Ofcom API:
-- Queries `https://api.ofcom.org.uk/mobile/coverage?postcode={postcode}`
+- Queries `https://api-proxy.ofcom.org.uk/mobile/coverage/{PostCode}` (no spaces, uppercase)
+- Requires `Ocp-Apim-Subscription-Key` header with user's Ofcom API key
+- Provider field mappings: EE=EE, VO=Vodafone, TF=O2, H3=Three
+- Coverage ratings 0-4 (0=none, 2=outdoor, 3+=indoor)
 - Transforms Ofcom response to normalized format with EE, Vodafone, O2, Three
 - Handles errors gracefully with user-friendly messages
 
@@ -82,7 +85,8 @@ Orchestrates the entire workflow:
   - Reverse: `/postcodes?lon={lng}&lat={lat}` → postcode
 - **OpenRouteService**: Free tier (2,000 req/day), requires API key
   - Directions API: Returns GeoJSON route between coordinates
-- **Ofcom API**: Coverage data per postcode
+- **Ofcom API**: Requires free API key from https://api.ofcom.org.uk/signup
+  - Mobile coverage API: Returns ratings (0-4) per network per address
 
 ### Libraries
 - **Chart.js** (v4.4.0): Visualization
@@ -110,11 +114,11 @@ npm test  # Runs all *.test.js files including coverage-analyzer.test.js
 
 ## Common Development Tasks
 
-### Modifying Sampling Interval
-Currently fixed at 500m. To make configurable:
+### Modifying Sample Count
+Currently fixed at 150 points. To make configurable:
 1. Add input field in `index.md`
-2. Pass interval to `sampleRoute()` in `coverage-analyzer.js:90`
-3. Update validation (reasonable range: 100m - 2000m)
+2. Pass count to `sampleRouteByCount()` in `coverage-analyzer.js:89`
+3. Update validation (reasonable range: 50-300 points)
 
 ### Changing Visualization Style
 All chart configuration in `chart-renderer.js`:
@@ -145,7 +149,7 @@ For each segment between route waypoints:
 3. Linearly interpolate lat/lng along segment
 4. Track cumulative distance for each point
 
-Why fixed 500m: Balance between accuracy and API call volume (typical 10-30km commute = 20-60 points).
+Why 150 points: Balance between accuracy and API call volume for typical commute routes.
 
 ## Design Decisions
 

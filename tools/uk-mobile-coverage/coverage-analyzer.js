@@ -15,6 +15,7 @@ class CoverageAnalyzer {
       'Sampling points along route',
       'Getting coverage data'
     ];
+    this.STORAGE_KEY = 'uk-mobile-coverage-form';
   }
 
   /**
@@ -24,6 +25,51 @@ class CoverageAnalyzer {
     const form = document.getElementById('route-form');
     if (form) {
       form.addEventListener('submit', (e) => this.handleSubmit(e));
+      this.loadSavedValues();
+    }
+  }
+
+  /**
+   * Load saved form values from localStorage
+   */
+  loadSavedValues() {
+    try {
+      const saved = localStorage.getItem(this.STORAGE_KEY);
+      if (!saved) return;
+
+      const values = JSON.parse(saved);
+      const fields = {
+        'start': values.start,
+        'end': values.end,
+        'ors-api-key': values.orsApiKey,
+        'ofcom-api-key': values.ofcomApiKey
+      };
+
+      for (const [id, value] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (el && value) {
+          el.value = value;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load saved form values:', error);
+    }
+  }
+
+  /**
+   * Save form values to localStorage
+   */
+  saveFormValues(startPostcode, endPostcode, orsApiKey, ofcomApiKey) {
+    try {
+      const values = {
+        start: startPostcode,
+        end: endPostcode,
+        orsApiKey: orsApiKey,
+        ofcomApiKey: ofcomApiKey
+      };
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(values));
+    } catch (error) {
+      console.warn('Failed to save form values:', error);
     }
   }
 
@@ -42,13 +88,16 @@ class CoverageAnalyzer {
     const startPostcode = document.getElementById('start').value.trim().toUpperCase();
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('ors-api-key').value.trim();
+    const ofcomApiKey = document.getElementById('ofcom-api-key').value.trim();
 
     // Disable form
     const submitBtn = event.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
 
     try {
-      await this.analyzeRoute(startPostcode, endPostcode, apiKey);
+      await this.analyzeRoute(startPostcode, endPostcode, apiKey, ofcomApiKey);
+      // Save form values on successful analysis
+      this.saveFormValues(startPostcode, endPostcode, apiKey, ofcomApiKey);
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -59,7 +108,7 @@ class CoverageAnalyzer {
   /**
    * Main analysis workflow
    */
-  async analyzeRoute(startPostcode, endPostcode, apiKey) {
+  async analyzeRoute(startPostcode, endPostcode, apiKey, ofcomApiKey) {
     this.showProgress();
     this.updateProgress(0, 'Initializing...');
 
@@ -92,7 +141,7 @@ class CoverageAnalyzer {
 
       // Step 5: Get coverage data
       this.setStep(4);
-      this.coverageAdapter = new CoverageAdapter();
+      this.coverageAdapter = new CoverageAdapter(ofcomApiKey);
       const coverageResults = await this.getCoverageData(sampledPoints);
       this.completeStep(4);
 
