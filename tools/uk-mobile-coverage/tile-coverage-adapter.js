@@ -3,10 +3,28 @@
  * Fetches coverage data from Ofcom tile API and extracts coverage colors
  */
 
-// Use const in an IIFE to avoid redeclaration errors when script is reloaded
-const TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
-const TILE_VERSION = '42';
-const STANDARD_ZOOM = 10;
+// Resolve shared config (use browser global if present, else fallback)
+let TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
+let TILE_VERSION = '42';
+let STANDARD_ZOOM = 10;
+
+try {
+  if (typeof window !== 'undefined' && window.UK_MOBILE_COVERAGE_CONSTANTS) {
+    const c = window.UK_MOBILE_COVERAGE_CONSTANTS;
+    TILE_API_BASE = c.TILE_API_BASE || TILE_API_BASE;
+    TILE_VERSION = c.TILE_VERSION || TILE_VERSION;
+    STANDARD_ZOOM = c.STANDARD_ZOOM || STANDARD_ZOOM;
+  } else if (typeof require === 'function') {
+    const c = require('./constants');
+    if (c) {
+      TILE_API_BASE = c.TILE_API_BASE || TILE_API_BASE;
+      TILE_VERSION = c.TILE_VERSION || TILE_VERSION;
+      STANDARD_ZOOM = c.STANDARD_ZOOM || STANDARD_ZOOM;
+    }
+  }
+} catch (e) {
+  // ignore and use defaults
+}
 
 // Mobile Network Operator mapping
 const MNO_MAP = {
