@@ -28,17 +28,8 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
       <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a></small>
     </div>
 
-    <div class="form-group">
-      <label for="data-source">Coverage Data Source</label>
-      <select id="data-source">
-        <option value="demo" selected>Demo Mode (mock data)</option>
-        <option value="proxy">Custom Proxy (requires setup)</option>
-        <option value="ofcom-direct">Direct Ofcom API (may not work due to CORS)</option>
-      </select>
-      <small>Route sampled at 150 evenly-spaced points</small>
-    </div>
-
     <button type="submit" class="btn-primary">Analyze Route Coverage</button>
+    <small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage data</small>
   </form>
 
   <!-- Step-by-Step Progress Indicator -->
