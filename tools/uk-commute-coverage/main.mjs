@@ -32,6 +32,7 @@ if (previewBtn) {
     try {
       // getRoute will also load the Google Maps API if not already loaded
       const route = await analyzer.getRoute(startPostcode, endPostcode, apiKey, profile);
+      analyzer.currentRouteCoordinates = route.coordinates;
       
       // Initialize the map and draw the route
       analyzer.showElement('preview-container');
@@ -42,6 +43,12 @@ if (previewBtn) {
         analyzer.googleMap.setDirections(route.fullResult);
       } else {
         analyzer.googleMap.drawRoute(route.coordinates);
+      }
+
+      // Show tiles if a network is selected
+      const tileNetwork = document.getElementById('tile-network').value;
+      if (tileNetwork) {
+        await analyzer.updateMapTiles(tileNetwork, route.coordinates);
       }
     } catch (error) {
       errorEl.textContent = `Route preview failed: ${error.message}`;

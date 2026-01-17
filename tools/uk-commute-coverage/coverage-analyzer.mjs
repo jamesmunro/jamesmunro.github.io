@@ -24,6 +24,8 @@ export class CoverageAnalyzer {
       'Getting coverage data'
     ];
     this.googleMapsLoaded = false;
+    this.currentRouteCoordinates = null;
+    this.coverageAdapter = new TileCoverageAdapter();
   }
 
   /**
@@ -35,6 +37,15 @@ export class CoverageAnalyzer {
       this.loadFormValues();
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
+
+    const tileNetworkSelect = document.getElementById('tile-network');
+    if (tileNetworkSelect) {
+      tileNetworkSelect.addEventListener('change', () => {
+        if (this.currentRouteCoordinates) {
+          this.updateMapTiles(tileNetworkSelect.value, this.currentRouteCoordinates);
+        }
+      });
+    }
   }
 
   loadFormValues() {
@@ -42,7 +53,7 @@ export class CoverageAnalyzer {
     const endInput = document.getElementById('end');
     const apiKeyInput = document.getElementById('google-maps-api-key');
     const profileInput = document.getElementById('route-profile');
-    const showTilesInput = document.getElementById('show-tiles');
+    const tileNetworkSelect = document.getElementById('tile-network');
 
     if (startInput && localStorage.getItem('route-start')) {
       startInput.value = localStorage.getItem('route-start');
@@ -56,16 +67,17 @@ export class CoverageAnalyzer {
     if (profileInput && localStorage.getItem('route-profile')) {
       profileInput.value = localStorage.getItem('route-profile');
     }
-    if (showTilesInput && localStorage.getItem('show-tiles')) {
-      showTilesInput.checked = localStorage.getItem('show-tiles') === 'true';
+    if (tileNetworkSelect && localStorage.getItem('tile-network')) {
+      tileNetworkSelect.value = localStorage.getItem('tile-network');
     }
   }
 
-  saveFormValues(startPostcode, endPostcode, apiKey, profile) {
+  saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork) {
     localStorage.setItem('route-start', startPostcode);
     localStorage.setItem('route-end', endPostcode);
     localStorage.setItem('google-maps-api-key', apiKey);
     if (profile) localStorage.setItem('route-profile', profile);
+    if (tileNetwork !== undefined) localStorage.setItem('tile-network', tileNetwork);
   }
 
   async handleSubmit(event) {
@@ -79,16 +91,15 @@ export class CoverageAnalyzer {
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('google-maps-api-key').value.trim();
     const profile = document.getElementById('route-profile').value;
-    const showTiles = document.getElementById('show-tiles').checked;
+    const tileNetwork = document.getElementById('tile-network').value;
 
-    this.saveFormValues(startPostcode, endPostcode, apiKey, profile);
-    localStorage.setItem('show-tiles', showTiles);
+    this.saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork);
 
     const submitBtn = event.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
 
     try {
-      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile, showTiles);
+      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile, tileNetwork);
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -137,7 +148,7 @@ export class CoverageAnalyzer {
     return this.fetchRoute(startCoords, endCoords, profile);
   }
 
-  async analyzeRoute(startPostcode, endPostcode, apiKey, profile, showTiles = false) {
+  async analyzeRoute(startPostcode, endPostcode, apiKey, profile, tileNetwork = '') {
     this.showProgress();
     this.updateProgress(0, 'Initializing...');
 
@@ -162,6 +173,7 @@ export class CoverageAnalyzer {
       this.setStep(3);
       this.updateProgress(30, 'Fetching route from Google Directions...');
       const route = await this.fetchRoute(startCoords, endCoords, profile);
+      this.currentRouteCoordinates = route.coordinates;
       this.completeStep(3);
 
       // Initialize map and draw route
@@ -193,8 +205,7 @@ export class CoverageAnalyzer {
 
       // Step 5: Get coverage data
       this.setStep(5);
-      this.coverageAdapter = new TileCoverageAdapter();
-      const coverageResults = await this.getCoverageData(sampledPoints, startPostcode, endPostcode, showTiles);
+      const coverageResults = await this.getCoverageData(sampledPoints, startPostcode, endPostcode, tileNetwork);
       this.completeStep(5);
 
       // Render results
@@ -269,7 +280,7 @@ export class CoverageAnalyzer {
     });
   }
 
-  async getCoverageData(sampledPoints, startPostcode, endPostcode, showTiles = false) {
+  async getCoverageData(sampledPoints, startPostcode, endPostcode, tileNetwork = '') {
     const results = [];
     const BATCH_SIZE = 5;
     const DELAY_MS = 500;
@@ -281,9 +292,8 @@ export class CoverageAnalyzer {
       try {
         coverage = await this.coverageAdapter.getCoverageFromCoordinates(point.lat, point.lng);
         
-        if (showTiles) {
-          // Use mno3 (EE) as the default for tile display
-          const tileInfo = await this.coverageAdapter.getTileInfo(point.lat, point.lng, 'mno3');
+        if (tileNetwork) {
+          const tileInfo = await this.coverageAdapter.getTileInfo(point.lat, point.lng, tileNetwork);
           const tileKey = `${tileInfo.tileX}-${tileInfo.tileY}`;
           if (!displayedTiles.has(tileKey)) {
             this.googleMap.addTileOverlay(tileInfo.url, tileInfo.bounds, 0.4);
@@ -315,6 +325,29 @@ export class CoverageAnalyzer {
       }
     }
     return results;
+  }
+
+  async updateMapTiles(tileNetwork, coordinates) {
+    if (!this.googleMap.map) return;
+    
+    this.googleMap.clearOverlays();
+    if (!tileNetwork) return;
+
+    const displayedTiles = new Set();
+    const sampledPoints = sampleRouteByCount(coordinates, ROUTE_SAMPLE_COUNT);
+
+    for (const point of sampledPoints) {
+      try {
+        const tileInfo = await this.coverageAdapter.getTileInfo(point.lat, point.lng, tileNetwork);
+        const tileKey = `${tileInfo.tileX}-${tileInfo.tileY}`;
+        if (!displayedTiles.has(tileKey)) {
+          this.googleMap.addTileOverlay(tileInfo.url, tileInfo.bounds, 0.4);
+          displayedTiles.add(tileKey);
+        }
+      } catch (error) {
+        this.logger.warn('Failed to add tile overlay:', error);
+      }
+    }
   }
 
   sleep(ms) {

@@ -38,9 +38,16 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
       <small>Requires Geocoding, Directions, and Maps JavaScript APIs | <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Get a key here</a></small>
     </div>
 
-    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
-      <input type="checkbox" id="show-tiles" style="width: auto;">
-      <label for="show-tiles" style="margin-bottom: 0;">Show coverage tiles on map (EE)</label>
+    <div class="form-group">
+      <label for="tile-network">Show coverage tiles on map</label>
+      <select id="tile-network">
+        <option value="">None</option>
+        <option value="mno3">EE</option>
+        <option value="mno1">Vodafone</option>
+        <option value="mno2">O2</option>
+        <option value="mno4">Three</option>
+      </select>
+      <small>Select a network to overlay its coverage tiles on the map</small>
     </div>
 
     <div class="button-group">

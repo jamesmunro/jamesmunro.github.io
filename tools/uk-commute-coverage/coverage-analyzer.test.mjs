@@ -51,13 +51,20 @@ global.document = {
   createElement: () => ({}),
   head: { appendChild: () => {} },
   getElementById: (id) => {
+    const base = {
+      addEventListener: () => {},
+      appendChild: () => {},
+      style: {},
+      value: '',
+      innerHTML: ''
+    };
     if (id === 'route-form') {
       return { 
-        addEventListener: () => {},
+        ...base,
         querySelector: () => ({ disabled: false })
       };
     }
-    return { value: '', style: {}, appendChild: () => {}, innerHTML: '' };
+    return base;
   },
   addEventListener: () => {}
 };
