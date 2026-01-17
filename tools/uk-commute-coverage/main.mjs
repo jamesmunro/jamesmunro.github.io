@@ -14,6 +14,7 @@ previewBtn.addEventListener('click', async () => {
   const startPostcode = document.getElementById('start').value.trim().toUpperCase();
   const endPostcode = document.getElementById('end').value.trim().toUpperCase();
   const apiKey = document.getElementById('ors-api-key').value.trim();
+  const profile = document.getElementById('route-profile').value;
   const previewContainer = document.getElementById('preview-container');
   const mapContainer = document.getElementById('map-container');
   const errorEl = document.getElementById('error');
@@ -36,7 +37,7 @@ previewBtn.addEventListener('click', async () => {
   previewBtn.textContent = 'Loading Preview...';
 
   try {
-    const route = await analyzer.getRoute(startPostcode, endPostcode, apiKey);
+    const route = await analyzer.getRoute(startPostcode, endPostcode, apiKey, profile);
     leafletMap.drawRoute(route.coordinates);
   } catch (error) {
     errorEl.textContent = `Route preview failed: ${error.message}`;

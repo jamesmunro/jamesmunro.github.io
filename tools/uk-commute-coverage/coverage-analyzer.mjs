@@ -37,6 +37,7 @@ export class CoverageAnalyzer {
     const startInput = document.getElementById('start');
     const endInput = document.getElementById('end');
     const apiKeyInput = document.getElementById('ors-api-key');
+    const profileInput = document.getElementById('route-profile');
 
     if (startInput && localStorage.getItem('route-start')) {
       startInput.value = localStorage.getItem('route-start');
@@ -47,12 +48,16 @@ export class CoverageAnalyzer {
     if (apiKeyInput && localStorage.getItem('ors-api-key')) {
       apiKeyInput.value = localStorage.getItem('ors-api-key');
     }
+    if (profileInput && localStorage.getItem('route-profile')) {
+      profileInput.value = localStorage.getItem('route-profile');
+    }
   }
 
-  saveFormValues(startPostcode, endPostcode, apiKey) {
+  saveFormValues(startPostcode, endPostcode, apiKey, profile) {
     localStorage.setItem('route-start', startPostcode);
     localStorage.setItem('route-end', endPostcode);
     localStorage.setItem('ors-api-key', apiKey);
+    if (profile) localStorage.setItem('route-profile', profile);
   }
 
   async handleSubmit(event) {
@@ -65,14 +70,15 @@ export class CoverageAnalyzer {
     const startPostcode = document.getElementById('start').value.trim().toUpperCase();
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('ors-api-key').value.trim();
+    const profile = document.getElementById('route-profile').value;
 
-    this.saveFormValues(startPostcode, endPostcode, apiKey);
+    this.saveFormValues(startPostcode, endPostcode, apiKey, profile);
 
     const submitBtn = event.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
 
     try {
-      await this.analyzeRoute(startPostcode, endPostcode, apiKey);
+      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile);
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -84,7 +90,7 @@ export class CoverageAnalyzer {
    * Fetches the route between two postcodes.
    * This is a separate method so it can be used for visualization before full analysis.
    */
-  async getRoute(startPostcode, endPostcode, apiKey) {
+  async getRoute(startPostcode, endPostcode, apiKey, profile = 'driving-car') {
     // Step 1: Validate postcodes
     this.validatePostcode(startPostcode);
     this.validatePostcode(endPostcode);
@@ -94,10 +100,10 @@ export class CoverageAnalyzer {
     const endCoords = await this.postcodeToCoordinates(endPostcode);
 
     // Step 3: Fetch route
-    return this.fetchRoute(startCoords, endCoords, apiKey);
+    return this.fetchRoute(startCoords, endCoords, apiKey, profile);
   }
 
-  async analyzeRoute(startPostcode, endPostcode, apiKey) {
+  async analyzeRoute(startPostcode, endPostcode, apiKey, profile) {
     this.showProgress();
     this.updateProgress(0, 'Initializing...');
 
@@ -112,7 +118,7 @@ export class CoverageAnalyzer {
 
       this.setStep(2);
       this.updateProgress(30, 'Fetching route from OpenRouteService...');
-      const route = await this.getRoute(startPostcode, endPostcode, apiKey);
+      const route = await this.getRoute(startPostcode, endPostcode, apiKey, profile);
       this.completeStep(2);
 
       // Step 4: Sample route
@@ -183,11 +189,11 @@ export class CoverageAnalyzer {
     }
   }
 
-  async fetchRoute(start, end, apiKey) {
+  async fetchRoute(start, end, apiKey, profile = 'driving-car') {
     if (!apiKey) {
       throw new Error('OpenRouteService API key required');
     }
-    const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${start.longitude},${start.latitude}&end=${end.longitude},${end.latitude}`;
+    const url = `https://api.openrouteservice.org/v2/directions/${profile}?start=${start.longitude},${start.latitude}&end=${end.longitude},${end.latitude}`;
     try {
       const response = await fetch(url, {
         headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' }

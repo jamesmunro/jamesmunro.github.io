@@ -39,7 +39,7 @@ test('previewRoute successfully fetches and draws a route', async () => {
   await previewRoute('SW1A 1AA', 'EC2N 2DB', 'API_KEY');
 
   assert.strictEqual(getRouteMock.mock.calls.length, 1);
-  assert.deepStrictEqual(getRouteMock.mock.calls[0].arguments, ['SW1A 1AA', 'EC2N 2DB', 'API_KEY']);
+  assert.deepStrictEqual(getRouteMock.mock.calls[0].arguments, ['SW1A 1AA', 'EC2N 2DB', 'API_KEY', 'driving-car']);
 
   assert.strictEqual(drawRouteMock.mock.calls.length, 1);
   assert.deepStrictEqual(drawRouteMock.mock.calls[0].arguments, [routeData.coordinates]);

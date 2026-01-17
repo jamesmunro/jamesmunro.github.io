@@ -26,13 +26,36 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
     </div>
 
     <div class="form-group">
+      <label for="route-profile">Travel Mode</label>
+      <select id="route-profile">
+        <optgroup label="Driving">
+          <option value="driving-car">Car</option>
+          <option value="driving-hgv">HGV (Truck)</option>
+        </optgroup>
+        <optgroup label="Cycling">
+          <option value="cycling-regular">Regular Cycle</option>
+          <option value="cycling-road">Road Bike</option>
+          <option value="cycling-mountain">Mountain Bike</option>
+          <option value="cycling-electric">E-Bike</option>
+        </optgroup>
+        <optgroup label="Walking">
+          <option value="foot-walking">Walking</option>
+          <option value="foot-hiking">Hiking</option>
+        </optgroup>
+        <optgroup label="Accessibility">
+          <option value="wheelchair">Wheelchair</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label for="ors-api-key">OpenRouteService API Key</label>
       <input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org" required autocomplete="off">
-      <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a> | <a href="https://openrouteservice.org/sign-in/" target="_blank" rel="noopener">Log in</a></small>
+      <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a> | <a href="https://openrouteservice.org/dev/#/login" target="_blank" rel="noopener">Log in</a></small>
     </div>
 
     <div class="button-group">
-      <button type="button" id="preview-btn" class="btn-secondary">Preview Route</button>
+      <button type="button" id="preview-btn" class="btn-primary">Preview Route</button>
       <button type="submit" class="btn-primary">Analyse Route Coverage</button>
     </div>
     <small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small>
@@ -133,6 +156,11 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
   font-size: 0.875rem;
 }
 
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
 .btn-primary {
   background: var(--link-color);
   color: var(--bg-card);
@@ -142,7 +170,7 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  width: 100%;
+  flex: 1;
 }
 
 .btn-primary:hover {
