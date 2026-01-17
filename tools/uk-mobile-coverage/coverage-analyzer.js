@@ -23,8 +23,39 @@ class CoverageAnalyzer {
   init() {
     const form = document.getElementById('route-form');
     if (form) {
+      // Load saved values from localStorage
+      this.loadFormValues();
+      
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
+  }
+
+  /**
+   * Load form values from localStorage
+   */
+  loadFormValues() {
+    const startInput = document.getElementById('start');
+    const endInput = document.getElementById('end');
+    const apiKeyInput = document.getElementById('ors-api-key');
+
+    if (startInput && localStorage.getItem('route-start')) {
+      startInput.value = localStorage.getItem('route-start');
+    }
+    if (endInput && localStorage.getItem('route-end')) {
+      endInput.value = localStorage.getItem('route-end');
+    }
+    if (apiKeyInput && localStorage.getItem('ors-api-key')) {
+      apiKeyInput.value = localStorage.getItem('ors-api-key');
+    }
+  }
+
+  /**
+   * Save form values to localStorage
+   */
+  saveFormValues(startPostcode, endPostcode, apiKey) {
+    localStorage.setItem('route-start', startPostcode);
+    localStorage.setItem('route-end', endPostcode);
+    localStorage.setItem('ors-api-key', apiKey);
   }
 
   /**
@@ -42,6 +73,9 @@ class CoverageAnalyzer {
     const startPostcode = document.getElementById('start').value.trim().toUpperCase();
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('ors-api-key').value.trim();
+
+    // Save values to localStorage for next time
+    this.saveFormValues(startPostcode, endPostcode, apiKey);
 
     // Disable form
     const submitBtn = event.target.querySelector('button[type="submit"]');
