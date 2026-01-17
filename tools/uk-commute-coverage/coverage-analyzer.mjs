@@ -1,5 +1,6 @@
 import { ChartRenderer } from './chart-renderer.mjs';
 import { TileCoverageAdapter } from './tile-coverage-adapter.mjs';
+import { GoogleMap } from './google-map.mjs';
 import { sampleRouteByCount } from './route-sampler.mjs';
 import { ROUTE_SAMPLE_COUNT } from './constants.mjs';
 
@@ -11,6 +12,7 @@ export class CoverageAnalyzer {
   constructor({ logger = console } = {}) {
     this.logger = logger;
     this.chartRenderer = new ChartRenderer('coverage-chart');
+    this.googleMap = new GoogleMap('map-container', logger);
     this.coverageAdapter = null;
     this.currentStep = 0;
     this.steps = [
@@ -155,6 +157,15 @@ export class CoverageAnalyzer {
       this.updateProgress(30, 'Fetching route from Google Directions...');
       const route = await this.fetchRoute(startCoords, endCoords, profile);
       this.completeStep(3);
+
+      // Initialize map and draw route
+      this.showElement('preview-container');
+      await this.googleMap.initMap();
+      if (route.fullResult) {
+        this.googleMap.setDirections(route.fullResult);
+      } else {
+        this.googleMap.drawRoute(route.coordinates);
+      }
 
       // Step 4: Sample route
       this.setStep(4);

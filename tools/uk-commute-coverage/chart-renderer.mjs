@@ -154,6 +154,22 @@ class ChartRenderer {
           }
         },
         plugins: {
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x',
+              threshold: 10
+            },
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'x',
+            }
+          },
           tooltip: {
             callbacks: {
               title: function(context) {

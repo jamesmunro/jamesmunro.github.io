@@ -21,6 +21,11 @@ export class GoogleMap {
     this.map = new google.maps.Map(mapContainer, {
       center: { lat: 54.5, lng: -3.4359 }, // Default view over the UK
       zoom: 5,
+      gestureHandling: 'greedy',
+      mapTypeControl: true,
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true
     });
 
     this.directionsRenderer = new google.maps.DirectionsRenderer({

@@ -1,9 +1,9 @@
 import { CoverageAnalyzer } from './coverage-analyzer.mjs';
-import { GoogleMap } from './google-map.mjs';
 
 // Main application setup
+let analyzer;
 if (window.location.pathname.includes('uk-commute-coverage')) {
-  const analyzer = new CoverageAnalyzer();
+  analyzer = new CoverageAnalyzer();
   analyzer.init();
 }
 
@@ -15,8 +15,6 @@ if (previewBtn) {
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('google-maps-api-key').value.trim();
     const profile = document.getElementById('route-profile').value;
-    const previewContainer = document.getElementById('preview-container');
-    const mapContainer = document.getElementById('map-container');
     const errorEl = document.getElementById('error');
 
     // Basic input check
@@ -27,11 +25,6 @@ if (previewBtn) {
     }
 
     errorEl.style.display = 'none';
-    previewContainer.style.display = 'block';
-    mapContainer.style.display = 'block';
-
-    const googleMap = new GoogleMap('map-container');
-    const analyzer = new CoverageAnalyzer();
 
     previewBtn.disabled = true;
     previewBtn.textContent = 'Loading Preview...';
@@ -40,19 +33,19 @@ if (previewBtn) {
       // getRoute will also load the Google Maps API if not already loaded
       const route = await analyzer.getRoute(startPostcode, endPostcode, apiKey, profile);
       
-      // Initialize the map after the API is guaranteed to be loaded by analyzer.getRoute
-      await googleMap.initMap();
+      // Initialize the map and draw the route
+      analyzer.showElement('preview-container');
+      await analyzer.googleMap.initMap();
       
-      // Draw the route
       if (route.fullResult) {
-        googleMap.setDirections(route.fullResult);
+        analyzer.googleMap.setDirections(route.fullResult);
       } else {
-        googleMap.drawRoute(route.coordinates);
+        analyzer.googleMap.drawRoute(route.coordinates);
       }
     } catch (error) {
       errorEl.textContent = `Route preview failed: ${error.message}`;
       errorEl.style.display = 'block';
-      mapContainer.style.display = 'none';
+      analyzer.hideElement('preview-container');
     } finally {
       previewBtn.disabled = false;
       previewBtn.textContent = 'Preview Route';
