@@ -3,20 +3,20 @@
  * Fetches coverage data from Ofcom tile API and extracts coverage colors
  */
 
-// Use var for browser compatibility (allows redeclaration on reload)
-var TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
-var TILE_VERSION = '42';
-var STANDARD_ZOOM = 10;
+// Use const in an IIFE to avoid redeclaration errors when script is reloaded
+const TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
+const TILE_VERSION = '42';
+const STANDARD_ZOOM = 10;
 
 // Mobile Network Operator mapping
-var MNO_MAP = {
+const MNO_MAP = {
   mno1: 'Vodafone',
   mno2: 'O2',
   mno3: 'EE',
   mno4: 'Three'
 };
 
-var MNO_IDS = ['mno1', 'mno2', 'mno3', 'mno4'];
+const MNO_IDS = ['mno1', 'mno2', 'mno3', 'mno4'];
 
 /**
  * Tile-based coverage adapter using Ofcom tile API
