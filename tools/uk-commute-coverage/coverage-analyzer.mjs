@@ -227,6 +227,7 @@ export class CoverageAnalyzer {
       'cycling-road': google.maps.TravelMode.BICYCLING,
       'foot-walking': google.maps.TravelMode.WALKING,
       'foot-hiking': google.maps.TravelMode.WALKING,
+      'transit': google.maps.TravelMode.TRANSIT,
     };
     
     const travelMode = modeMap[profile] || google.maps.TravelMode.DRIVING;

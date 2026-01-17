@@ -26,6 +26,7 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
       <label for="route-profile">Travel Mode</label>
       <select id="route-profile">
         <option value="driving-car">Driving (Car)</option>
+        <option value="transit">Public Transport (Bus/Train)</option>
         <option value="cycling-regular">Cycling</option>
         <option value="foot-walking">Walking</option>
       </select>

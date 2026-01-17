@@ -31,7 +31,12 @@ const googleMock = {
         }, 'OK');
       }
     },
-    TravelMode: { DRIVING: 'DRIVING' }
+    TravelMode: { 
+      DRIVING: 'DRIVING',
+      TRANSIT: 'TRANSIT',
+      BICYCLING: 'BICYCLING',
+      WALKING: 'WALKING'
+    }
   }
 };
 
@@ -105,6 +110,15 @@ describe('CoverageAnalyzer', () => {
       assert.ok(Array.isArray(route.coordinates));
       assert.strictEqual(route.coordinates.length, 2);
       assert.strictEqual(route.distance, 200);
+    });
+
+    test('fetches transit route', async () => {
+      const start = { lat: () => 51.501, lng: () => -0.1418 };
+      const end = { lat: () => 51.502, lng: () => -0.1420 };
+      const route = await analyzer.fetchRoute(start, end, 'transit');
+      
+      assert.ok(Array.isArray(route.coordinates));
+      assert.strictEqual(route.coordinates.length, 2);
     });
   });
 });
