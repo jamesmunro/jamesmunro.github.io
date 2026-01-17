@@ -215,3 +215,8 @@ class ChartRenderer {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { ChartRenderer };
 }
+
+// Export to global scope for browser
+if (typeof window !== 'undefined') {
+  window.ChartRenderer = ChartRenderer;
+}

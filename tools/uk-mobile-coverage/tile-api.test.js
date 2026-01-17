@@ -310,3 +310,47 @@ describe('Cache Key Construction', () => {
     assert.ok(key.includes('v42'), 'Cache key should include version');
   });
 });
+
+/**
+ * Module Export Tests
+ * Verifies that classes are properly exported for both Node.js and browser environments
+ */
+describe('Module Exports', () => {
+  test('TileCoverageAdapter should be exported to module.exports', () => {
+    // TileCoverageAdapter should be available via require() in Node.js
+    const { TileCoverageAdapter } = require('./tile-coverage-adapter.js');
+    assert.ok(TileCoverageAdapter, 'TileCoverageAdapter should be exported in module.exports');
+    assert.strictEqual(typeof TileCoverageAdapter, 'function', 'TileCoverageAdapter should be a class/function');
+  });
+
+  test('TileCoverageAdapter should be exported to global scope for browser', () => {
+    // Simulate browser environment by checking the module content
+    const path = require('path');
+    const fs = require('fs');
+    const filePath = path.join(__dirname, 'tile-coverage-adapter.js');
+    const moduleContent = fs.readFileSync(filePath, 'utf8');
+    assert.ok(
+      moduleContent.includes('window.TileCoverageAdapter = TileCoverageAdapter'),
+      'TileCoverageAdapter should be assigned to window object for browser compatibility'
+    );
+  });
+
+  test('ChartRenderer should be exported to module.exports', () => {
+    // ChartRenderer should be available via require() in Node.js
+    const { ChartRenderer } = require('./chart-renderer.js');
+    assert.ok(ChartRenderer, 'ChartRenderer should be exported in module.exports');
+    assert.strictEqual(typeof ChartRenderer, 'function', 'ChartRenderer should be a class/function');
+  });
+
+  test('ChartRenderer should be exported to global scope for browser', () => {
+    // Simulate browser environment by checking the module content
+    const path = require('path');
+    const fs = require('fs');
+    const filePath = path.join(__dirname, 'chart-renderer.js');
+    const moduleContent = fs.readFileSync(filePath, 'utf8');
+    assert.ok(
+      moduleContent.includes('window.ChartRenderer = ChartRenderer'),
+      'ChartRenderer should be assigned to window object for browser compatibility'
+    );
+  });
+});

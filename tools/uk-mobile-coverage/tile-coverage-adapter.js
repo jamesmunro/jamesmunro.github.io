@@ -340,3 +340,8 @@ class TileCoverageAdapter {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { TileCoverageAdapter };
 }
+
+// Export to global scope for browser
+if (typeof window !== 'undefined') {
+  window.TileCoverageAdapter = TileCoverageAdapter;
+}
