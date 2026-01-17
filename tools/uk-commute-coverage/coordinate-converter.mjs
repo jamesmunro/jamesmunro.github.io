@@ -114,3 +114,54 @@ export async function latLonToPixelInTile(lat, lon, zoom = DEFAULT_ZOOM) {
   const { easting, northing } = await latLonToBng(lat, lon);
   return bngToPixelInTile(easting, northing, zoom);
 }
+
+/**
+ * Convert tile coordinates to BNG bounding box
+ * @param {number} tileX - Tile X coordinate
+ * @param {number} tileY - Tile Y coordinate
+ * @param {number} zoom - Zoom level
+ * @returns {Object} {west, south, east, north} in BNG
+ */
+export function tileToBngBounds(tileX, tileY, zoom = DEFAULT_ZOOM) {
+  const resolution = RESOLUTIONS[zoom];
+  const tileSpan = resolution * TILE_SIZE;
+  const west = tileX * tileSpan + ORIGIN_X;
+  const south = tileY * tileSpan + ORIGIN_Y;
+  const east = (tileX + 1) * tileSpan + ORIGIN_X;
+  const north = (tileY + 1) * tileSpan + ORIGIN_Y;
+  return { west, south, east, north };
+}
+
+/**
+ * Convert BNG to WGS84 (lat/lon)
+ * @param {number} easting - BNG easting
+ * @param {number} northing - BNG northing
+ * @returns {Promise<Object>} {lat, lon}
+ */
+export async function bngToLatLon(easting, northing) {
+  await initProj4();
+  if (!proj4) {
+    throw new Error('proj4 library is not loaded.');
+  }
+  const [lon, lat] = proj4('EPSG:27700', 'EPSG:4326', [easting, northing]);
+  return { lat, lon };
+}
+
+/**
+ * Convert tile coordinates to WGS84 bounding box
+ * @param {number} tileX - Tile X coordinate
+ * @param {number} tileY - Tile Y coordinate
+ * @param {number} zoom - Zoom level
+ * @returns {Promise<Object>} {west, south, east, north} in Lat/Lon
+ */
+export async function tileToWgs84Bounds(tileX, tileY, zoom = DEFAULT_ZOOM) {
+  const bngBounds = tileToBngBounds(tileX, tileY, zoom);
+  const sw = await bngToLatLon(bngBounds.west, bngBounds.south);
+  const ne = await bngToLatLon(bngBounds.east, bngBounds.north);
+  return {
+    south: sw.lat,
+    west: sw.lon,
+    north: ne.lat,
+    east: ne.lon
+  };
+}

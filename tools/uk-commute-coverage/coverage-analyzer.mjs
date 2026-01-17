@@ -42,6 +42,7 @@ export class CoverageAnalyzer {
     const endInput = document.getElementById('end');
     const apiKeyInput = document.getElementById('google-maps-api-key');
     const profileInput = document.getElementById('route-profile');
+    const showTilesInput = document.getElementById('show-tiles');
 
     if (startInput && localStorage.getItem('route-start')) {
       startInput.value = localStorage.getItem('route-start');
@@ -54,6 +55,9 @@ export class CoverageAnalyzer {
     }
     if (profileInput && localStorage.getItem('route-profile')) {
       profileInput.value = localStorage.getItem('route-profile');
+    }
+    if (showTilesInput && localStorage.getItem('show-tiles')) {
+      showTilesInput.checked = localStorage.getItem('show-tiles') === 'true';
     }
   }
 
@@ -75,14 +79,16 @@ export class CoverageAnalyzer {
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('google-maps-api-key').value.trim();
     const profile = document.getElementById('route-profile').value;
+    const showTiles = document.getElementById('show-tiles').checked;
 
     this.saveFormValues(startPostcode, endPostcode, apiKey, profile);
+    localStorage.setItem('show-tiles', showTiles);
 
     const submitBtn = event.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
 
     try {
-      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile);
+      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile, showTiles);
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -131,7 +137,7 @@ export class CoverageAnalyzer {
     return this.fetchRoute(startCoords, endCoords, profile);
   }
 
-  async analyzeRoute(startPostcode, endPostcode, apiKey, profile) {
+  async analyzeRoute(startPostcode, endPostcode, apiKey, profile, showTiles = false) {
     this.showProgress();
     this.updateProgress(0, 'Initializing...');
 
@@ -161,6 +167,8 @@ export class CoverageAnalyzer {
       // Initialize map and draw route
       this.showElement('preview-container');
       await this.googleMap.initMap();
+      this.googleMap.clearOverlays();
+
       if (route.fullResult) {
         this.googleMap.setDirections(route.fullResult);
       } else {
@@ -186,7 +194,7 @@ export class CoverageAnalyzer {
       // Step 5: Get coverage data
       this.setStep(5);
       this.coverageAdapter = new TileCoverageAdapter();
-      const coverageResults = await this.getCoverageData(sampledPoints, startPostcode, endPostcode);
+      const coverageResults = await this.getCoverageData(sampledPoints, startPostcode, endPostcode, showTiles);
       this.completeStep(5);
 
       // Render results
@@ -261,16 +269,27 @@ export class CoverageAnalyzer {
     });
   }
 
-  async getCoverageData(sampledPoints, startPostcode, endPostcode) {
+  async getCoverageData(sampledPoints, startPostcode, endPostcode, showTiles = false) {
     const results = [];
     const BATCH_SIZE = 5;
     const DELAY_MS = 500;
+    const displayedTiles = new Set();
 
     for (let i = 0; i < sampledPoints.length; i++) {
       const point = sampledPoints[i];
       let coverage = null;
       try {
         coverage = await this.coverageAdapter.getCoverageFromCoordinates(point.lat, point.lng);
+        
+        if (showTiles) {
+          // Use mno3 (EE) as the default for tile display
+          const tileInfo = await this.coverageAdapter.getTileInfo(point.lat, point.lng, 'mno3');
+          const tileKey = `${tileInfo.tileX}-${tileInfo.tileY}`;
+          if (!displayedTiles.has(tileKey)) {
+            this.googleMap.addTileOverlay(tileInfo.url, tileInfo.bounds, 0.4);
+            displayedTiles.add(tileKey);
+          }
+        }
       } catch (error) {
         this.logger.warn(`Failed to get coverage for point ${i}:`, error);
         coverage = { latitude: point.lat, longitude: point.lng, error: error.message, networks: {} };

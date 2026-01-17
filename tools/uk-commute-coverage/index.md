@@ -38,6 +38,11 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
       <small>Requires Geocoding, Directions, and Maps JavaScript APIs | <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Get a key here</a></small>
     </div>
 
+    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+      <input type="checkbox" id="show-tiles" style="width: auto;">
+      <label for="show-tiles" style="margin-bottom: 0;">Show coverage tiles on map (EE)</label>
+    </div>
+
     <div class="button-group">
       <button type="button" id="preview-btn" class="btn-primary">Preview Route</button>
       <button type="submit" class="btn-primary">Analyse Route Coverage</button>

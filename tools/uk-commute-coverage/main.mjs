@@ -36,6 +36,7 @@ if (previewBtn) {
       // Initialize the map and draw the route
       analyzer.showElement('preview-container');
       await analyzer.googleMap.initMap();
+      analyzer.googleMap.clearOverlays();
       
       if (route.fullResult) {
         analyzer.googleMap.setDirections(route.fullResult);

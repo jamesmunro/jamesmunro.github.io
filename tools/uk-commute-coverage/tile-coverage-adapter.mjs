@@ -3,9 +3,10 @@
  * Fetches coverage data from Ofcom tile API and extracts coverage colors
  */
 import { TILE_API_BASE, TILE_VERSION, STANDARD_ZOOM, COLOR_TOLERANCE } from './constants.mjs';
-import { latLonToPixelInTile } from './coordinate-converter.mjs';
+import { latLonToPixelInTile, tileToWgs84Bounds } from './coordinate-converter.mjs';
 
 // Mobile Network Operator mapping
+// ... (rest of imports/constants)
 const MNO_MAP = {
   mno1: 'Vodafone',
   mno2: 'O2',
@@ -73,6 +74,27 @@ export class TileCoverageAdapter {
     } catch (error) {
       throw new Error(`Failed to get coverage from coordinates: ${error.message}`);
     }
+  }
+
+  /**
+   * Get tile URL and bounds for a coordinate
+   * @param {number} lat - Latitude
+   * @param {number} lon - Longitude
+   * @param {string} mnoId - MNO parameter
+   * @returns {Promise<Object>} {url, bounds}
+   */
+  async getTileInfo(lat, lon, mnoId = 'mno1') {
+    const pixelInfo = await latLonToPixelInTile(lat, lon, STANDARD_ZOOM);
+    const bounds = await tileToWgs84Bounds(pixelInfo.tileX, pixelInfo.tileY, STANDARD_ZOOM);
+    const url = this.getTileUrl(mnoId, pixelInfo.tileX, pixelInfo.tileY);
+    return { url, bounds, tileX: pixelInfo.tileX, tileY: pixelInfo.tileY };
+  }
+
+  /**
+   * Get tile URL for given parameters
+   */
+  getTileUrl(mnoId, tileX, tileY) {
+    return `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`;
   }
 
   /**

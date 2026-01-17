@@ -32,6 +32,42 @@ export class GoogleMap {
       map: this.map,
       suppressMarkers: false,
     });
+
+    this.overlays = [];
+  }
+
+  /**
+   * Add a tile overlay to the map
+   * @param {string} url - URL of the tile image
+   * @param {Object} bounds - {south, west, north, east}
+   * @param {number} opacity - Opacity of the overlay (0-1)
+   */
+  addTileOverlay(url, bounds, opacity = 0.5) {
+    if (!this.map) return;
+
+    const imageBounds = {
+      north: bounds.north,
+      south: bounds.south,
+      east: bounds.east,
+      west: bounds.west,
+    };
+
+    const overlay = new google.maps.GroundOverlay(url, imageBounds, {
+      map: this.map,
+      opacity: opacity,
+      clickable: false
+    });
+
+    this.overlays.push(overlay);
+    return overlay;
+  }
+
+  /**
+   * Clear all overlays from the map
+   */
+  clearOverlays() {
+    this.overlays.forEach(overlay => overlay.setMap(null));
+    this.overlays = [];
   }
 
   /**
