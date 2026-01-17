@@ -71,7 +71,7 @@ class ChartRenderer {
         backgroundColor: colors[network] + '20', // Add transparency
         borderWidth: 2,
         tension: 0,
-        stepped: true,
+        stepped: false,
         pointRadius: 0,
         pointHoverRadius: 5
       };
