@@ -101,8 +101,13 @@ class ChartRenderer {
       this.chart.destroy();
     }
 
-    // To be absolutely sure, replace the canvas element to remove any lingering bindings
-    const newCanvas = canvas.cloneNode(true);
+    // Create a fresh canvas element to ensure no lingering state
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = this.canvasId;
+    newCanvas.className = canvas.className; // Preserve classes
+    // Preserve any inline styles if necessary, but typically controlled by CSS
+    // canvas.style.cssText = canvas.style.cssText; 
+    
     canvas.parentNode.replaceChild(newCanvas, canvas);
     canvas = newCanvas;
 
