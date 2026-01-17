@@ -5,8 +5,8 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 
 <div class="coverage-tool">
   <div class="intro">
-    <p>Compare mobile data coverage (3G/4G/5G) from EE, Vodafone, O2, and Three along any UK route. Perfect for finding the best network for your daily commute.</p>
-    <p><strong>Note:</strong> This tool focuses on data coverage only - voice coverage is not analyzed.</p>
+    <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyze signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
+    <p><strong>How it works:</strong> Enter your route, and we'll fetch Ofcom's official coverage data and sample it along your journey. Results show coverage quality levels for each network.</p>
   </div>
 
   <form id="route-form">
@@ -29,7 +29,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
     </div>
 
     <button type="submit" class="btn-primary">Analyze Route Coverage</button>
-    <small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage data</small>
+    <small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small>
   </form>
 
   <!-- Step-by-Step Progress Indicator -->
@@ -49,14 +49,14 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 
   <!-- Network Comparison Summary -->
   <div id="summary" style="display:none">
-    <h3>Route Coverage Summary (Data Only)</h3>
+    <h3>Route Coverage Summary</h3>
     <table class="coverage-table">
       <thead>
         <tr>
           <th>Network</th>
-          <th>5G Data</th>
-          <th>4G Data</th>
-          <th>3G+ Data</th>
+          <th>Excellent</th>
+          <th>Good</th>
+          <th>Adequate</th>
           <th>Best Network?</th>
         </tr>
       </thead>
@@ -64,7 +64,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
         <!-- Populated dynamically with percentages -->
       </tbody>
     </table>
-    <p><small>Voice coverage not shown - focusing on data connectivity for smartphones</small></p>
+    <p><small>Coverage levels based on Ofcom tile coverage data (variable based on location, indoor/outdoor, and network conditions)</small></p>
   </div>
 
   <!-- Error Display (Fail Fast) -->
@@ -214,8 +214,11 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 <script src="{{ '/assets/libs/chart.js/chart.min.js' | cacheBust }}"></script>
+<script src="{{ 'coordinate-converter.js' | cacheBust }}"></script>
+<script src="{{ 'pixel-extractor.js' | cacheBust }}"></script>
 <script src="{{ 'route-sampler.js' | cacheBust }}"></script>
-<script src="{{ 'coverage-adapter.js' | cacheBust }}"></script>
+<script src="{{ 'tile-coverage-adapter.js' | cacheBust }}"></script>
 <script src="{{ 'chart-renderer.js' | cacheBust }}"></script>
 <script src="{{ 'coverage-analyzer.js' | cacheBust }}"></script>

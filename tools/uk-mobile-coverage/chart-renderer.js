@@ -11,14 +11,15 @@ class ChartRenderer {
 
   /**
    * Determine signal level from coverage data
-   * @param {Object} networkData - Coverage data for a network {data3G, data4G, data5G}
-   * @returns {number} Signal level (0=No Data, 1=3G Data, 2=4G Data, 3=5G Data)
+   * @param {Object} networkData - Coverage data for a network {level, color, description}
+   * @returns {number} Signal level (0-4 from tile API, or 0 if no data)
    */
   getSignalLevel(networkData) {
     if (!networkData) return 0;
-    if (networkData.data5G) return 3;
-    if (networkData.data4G) return 2;
-    if (networkData.data3G) return 1;
+    if (networkData.error) return 0;
+    if (typeof networkData.level === 'number') {
+      return Math.max(0, Math.min(4, networkData.level)); // Clamp to 0-4
+    }
     return 0;
   }
 
@@ -105,15 +106,15 @@ class ChartRenderer {
           y: {
             type: 'linear',
             min: 0,
-            max: 3,
+            max: 4,
             title: {
               display: true,
-              text: 'Data Coverage Type'
+              text: 'Coverage Level'
             },
             ticks: {
               stepSize: 1,
               callback: function(value) {
-                const labels = ['No Data', '3G Data', '4G Data', '5G Data'];
+                const labels = ['No Coverage', 'Variable', 'Good Outdoor', 'Mixed', 'Excellent'];
                 return labels[value] || '';
               }
             }
@@ -127,9 +128,9 @@ class ChartRenderer {
                 return `Distance: ${point.x.toFixed(2)} km`;
               },
               label: function(context) {
-                const labels = ['No Data', '3G Data', '4G Data', '5G Data'];
-                const signalLabel = labels[context.parsed.y] || 'Unknown';
-                return `${context.dataset.label}: ${signalLabel}`;
+                const labels = ['No Coverage', 'Variable Outdoor', 'Good Outdoor', 'Good Outdoor (Variable In-Home)', 'Excellent (In & Out)'];
+                const levelLabel = labels[context.parsed.y] || 'Unknown';
+                return `${context.dataset.label}: ${levelLabel}`;
               },
               afterLabel: function(context) {
                 const point = context.raw;
@@ -161,14 +162,15 @@ class ChartRenderer {
       );
 
       const total = levels.length;
-      const data5G = levels.filter(l => l === 3).length;
-      const data4G = levels.filter(l => l >= 2).length;
-      const data3G = levels.filter(l => l >= 1).length;
+      // Count points with good coverage (level 2+) and excellent (level 3+)
+      const excellent = levels.filter(l => l >= 3).length;
+      const good = levels.filter(l => l >= 2).length;
+      const adequate = levels.filter(l => l >= 1).length;
 
       summary[network] = {
-        '5G': total > 0 ? ((data5G / total) * 100).toFixed(1) : '0.0',
-        '4G': total > 0 ? ((data4G / total) * 100).toFixed(1) : '0.0',
-        '3G+': total > 0 ? ((data3G / total) * 100).toFixed(1) : '0.0',
+        'Excellent': total > 0 ? ((excellent / total) * 100).toFixed(1) : '0.0',
+        'Good': total > 0 ? ((good / total) * 100).toFixed(1) : '0.0',
+        'Adequate': total > 0 ? ((adequate / total) * 100).toFixed(1) : '0.0',
         avgLevel: total > 0 ? (levels.reduce((a, b) => a + b, 0) / total) : 0
       };
     });
@@ -200,9 +202,9 @@ class ChartRenderer {
       const row = tbody.insertRow();
       row.innerHTML = `
         <td><strong>${network}</strong></td>
-        <td>${stats['5G']}%</td>
-        <td>${stats['4G']}%</td>
-        <td>${stats['3G+']}%</td>
+        <td>${stats['Excellent']}%</td>
+        <td>${stats['Good']}%</td>
+        <td>${stats['Adequate']}%</td>
         <td>${index === 0 ? '✓ Best' : ''}</td>
       `;
     });
