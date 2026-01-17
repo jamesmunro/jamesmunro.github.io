@@ -14,6 +14,7 @@ module.exports = function (eleventyConfig) {
   });
 
   eleventyConfig.addPassthroughCopy("tools/**/*.js");
+  eleventyConfig.addPassthroughCopy("tools/**/*.mjs");
   eleventyConfig.addPassthroughCopy({
     "node_modules/xterm/css/xterm.css": "assets/libs/xterm/xterm.css",
     "node_modules/xterm/lib/xterm.js": "assets/libs/xterm/xterm.js",

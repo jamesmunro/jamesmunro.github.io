@@ -160,7 +160,5 @@ function sampleRouteByCount(coordinates, targetSamples = 150) {
   return points;
 }
 
-// Export for use in other modules and tests
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance };
-}
+// Export for use in other modules
+export { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance };

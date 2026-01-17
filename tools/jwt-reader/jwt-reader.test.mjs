@@ -1,5 +1,6 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { decodeSegment, decodeToken } from "./jwt-reader.js";
 
 const base64UrlEncode = (value) =>
   Buffer.from(value)
@@ -14,8 +15,7 @@ const buildToken = (header, payload) => {
   return `${headerSegment}.${payloadSegment}.signature`;
 };
 
-test("decodes header and payload JSON", async () => {
-  const { decodeSegment, decodeToken } = await import("./jwt-reader.js");
+test("decodes header and payload JSON", () => {
   const header = { alg: "HS256", typ: "JWT" };
   const payload = { sub: "123", admin: true };
   const token = buildToken(header, payload);
@@ -25,8 +25,7 @@ test("decodes header and payload JSON", async () => {
   assert.deepEqual(decodeToken(token), { header, payload });
 });
 
-test("decodes tokens with whitespace and newlines", async () => {
-  const { decodeToken } = await import("./jwt-reader.js");
+test("decodes tokens with whitespace and newlines", () => {
   const header = { alg: "HS256", typ: "JWT" };
   const payload = { sub: "456", role: "editor" };
   const token = buildToken(header, payload);
@@ -35,8 +34,6 @@ test("decodes tokens with whitespace and newlines", async () => {
   assert.deepEqual(decodeToken(spacedToken), { header, payload });
 });
 
-test("throws on invalid Base64 segments", async () => {
-  const { decodeSegment } = await import("./jwt-reader.js");
-
+test("throws on invalid Base64 segments", () => {
   assert.throws(() => decodeSegment("###"), /Invalid Base64/);
 });

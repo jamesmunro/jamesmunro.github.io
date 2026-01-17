@@ -3,20 +3,12 @@
  * Tests the pure functions that don't require DOM/network
  */
 
-const { describe, test } = require('node:test');
-const assert = require('node:assert');
+import { describe, test } from 'node:test';
+import assert from 'node:assert';
+import { CoverageAnalyzer } from './coverage-analyzer.mjs';
 
-// Extract validatePostcode for testing by creating a test instance
-// Since CoverageAnalyzer is browser-dependent, we extract the regex pattern
-const POSTCODE_PATTERN = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
-
-function validatePostcode(postcode) {
-  if (!POSTCODE_PATTERN.test(postcode)) {
-    const hasSpace = postcode.includes(' ');
-    const suggestion = hasSpace ? '' : ' (missing space?)';
-    throw new Error(`Invalid postcode format: ${postcode}${suggestion}`);
-  }
-}
+const analyzer = new CoverageAnalyzer();
+const validatePostcode = analyzer.validatePostcode.bind(analyzer);
 
 describe('CoverageAnalyzer', () => {
   describe('validatePostcode', () => {

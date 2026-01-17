@@ -3,9 +3,9 @@
  * Run with: npm test
  */
 
-const { describe, test } = require('node:test');
-const assert = require('node:assert');
-const { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance } = require('./route-sampler.js');
+import { describe, test } from 'node:test';
+import assert from 'node:assert';
+import { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance } from './route-sampler.mjs';
 
 describe('Route Sampler', () => {
   describe('haversineDistance', () => {

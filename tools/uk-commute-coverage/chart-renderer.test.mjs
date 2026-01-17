@@ -3,9 +3,9 @@
  * Tests pure functions without DOM dependencies
  */
 
-const { describe, test, before } = require('node:test');
-const assert = require('node:assert');
-const { JSDOM } = require('jsdom');
+import { describe, test, before } from 'node:test';
+import assert from 'node:assert';
+import { JSDOM } from 'jsdom';
 
 // Setup minimal DOM environment for ChartRenderer
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
@@ -18,7 +18,7 @@ global.Chart = class MockChart {
   destroy() {}
 };
 
-const { ChartRenderer } = require('./chart-renderer.js');
+import { ChartRenderer } from './chart-renderer.mjs';
 
 describe('ChartRenderer', () => {
   let renderer;

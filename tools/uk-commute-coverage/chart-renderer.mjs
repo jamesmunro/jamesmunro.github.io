@@ -309,11 +309,4 @@ class ChartRenderer {
 }
 
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ChartRenderer };
-}
-
-// Export to global scope for browser
-if (typeof window !== 'undefined') {
-  window.ChartRenderer = ChartRenderer;
-}
+export { ChartRenderer };

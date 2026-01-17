@@ -3,6 +3,9 @@ title: UK Commute Coverage Analyser
 hero_subtitle: Find the best network for your commute by analysing mobile data coverage along your route
 ---
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <div class="coverage-tool">
   <div class="intro">
     <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyse signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
@@ -28,9 +31,17 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
       <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a> | <a href="https://openrouteservice.org/sign-in/" target="_blank" rel="noopener">Log in</a></small>
     </div>
 
-    <button type="submit" class="btn-primary">Analyse Route Coverage</button>
+    <div class="button-group">
+      <button type="button" id="preview-btn" class="btn-secondary">Preview Route</button>
+      <button type="submit" class="btn-primary">Analyse Route Coverage</button>
+    </div>
     <small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small>
   </form>
+
+  <!-- Route Preview Map -->
+  <div id="preview-container" style="display:none;">
+    <div id="map-container" style="height: 400px; margin: 2rem 0;"></div>
+  </div>
 
   <!-- Step-by-Step Progress Indicator -->
   <div id="progress" class="progress-container" style="display:none">
@@ -248,12 +259,7 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
 }
 </style>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
-<script src="{{ '/assets/libs/chart.js/chart.min.js' | cacheBust }}"></script>
-<script src="{{ 'constants.js' | cacheBust }}"></script>
-<script src="{{ 'coordinate-converter.js' | cacheBust }}"></script>
-<script src="{{ 'pixel-extractor.js' | cacheBust }}"></script>
-<script src="{{ 'route-sampler.js' | cacheBust }}"></script>
-<script src="{{ 'tile-coverage-adapter.js' | cacheBust }}"></script>
-<script src="{{ 'chart-renderer.js' | cacheBust }}"></script>
-<script src="{{ 'coverage-analyzer.js' | cacheBust }}"></script>
+<script type="module" src="main.mjs"></script>
