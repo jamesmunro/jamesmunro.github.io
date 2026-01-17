@@ -29,7 +29,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
     </div>
 
     <button type="submit" class="btn-primary">Analyze Route Coverage</button>
-    <small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small>
+    <small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small>
   </form>
 
   <!-- Step-by-Step Progress Indicator -->
@@ -88,7 +88,7 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 }
 
 .intro {
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
@@ -108,21 +108,23 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .form-group small {
   display: block;
   margin-top: 0.25rem;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .btn-primary {
-  background: #0066cc;
-  color: white;
+  background: var(--link-color);
+  color: var(--bg-card);
   border: none;
   padding: 1rem 2rem;
   border-radius: 4px;
@@ -133,18 +135,19 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 }
 
 .btn-primary:hover {
-  background: #0052a3;
+  background: var(--link-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--border-color);
+  color: var(--text-tertiary);
   cursor: not-allowed;
 }
 
 .progress-container {
   margin: 2rem 0;
   padding: 1.5rem;
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   border-radius: 8px;
 }
 
@@ -159,16 +162,16 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 }
 
 .progress-step.complete {
-  color: #28a745;
+  color: #22c55e;
 }
 
 .progress-step.active {
-  color: #0066cc;
+  color: var(--link-color);
   font-weight: 600;
 }
 
 .progress-step.pending {
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 #progress-bar {
@@ -181,13 +184,13 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
   display: block;
   text-align: center;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .error-message {
-  background: #ffebee;
-  border: 1px solid #ef5350;
-  color: #c62828;
+  background: color-mix(in srgb, var(--error-color) 15%, var(--bg-card));
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
   padding: 1rem;
   border-radius: 4px;
   margin: 1rem 0;
@@ -203,22 +206,22 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 .coverage-table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .coverage-table th {
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   font-weight: 600;
 }
 
 .coverage-table tr:hover {
-  background: #fafafa;
+  background: var(--bg-secondary-hover);
 }
 
 .coverage-legend {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: #f9f9f9;
+  background: var(--bg-secondary);
   border-radius: 6px;
   font-size: 0.9rem;
 }
