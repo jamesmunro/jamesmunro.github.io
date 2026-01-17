@@ -310,6 +310,13 @@ describe('TileCoverageAdapter', () => {
       assert.strictEqual(adapter.getCoverageDescription(undefined), 'Unknown');
     });
   });
+
+  describe('stats', () => {
+    test('initializes with zeroed stats', () => {
+      assert.strictEqual(adapter.stats.tilesFetched, 0);
+      assert.strictEqual(adapter.stats.tilesFromCache, 0);
+    });
+  });
 });
 
 // Test tile URL construction

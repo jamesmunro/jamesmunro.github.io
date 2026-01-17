@@ -59,7 +59,10 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
   <div id="progress" class="progress-container" style="display:none">
     <div id="progress-steps"></div>
     <progress id="progress-bar" max="100" value="0"></progress>
-    <span id="progress-text">Initializing...</span>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+      <span id="progress-text">Initializing...</span>
+      <span id="stats-text" style="font-size: 0.85rem; color: var(--text-secondary); font-family: monospace;"></span>
+    </div>
   </div>
 
   <!-- Chart Canvas -->

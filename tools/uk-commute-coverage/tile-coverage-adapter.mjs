@@ -22,6 +22,10 @@ const MNO_IDS = ['mno1', 'mno2', 'mno3', 'mno4'];
 export class TileCoverageAdapter {
   constructor() {
     this.tileCache = this.loadTileCacheFromStorage();
+    this.stats = {
+      tilesFetched: 0,
+      tilesFromCache: 0
+    };
     this.colorMap = {
       4: '#7d2093', // Good outdoor and in-home
       3: '#cd7be4', // Good outdoor, variable in-home
@@ -108,12 +112,14 @@ export class TileCoverageAdapter {
     const cacheKey = `${mnoId}-${STANDARD_ZOOM}-${tileX}-${tileY}-v${TILE_VERSION}`;
 
     if (this.tileCache[cacheKey] instanceof Blob) {
+      this.stats.tilesFromCache++;
       return this.tileCache[cacheKey];
     }
 
     if (this.tileCache[cacheKey] && this.tileCache[cacheKey].timestamp) {
       const blob = await this.loadTileFromIndexedDB(cacheKey);
       if (blob) {
+        this.stats.tilesFromCache++;
         this.tileCache[cacheKey] = blob;
         return blob;
       }
@@ -127,6 +133,7 @@ export class TileCoverageAdapter {
         throw new Error(`Tile fetch failed: ${response.status} ${response.statusText}`);
       }
       const blob = await response.blob();
+      this.stats.tilesFetched++;
       this.tileCache[cacheKey] = blob;
       this.saveTileCacheToStorage(cacheKey, blob);
       return blob;

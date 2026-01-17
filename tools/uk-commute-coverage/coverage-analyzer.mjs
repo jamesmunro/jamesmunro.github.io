@@ -307,7 +307,8 @@ export class CoverageAnalyzer {
       results.push(result);
 
       const progress = 40 + (i / sampledPoints.length) * 55;
-      this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} points`);
+      const stats = `Tiles: ${this.coverageAdapter.stats.tilesFetched} fetched / ${this.coverageAdapter.stats.tilesFromCache} cached`;
+      this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} samples`, stats);
 
       if (i < sampledPoints.length - 1 && (i + 1) % BATCH_SIZE === 0) {
         await this.sleep(DELAY_MS);
@@ -334,11 +335,17 @@ export class CoverageAnalyzer {
   }
 
   hideProgress() { this.hideElement('progress'); }
-  updateProgress(percent, text) {
+  updateProgress(percent, text, stats = null) {
     const bar = document.getElementById('progress-bar');
     const textEl = document.getElementById('progress-text');
+    const statsEl = document.getElementById('stats-text');
     if (bar) bar.value = percent;
     if (textEl) textEl.textContent = text;
+    if (statsEl && stats) {
+      statsEl.textContent = stats;
+    } else if (statsEl) {
+      statsEl.textContent = '';
+    }
   }
 
   setStep(stepIndex) {
