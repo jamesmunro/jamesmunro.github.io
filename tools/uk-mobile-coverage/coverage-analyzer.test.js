@@ -224,5 +224,20 @@ describe('Route Sampler', () => {
       assert.throws(() => sampleRouteByCount([[-0.1276, 51.5074]], 150), /at least 2 points/);
       assert.throws(() => sampleRouteByCount(null, 150), /at least 2 points/);
     });
+
+    test('handles zero-length routes (same start and end point)', () => {
+      const route = [
+        [-0.1276, 51.5074],
+        [-0.1276, 51.5074]  // Same point
+      ];
+
+      const sampled = sampleRouteByCount(route, 150);
+
+      // Should return at least one point at the location
+      assert.ok(sampled.length > 0, 'Should return at least one point');
+      assert.strictEqual(sampled[0].lat, route[0][1], 'Should be at route start latitude');
+      assert.strictEqual(sampled[0].lng, route[0][0], 'Should be at route start longitude');
+      assert.strictEqual(sampled[0].distance, 0, 'Distance should be 0');
+    });
   });
 });
