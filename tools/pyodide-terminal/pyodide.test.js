@@ -9,15 +9,16 @@ test('Pyodide Terminal structure', async (t) => {
   const content = fs.readFileSync(indexPath, 'utf8');
 
   await t.test('should contain local Pyodide script', () => {
-    assert.match(content, /src="\.\.\/\.\.\/assets\/libs\/pyodide\/pyodide\.js"/);
+    // Matches both direct paths and paths using cacheBust filter
+    assert.match(content, /['"]\.\.\/\.\.\/assets\/libs\/pyodide\/pyodide\.js['"]/);
   });
 
   await t.test('should contain local xterm script', () => {
-    assert.match(content, /src="\.\.\/\.\.\/assets\/libs\/xterm\/xterm\.js"/);
+    assert.match(content, /['"]\.\.\/\.\.\/assets\/libs\/xterm\/xterm\.js['"]/);
   });
 
   await t.test('should contain local xterm-addon-fit script', () => {
-    assert.match(content, /src="\.\.\/\.\.\/assets\/libs\/xterm\/xterm-addon-fit\.js"/);
+    assert.match(content, /['"]\.\.\/\.\.\/assets\/libs\/xterm\/xterm-addon-fit\.js['"]/);
   });
 
   await t.test('should contain terminal container', () => {

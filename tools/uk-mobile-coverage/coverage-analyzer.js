@@ -42,14 +42,13 @@ class CoverageAnalyzer {
     const startPostcode = document.getElementById('start').value.trim().toUpperCase();
     const endPostcode = document.getElementById('end').value.trim().toUpperCase();
     const apiKey = document.getElementById('ors-api-key').value.trim();
-    const dataSource = document.getElementById('data-source').value;
 
     // Disable form
     const submitBtn = event.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
 
     try {
-      await this.analyzeRoute(startPostcode, endPostcode, apiKey, dataSource);
+      await this.analyzeRoute(startPostcode, endPostcode, apiKey);
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -60,7 +59,7 @@ class CoverageAnalyzer {
   /**
    * Main analysis workflow
    */
-  async analyzeRoute(startPostcode, endPostcode, apiKey, dataSource) {
+  async analyzeRoute(startPostcode, endPostcode, apiKey) {
     this.showProgress();
     this.updateProgress(0, 'Initializing...');
 
@@ -93,7 +92,7 @@ class CoverageAnalyzer {
 
       // Step 5: Get coverage data
       this.setStep(4);
-      this.coverageAdapter = new CoverageAdapter(dataSource);
+      this.coverageAdapter = new CoverageAdapter();
       const coverageResults = await this.getCoverageData(sampledPoints);
       this.completeStep(4);
 
