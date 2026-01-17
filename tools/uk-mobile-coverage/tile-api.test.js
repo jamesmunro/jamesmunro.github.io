@@ -1,257 +1,321 @@
 /**
  * Unit tests for tile-based coverage implementation
- * Run with: npm test
+ * Tests coordinate conversion, pixel extraction, and color mapping
  */
 
 const { describe, test, before } = require('node:test');
 const assert = require('node:assert');
+const { JSDOM } = require('jsdom');
 
-// Test coordinate converter
+// Setup minimal DOM environment
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
+global.window = dom.window;
+global.document = dom.window.document;
+
+// Load actual modules
+const {
+  latLonToBng,
+  bngToTile,
+  bngToPixelInTile,
+  latLonToTile,
+  latLonToPixelInTile,
+  RESOLUTIONS,
+  TILE_SIZE
+} = require('./coordinate-converter.js');
+
+const {
+  rgbToHex,
+  hexToRgb,
+  colorDistance,
+  mapColorToCoverageLevel,
+  COVERAGE_COLOR_MAP
+} = require('./pixel-extractor.js');
+
+const { TileCoverageAdapter } = require('./tile-coverage-adapter.js');
+
+// Test coordinate converter with real proj4
 describe('Coordinate Converter', () => {
-  let converter;
+  describe('latLonToBng', () => {
+    test('converts London coordinates to BNG', () => {
+      // London: 51.5074, -0.1276
+      // Expected BNG: approximately 530000, 180000
+      const result = latLonToBng(51.5074, -0.1276);
+
+      assert.ok(result.easting > 520000 && result.easting < 540000,
+        `Easting ${result.easting} should be around 530000`);
+      assert.ok(result.northing > 170000 && result.northing < 190000,
+        `Northing ${result.northing} should be around 180000`);
+    });
+
+    test('converts Edinburgh coordinates to BNG', () => {
+      // Edinburgh: 55.9533, -3.1883
+      // Expected BNG: approximately 325000, 673000
+      const result = latLonToBng(55.9533, -3.1883);
+
+      assert.ok(result.easting > 315000 && result.easting < 335000,
+        `Easting ${result.easting} should be around 325000`);
+      assert.ok(result.northing > 663000 && result.northing < 683000,
+        `Northing ${result.northing} should be around 673000`);
+    });
+
+    test('converts Cardiff coordinates to BNG', () => {
+      // Cardiff: 51.4816, -3.1791
+      // Expected BNG: approximately 318000, 177000
+      const result = latLonToBng(51.4816, -3.1791);
+
+      assert.ok(result.easting > 308000 && result.easting < 328000,
+        `Easting ${result.easting} should be around 318000`);
+      assert.ok(result.northing > 167000 && result.northing < 187000,
+        `Northing ${result.northing} should be around 177000`);
+    });
+  });
+
+  describe('bngToTile', () => {
+    test('converts BNG to tile coordinates at zoom 10', () => {
+      // London: approximately 530000, 180000
+      const result = bngToTile(530000, 180000, 10);
+
+      assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
+      assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
+      assert.strictEqual(result.z, 10, 'Zoom level should be 10');
+    });
+
+    test('tile coordinates increase with BNG coordinates', () => {
+      const result1 = bngToTile(100000, 100000, 10);
+      const result2 = bngToTile(500000, 500000, 10);
+
+      assert.ok(result2.tileX > result1.tileX, 'Higher easting should give higher tileX');
+      assert.ok(result2.tileY > result1.tileY, 'Higher northing should give higher tileY');
+    });
+
+    test('throws error for invalid zoom level', () => {
+      assert.throws(() => bngToTile(530000, 180000, -1), /Zoom level must be between 0 and 11/);
+      assert.throws(() => bngToTile(530000, 180000, 12), /Zoom level must be between 0 and 11/);
+    });
+  });
+
+  describe('bngToPixelInTile', () => {
+    test('converts BNG to pixel position within tile', () => {
+      const result = bngToPixelInTile(530000, 180000, 10);
+
+      assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE,
+        `Pixel X ${result.pixelX} should be within tile (0-${TILE_SIZE - 1})`);
+      assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE,
+        `Pixel Y ${result.pixelY} should be within tile (0-${TILE_SIZE - 1})`);
+      assert.strictEqual(result.z, 10, 'Zoom level should be 10');
+    });
+
+    test('pixel position is within tile bounds for various UK locations', () => {
+      const locations = [
+        { easting: 100000, northing: 100000 },   // SW England
+        { easting: 530000, northing: 180000 },   // London
+        { easting: 325000, northing: 673000 },   // Edinburgh
+        { easting: 0, northing: 0 },             // Origin
+        { easting: 700000, northing: 1200000 },  // NE Scotland
+      ];
+
+      locations.forEach(({ easting, northing }) => {
+        const result = bngToPixelInTile(easting, northing, 10);
+        assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE,
+          `Pixel X out of bounds for E=${easting}, N=${northing}`);
+        assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE,
+          `Pixel Y out of bounds for E=${easting}, N=${northing}`);
+      });
+    });
+
+    test('throws error for invalid zoom level', () => {
+      assert.throws(() => bngToPixelInTile(530000, 180000, -1), /Zoom level must be between 0 and 11/);
+      assert.throws(() => bngToPixelInTile(530000, 180000, 12), /Zoom level must be between 0 and 11/);
+    });
+  });
+
+  describe('latLonToTile', () => {
+    test('converts lat/lon to tile coordinates', () => {
+      const result = latLonToTile(51.5074, -0.1276, 10);
+
+      assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
+      assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
+      assert.strictEqual(result.z, 10);
+    });
+  });
+
+  describe('latLonToPixelInTile', () => {
+    test('converts lat/lon to pixel position', () => {
+      const result = latLonToPixelInTile(51.5074, -0.1276, 10);
+
+      assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE);
+      assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE);
+      assert.ok(result.tileX >= 0);
+      assert.ok(result.tileY >= 0);
+    });
+  });
+});
+
+// Test pixel extractor functions
+describe('Pixel Extractor', () => {
+  describe('rgbToHex', () => {
+    test('converts RGB to hex correctly', () => {
+      assert.strictEqual(rgbToHex(125, 32, 147), '#7d2093');
+      assert.strictEqual(rgbToHex(255, 255, 255), '#ffffff');
+      assert.strictEqual(rgbToHex(0, 0, 0), '#000000');
+      assert.strictEqual(rgbToHex(255, 0, 0), '#ff0000');
+      assert.strictEqual(rgbToHex(0, 255, 0), '#00ff00');
+      assert.strictEqual(rgbToHex(0, 0, 255), '#0000ff');
+    });
+
+    test('pads single digit hex values', () => {
+      assert.strictEqual(rgbToHex(0, 0, 0), '#000000');
+      assert.strictEqual(rgbToHex(1, 2, 3), '#010203');
+      assert.strictEqual(rgbToHex(15, 15, 15), '#0f0f0f');
+    });
+  });
+
+  describe('hexToRgb', () => {
+    test('converts hex to RGB correctly', () => {
+      const result = hexToRgb('#7d2093');
+      assert.strictEqual(result.r, 125);
+      assert.strictEqual(result.g, 32);
+      assert.strictEqual(result.b, 147);
+    });
+
+    test('handles hex without hash', () => {
+      const result = hexToRgb('7d2093');
+      assert.strictEqual(result.r, 125);
+      assert.strictEqual(result.g, 32);
+      assert.strictEqual(result.b, 147);
+    });
+
+    test('returns null for invalid hex', () => {
+      assert.strictEqual(hexToRgb('invalid'), null);
+      assert.strictEqual(hexToRgb('#gg0000'), null);
+      assert.strictEqual(hexToRgb('#fff'), null); // Short form not supported
+      assert.strictEqual(hexToRgb(''), null);
+    });
+  });
+
+  describe('colorDistance', () => {
+    test('returns 0 for identical colors', () => {
+      const color = { r: 100, g: 150, b: 200 };
+      assert.strictEqual(colorDistance(color, color), 0);
+    });
+
+    test('calculates correct distance', () => {
+      const color1 = { r: 0, g: 0, b: 0 };
+      const color2 = { r: 255, g: 255, b: 255 };
+      // Distance = sqrt(255^2 + 255^2 + 255^2) = sqrt(195075) ≈ 441.67
+      const distance = colorDistance(color1, color2);
+      assert.ok(Math.abs(distance - 441.67) < 1);
+    });
+
+    test('is symmetric', () => {
+      const color1 = { r: 125, g: 32, b: 147 };
+      const color2 = { r: 205, g: 123, b: 228 };
+
+      const dist1 = colorDistance(color1, color2);
+      const dist2 = colorDistance(color2, color1);
+
+      assert.strictEqual(dist1, dist2);
+    });
+  });
+
+  describe('mapColorToCoverageLevel', () => {
+    test('maps exact coverage colors', () => {
+      assert.strictEqual(mapColorToCoverageLevel('#7d2093', COVERAGE_COLOR_MAP), 4);
+      assert.strictEqual(mapColorToCoverageLevel('#cd7be4', COVERAGE_COLOR_MAP), 3);
+      assert.strictEqual(mapColorToCoverageLevel('#0081b3', COVERAGE_COLOR_MAP), 2);
+      assert.strictEqual(mapColorToCoverageLevel('#83e5f6', COVERAGE_COLOR_MAP), 1);
+      assert.strictEqual(mapColorToCoverageLevel('#d4d4d4', COVERAGE_COLOR_MAP), 0);
+    });
+
+    test('returns null for color outside tolerance', () => {
+      assert.strictEqual(mapColorToCoverageLevel('#ffffff', COVERAGE_COLOR_MAP, 5), null);
+      assert.strictEqual(mapColorToCoverageLevel('#000000', COVERAGE_COLOR_MAP, 5), null);
+    });
+
+    test('respects tolerance parameter', () => {
+      // Exact match should work with any tolerance
+      assert.strictEqual(mapColorToCoverageLevel('#7d2093', COVERAGE_COLOR_MAP, 0), 4);
+      assert.strictEqual(mapColorToCoverageLevel('#7d2093', COVERAGE_COLOR_MAP, 100), 4);
+    });
+
+    test('returns null for invalid hex', () => {
+      assert.strictEqual(mapColorToCoverageLevel('invalid', COVERAGE_COLOR_MAP), null);
+    });
+  });
+});
+
+// Test TileCoverageAdapter methods that don't require network
+describe('TileCoverageAdapter', () => {
+  let adapter;
 
   before(() => {
-    // Mock proj4 for testing
-    const mockProj4 = (from, to, coords) => {
-      if (from === 'EPSG:4326' && to === 'EPSG:27700') {
-        // Simplified conversion for testing (not accurate, just for testing logic)
-        const [lon, lat] = coords;
-        // Basic transformation (this would be handled by proj4 in reality)
-        const easting = 400000 + lon * 111000;
-        const northing = 100000 + lat * 110000;
-        return [easting, northing];
-      }
-      return coords;
+    // Mock localStorage
+    global.localStorage = {
+      data: {},
+      getItem(key) { return this.data[key] || null; },
+      setItem(key, value) { this.data[key] = value; },
+      removeItem(key) { delete this.data[key]; }
     };
 
-    // Load converter module with mocked proj4
-    global.proj4 = mockProj4;
-    global.proj4.defs = () => {};
+    // Mock indexedDB
+    global.indexedDB = null;
 
-    // Simulate the converter module (since we can't directly require)
-    converter = {
-      STANDARD_ZOOM: 10,
-      RESOLUTIONS: [5734.4, 2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8],
-      TILE_SIZE: 256,
-      bngToTile: function(easting, northing, zoom = 10) {
-        const resolution = this.RESOLUTIONS[zoom];
-        const tileSpan = resolution * this.TILE_SIZE;
-        const tileX = Math.floor(easting / tileSpan);
-        const tileY = Math.floor(northing / tileSpan);
-        return { tileX, tileY, z: zoom };
-      },
-      bngToPixelInTile: function(easting, northing, zoom = 10) {
-        const resolution = this.RESOLUTIONS[zoom];
-        const tileSpan = resolution * this.TILE_SIZE;
-        const tileX = Math.floor(easting / tileSpan);
-        const tileY = Math.floor(northing / tileSpan);
-        const pixelX = Math.floor((easting % tileSpan) / resolution);
-        const pixelY = this.TILE_SIZE - 1 - Math.floor((northing % tileSpan) / resolution);
-        return { tileX, tileY, pixelX, pixelY, z: zoom };
-      }
-    };
+    // Mock latLonToPixelInTile on window for the adapter
+    global.window.latLonToPixelInTile = latLonToPixelInTile;
+
+    adapter = new TileCoverageAdapter();
   });
 
-  test('converts BNG to tile coordinates', () => {
-    // London approximately: 530000 easting, 180000 northing at zoom 10
-    const result = converter.bngToTile(530000, 180000, 10);
-
-    assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
-    assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
-    assert.strictEqual(result.z, 10, 'Zoom level should be 10');
+  describe('rgbToHex', () => {
+    test('converts RGB to hex', () => {
+      assert.strictEqual(adapter.rgbToHex(125, 32, 147), '#7d2093');
+    });
   });
 
-  test('converts BNG to pixel position within tile', () => {
-    const result = converter.bngToPixelInTile(530000, 180000, 10);
+  describe('hexToRgb', () => {
+    test('converts hex to RGB', () => {
+      const result = adapter.hexToRgb('#7d2093');
+      assert.deepStrictEqual(result, { r: 125, g: 32, b: 147 });
+    });
 
-    assert.ok(result.pixelX >= 0 && result.pixelX < 256, 'Pixel X should be within tile');
-    assert.ok(result.pixelY >= 0 && result.pixelY < 256, 'Pixel Y should be within tile');
-    assert.strictEqual(result.z, 10, 'Zoom level should be 10');
+    test('returns null for invalid hex', () => {
+      assert.strictEqual(adapter.hexToRgb('invalid'), null);
+    });
   });
 
-  test('throws error for invalid zoom level', () => {
-    // The mock converter doesn't validate, so we test the actual implementation
-    // would need to be tested in browser environment
-    assert.ok(true, 'Validation is handled in actual implementation');
+  describe('colorDistance', () => {
+    test('calculates distance correctly', () => {
+      const color1 = { r: 0, g: 0, b: 0 };
+      const color2 = { r: 3, g: 4, b: 0 };
+      // Distance = sqrt(3^2 + 4^2) = 5
+      assert.strictEqual(adapter.colorDistance(color1, color2), 5);
+    });
   });
 
-  test('pixel position is within tile bounds', () => {
-    for (let easting = 0; easting < 1000000; easting += 100000) {
-      for (let northing = 0; northing < 1300000; northing += 100000) {
-        const result = converter.bngToPixelInTile(easting, northing, 10);
-        assert.ok(result.pixelX >= 0 && result.pixelX < 256, `Pixel X out of bounds for E=${easting}, N=${northing}`);
-        assert.ok(result.pixelY >= 0 && result.pixelY < 256, `Pixel Y out of bounds for E=${easting}, N=${northing}`);
-      }
-    }
-  });
-});
+  describe('mapColorToCoverageLevel', () => {
+    test('maps coverage colors to levels', () => {
+      assert.strictEqual(adapter.mapColorToCoverageLevel('#7d2093'), 4);
+      assert.strictEqual(adapter.mapColorToCoverageLevel('#cd7be4'), 3);
+      assert.strictEqual(adapter.mapColorToCoverageLevel('#0081b3'), 2);
+      assert.strictEqual(adapter.mapColorToCoverageLevel('#83e5f6'), 1);
+      assert.strictEqual(adapter.mapColorToCoverageLevel('#d4d4d4'), 0);
+    });
 
-// Test pixel extractor
-describe('Pixel Extractor', () => {
-  // Create a mock pixel extractor (can't easily test Canvas API in Node.js)
-  const pixelExtractor = {
-    rgbToHex: function(r, g, b) {
-      return '#' + [r, g, b].map(x => {
-        const hex = x.toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-      }).join('');
-    },
-    hexToRgb: function(hex) {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : null;
-    },
-    colorDistance: function(color1, color2) {
-      const dr = color1.r - color2.r;
-      const dg = color1.g - color2.g;
-      const db = color1.b - color2.b;
-      return Math.sqrt(dr * dr + dg * dg + db * db);
-    }
-  };
-
-  test('converts RGB to hex', () => {
-    const hex = pixelExtractor.rgbToHex(125, 32, 147);
-    assert.strictEqual(hex, '#7d2093', 'Should convert RGB to hex correctly');
+    test('returns null for unrecognized colors', () => {
+      assert.strictEqual(adapter.mapColorToCoverageLevel('#ffffff'), null);
+    });
   });
 
-  test('converts hex to RGB', () => {
-    const rgb = pixelExtractor.hexToRgb('#7d2093');
-    assert.strictEqual(rgb.r, 125);
-    assert.strictEqual(rgb.g, 32);
-    assert.strictEqual(rgb.b, 147);
-  });
-
-  test('calculates color distance', () => {
-    const color1 = { r: 125, g: 32, b: 147 };
-    const color2 = { r: 205, g: 123, b: 228 };
-
-    const distance = pixelExtractor.colorDistance(color1, color2);
-    assert.ok(distance > 0, 'Distance should be positive');
-    assert.ok(distance < 256, 'Distance should be less than max RGB range');
-  });
-
-  test('distance is zero for identical colors', () => {
-    const color = { r: 100, g: 150, b: 200 };
-    const distance = pixelExtractor.colorDistance(color, color);
-    assert.strictEqual(distance, 0, 'Distance should be zero for same color');
-  });
-
-  test('distance is symmetric', () => {
-    const color1 = { r: 125, g: 32, b: 147 };
-    const color2 = { r: 205, g: 123, b: 228 };
-
-    const dist1 = pixelExtractor.colorDistance(color1, color2);
-    const dist2 = pixelExtractor.colorDistance(color2, color1);
-
-    assert.ok(Math.abs(dist1 - dist2) < 0.001, 'Distance should be symmetric');
-  });
-
-  test('handles invalid hex colors', () => {
-    const result = pixelExtractor.hexToRgb('invalid');
-    assert.strictEqual(result, null, 'Should return null for invalid hex');
-  });
-});
-
-// Test color mapping
-describe('Color Mapping', () => {
-  const colorMap = {
-    4: '#7d2093', // Good outdoor and in-home
-    3: '#cd7be4', // Good outdoor, variable in-home
-    2: '#0081b3', // Good outdoor
-    1: '#83e5f6', // Variable outdoor
-    0: '#d4d4d4'  // Poor to none outdoor
-  };
-
-  const coverageMatcher = {
-    hexToRgb: function(hex) {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : null;
-    },
-    colorDistance: function(color1, color2) {
-      const dr = color1.r - color2.r;
-      const dg = color1.g - color2.g;
-      const db = color1.b - color2.b;
-      return Math.sqrt(dr * dr + dg * dg + db * db);
-    },
-    mapColorToCoverageLevel: function(hex, tolerance = 10) {
-      const extractedRgb = this.hexToRgb(hex);
-      if (!extractedRgb) return null;
-
-      let bestMatch = null;
-      let bestDistance = Infinity;
-
-      for (const [level, colorHex] of Object.entries(colorMap)) {
-        const mappedRgb = this.hexToRgb(colorHex);
-        if (!mappedRgb) continue;
-
-        const distance = this.colorDistance(extractedRgb, mappedRgb);
-        if (distance <= tolerance && distance < bestDistance) {
-          bestMatch = parseInt(level);
-          bestDistance = distance;
-        }
-      }
-
-      return bestMatch;
-    }
-  };
-
-  test('maps exact coverage colors', () => {
-    for (const [level, hex] of Object.entries(colorMap)) {
-      const matched = coverageMatcher.mapColorToCoverageLevel(hex);
-      assert.strictEqual(matched, parseInt(level), `Should match color for level ${level}`);
-    }
-  });
-
-  test('maps colors within tolerance', () => {
-    const purpleHex = '#7d2093'; // Exact purple for level 4
-    // Create slightly different shade (within tolerance)
-    const matched = coverageMatcher.mapColorToCoverageLevel(purpleHex, 15);
-    assert.strictEqual(matched, 4, 'Should match with color within tolerance');
-  });
-
-  test('returns null for color outside tolerance', () => {
-    const offColor = '#ffffff'; // White - far from all coverage colors
-    const matched = coverageMatcher.mapColorToCoverageLevel(offColor, 5);
-    assert.strictEqual(matched, null, 'Should return null when no match within tolerance');
-  });
-
-  test('respects tolerance parameter', () => {
-    const purpleVariant = '#7d2093'; // Exactly the purple - should match at any tolerance
-    const strictMatch = coverageMatcher.mapColorToCoverageLevel(purpleVariant, 1);
-    const looseMatch = coverageMatcher.mapColorToCoverageLevel(purpleVariant, 5);
-
-    assert.strictEqual(strictMatch, 4, 'Should match exact color even with strict tolerance');
-    assert.strictEqual(looseMatch, 4, 'Should match with loose tolerance');
-  });
-});
-
-// Test coverage description
-describe('Coverage Descriptions', () => {
-  const descriptionMap = {
-    4: 'Good outdoor and in-home',
-    3: 'Good outdoor, variable in-home',
-    2: 'Good outdoor',
-    1: 'Variable outdoor',
-    0: 'Poor to none outdoor'
-  };
-
-  test('returns correct descriptions for all levels', () => {
-    for (const [level, desc] of Object.entries(descriptionMap)) {
-      assert.strictEqual(desc.length > 0, true, `Description for level ${level} should not be empty`);
-    }
-  });
-
-  test('has description for each coverage level', () => {
-    for (let level = 0; level <= 4; level++) {
-      assert.ok(descriptionMap[level], `Should have description for level ${level}`);
-    }
+  describe('getCoverageDescription', () => {
+    test('returns correct descriptions', () => {
+      assert.strictEqual(adapter.getCoverageDescription(4), 'Good outdoor and in-home');
+      assert.strictEqual(adapter.getCoverageDescription(3), 'Good outdoor, variable in-home');
+      assert.strictEqual(adapter.getCoverageDescription(2), 'Good outdoor');
+      assert.strictEqual(adapter.getCoverageDescription(1), 'Variable outdoor');
+      assert.strictEqual(adapter.getCoverageDescription(0), 'Poor to none outdoor');
+      assert.strictEqual(adapter.getCoverageDescription(null), 'Unknown');
+      assert.strictEqual(adapter.getCoverageDescription(undefined), 'Unknown');
+    });
   });
 });
 
@@ -270,8 +334,7 @@ describe('Tile URL Construction', () => {
 
     assert.strictEqual(
       url,
-      'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42',
-      'Should construct correct tile URL'
+      'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42'
     );
   });
 
@@ -283,11 +346,6 @@ describe('Tile URL Construction', () => {
       assert.ok(url.includes(mnoId), `URL should include MNO ${mnoId}`);
       assert.ok(url.includes('/10/'), 'URL should include zoom level');
     }
-  });
-
-  test('version parameter is included', () => {
-    const url = `${TILE_API_BASE.replace('{mno}', 'mno1')}/10/0/0.png?v=${TILE_VERSION}`;
-    assert.ok(url.includes(`v=${TILE_VERSION}`), 'URL should include version parameter');
   });
 });
 
@@ -304,53 +362,28 @@ describe('Cache Key Construction', () => {
     assert.notStrictEqual(key1, key2, 'Different MNOs should have different keys');
     assert.notStrictEqual(key1, key3, 'Different tiles should have different keys');
   });
-
-  test('includes version in cache key', () => {
-    const key = `mno1-10-0-0-v42`;
-    assert.ok(key.includes('v42'), 'Cache key should include version');
-  });
 });
 
-/**
- * Module Export Tests
- * Verifies that classes are properly exported for both Node.js and browser environments
- */
+// Test module exports
 describe('Module Exports', () => {
-  test('TileCoverageAdapter should be exported to module.exports', () => {
-    // TileCoverageAdapter should be available via require() in Node.js
-    const { TileCoverageAdapter } = require('./tile-coverage-adapter.js');
-    assert.ok(TileCoverageAdapter, 'TileCoverageAdapter should be exported in module.exports');
-    assert.strictEqual(typeof TileCoverageAdapter, 'function', 'TileCoverageAdapter should be a class/function');
+  test('TileCoverageAdapter is exported', () => {
+    assert.ok(TileCoverageAdapter, 'TileCoverageAdapter should be exported');
+    assert.strictEqual(typeof TileCoverageAdapter, 'function', 'Should be a class/function');
   });
 
-  test('TileCoverageAdapter should be exported to global scope for browser', () => {
-    // Simulate browser environment by checking the module content
-    const path = require('path');
-    const fs = require('fs');
-    const filePath = path.join(__dirname, 'tile-coverage-adapter.js');
-    const moduleContent = fs.readFileSync(filePath, 'utf8');
-    assert.ok(
-      moduleContent.includes('window.TileCoverageAdapter = TileCoverageAdapter'),
-      'TileCoverageAdapter should be assigned to window object for browser compatibility'
-    );
+  test('coordinate converter functions are exported', () => {
+    assert.strictEqual(typeof latLonToBng, 'function');
+    assert.strictEqual(typeof bngToTile, 'function');
+    assert.strictEqual(typeof bngToPixelInTile, 'function');
+    assert.strictEqual(typeof latLonToTile, 'function');
+    assert.strictEqual(typeof latLonToPixelInTile, 'function');
   });
 
-  test('ChartRenderer should be exported to module.exports', () => {
-    // ChartRenderer should be available via require() in Node.js
-    const { ChartRenderer } = require('./chart-renderer.js');
-    assert.ok(ChartRenderer, 'ChartRenderer should be exported in module.exports');
-    assert.strictEqual(typeof ChartRenderer, 'function', 'ChartRenderer should be a class/function');
-  });
-
-  test('ChartRenderer should be exported to global scope for browser', () => {
-    // Simulate browser environment by checking the module content
-    const path = require('path');
-    const fs = require('fs');
-    const filePath = path.join(__dirname, 'chart-renderer.js');
-    const moduleContent = fs.readFileSync(filePath, 'utf8');
-    assert.ok(
-      moduleContent.includes('window.ChartRenderer = ChartRenderer'),
-      'ChartRenderer should be assigned to window object for browser compatibility'
-    );
+  test('pixel extractor functions are exported', () => {
+    assert.strictEqual(typeof rgbToHex, 'function');
+    assert.strictEqual(typeof hexToRgb, 'function');
+    assert.strictEqual(typeof colorDistance, 'function');
+    assert.strictEqual(typeof mapColorToCoverageLevel, 'function');
+    assert.ok(COVERAGE_COLOR_MAP, 'COVERAGE_COLOR_MAP should be exported');
   });
 });

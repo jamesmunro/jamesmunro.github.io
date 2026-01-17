@@ -3,6 +3,24 @@
  * Handles rendering the coverage visualization using Chart.js
  */
 
+// Canonical Ofcom coverage level descriptions (used throughout)
+const COVERAGE_LEVELS = {
+  4: 'Good outdoor and in-home',
+  3: 'Good outdoor, variable in-home',
+  2: 'Good outdoor',
+  1: 'Variable outdoor',
+  0: 'Poor to none outdoor'
+};
+
+// Short labels for chart Y-axis
+const COVERAGE_LABELS_SHORT = {
+  4: 'In-home',
+  3: 'Variable in-home',
+  2: 'Outdoor',
+  1: 'Variable',
+  0: 'Poor/None'
+};
+
 class ChartRenderer {
   constructor(canvasId) {
     this.canvasId = canvasId;
@@ -114,8 +132,7 @@ class ChartRenderer {
             ticks: {
               stepSize: 1,
               callback: function(value) {
-                const labels = ['Poor/None', 'Variable', 'Good', 'Good (Var In)', 'Good (In & Out)'];
-                return labels[value] || '';
+                return COVERAGE_LABELS_SHORT[value] || '';
               }
             }
           }
@@ -128,8 +145,7 @@ class ChartRenderer {
                 return `Distance: ${point.x.toFixed(2)} km`;
               },
               label: function(context) {
-                const labels = ['Poor to none outdoor', 'Variable outdoor', 'Good outdoor', 'Good outdoor, variable in-home', 'Good outdoor and in-home'];
-                const levelLabel = labels[context.parsed.y] || 'Unknown';
+                const levelLabel = COVERAGE_LEVELS[context.parsed.y] || 'Unknown';
                 return `${context.dataset.label}: ${levelLabel}`;
               },
               afterLabel: function(context) {
@@ -166,11 +182,13 @@ class ChartRenderer {
       const excellent = levels.filter(l => l >= 3).length;
       const good = levels.filter(l => l >= 2).length;
       const adequate = levels.filter(l => l >= 1).length;
+      const poorNone = levels.filter(l => l === 0).length;
 
       summary[network] = {
         'Excellent': total > 0 ? Math.round((excellent / total) * 100) : 0,
         'Good': total > 0 ? Math.round((good / total) * 100) : 0,
         'Adequate': total > 0 ? Math.round((adequate / total) * 100) : 0,
+        'Poor/None': total > 0 ? Math.round((poorNone / total) * 100) : 0,
         avgLevel: total > 0 ? (levels.reduce((a, b) => a + b, 0) / total) : 0
       };
     });
@@ -191,10 +209,25 @@ class ChartRenderer {
       throw new Error(`Table body element ${tableBodyId} not found`);
     }
 
+    // Calculate ranks based on avgLevel (descending)
+    const networksRanked = Object.entries(summary)
+      .sort((a, b) => b[1].avgLevel - a[1].avgLevel);
+
+    let currentRank = 1;
+    networksRanked.forEach(([network, stats], index) => {
+      if (index > 0) {
+        const prevStats = networksRanked[index - 1][1];
+        if (stats.avgLevel < prevStats.avgLevel) {
+          currentRank = index + 1;
+        }
+      }
+      summary[network]['Rank'] = currentRank;
+    });
+
     // Store summary data for sorting
     this.summaryData = summary;
     this.tableBodyId = tableBodyId;
-    this.currentSort = { column: 'avgLevel', descending: true };
+    this.currentSort = { column: 'Rank', descending: false };
 
     // Setup sortable headers
     this.setupSortableHeaders(tbody);
@@ -214,7 +247,9 @@ class ChartRenderer {
     const sortableColumns = {
       1: 'Excellent',
       2: 'Good',
-      3: 'Adequate'
+      3: 'Adequate',
+      4: 'Poor/None',
+      5: 'Rank'
     };
 
     headers.forEach((th, index) => {
@@ -251,11 +286,7 @@ class ChartRenderer {
   renderSummaryRows(summary, tbody, sortColumn, descending) {
     tbody.innerHTML = '';
 
-    // Find the best network (highest avgLevel)
-    const bestNetwork = Object.entries(summary)
-      .sort((a, b) => b[1].avgLevel - a[1].avgLevel)[0][0];
-
-    // Sort networks by specified column
+    // Sort networks by specified column for display
     const networksSorted = Object.entries(summary)
       .sort((a, b) => {
         const aVal = a[1][sortColumn];
@@ -270,7 +301,8 @@ class ChartRenderer {
         <td>${stats['Excellent']}%</td>
         <td>${stats['Good']}%</td>
         <td>${stats['Adequate']}%</td>
-        <td>${network === bestNetwork ? '✓ Best' : ''}</td>
+        <td>${stats['Poor/None']}%</td>
+        <td>${stats['Rank']}</td>
       `;
     });
   }

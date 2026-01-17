@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UK Mobile Coverage Analyzer | jamesmunro.github.io</title>
-    <meta name="site-version" content="20260117.1629">
+    <meta name="site-version" content="20260117.1706">
+    <link rel="icon" href="data:,">
     <style>
       :root {
         color-scheme: light;
@@ -167,6 +168,7 @@
       .breadcrumb {
         font-size: 0.95rem;
         margin-bottom: 16px;
+        padding-top: 40px;
       }
 
       .breadcrumb a {
@@ -283,7 +285,7 @@
 <small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a></small>
 </div></p>
 <p><button type="submit" class="btn-primary">Analyze Route Coverage</button>
-<small style="display:block; text-align:center; margin-top:0.5rem; color:#666;">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small></p>
+<small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small></p>
   </form>
   <!-- Step-by-Step Progress Indicator -->
   <div id="progress" class="progress-container" style="display:none">
@@ -308,14 +310,24 @@
           <th>Excellent</th>
           <th>Good</th>
           <th>Adequate</th>
-          <th>Best Network?</th>
+          <th>Poor/None</th>
+          <th>Rank</th>
         </tr>
       </thead>
       <tbody id="summary-body">
         <!-- Populated dynamically with percentages -->
       </tbody>
     </table>
-    <p><small>Coverage levels based on Ofcom tile coverage data (variable based on location, indoor/outdoor, and network conditions)</small></p>
+    <div class="coverage-legend">
+      <p><small><strong>Ofcom coverage levels:</strong></small></p>
+      <ul>
+        <li><strong>Excellent</strong> = Level 3-4: Good outdoor, variable in-home / Good outdoor and in-home</li>
+        <li><strong>Good</strong> = Level 2+: Good outdoor</li>
+        <li><strong>Adequate</strong> = Level 1+: Variable outdoor</li>
+        <li><strong>Poor/None</strong> = Level 0: Poor to none outdoor</li>
+      </ul>
+      <p><small><strong>Ranking:</strong> Networks ranked by average coverage level across all sampled points. Higher average = better rank. Ties receive the same rank.</small></p>
+    </div>
   </div>
   <!-- Error Display (Fail Fast) -->
   <div id="error" class="error-message" style="display:none"></div>
@@ -327,7 +339,7 @@
 }
 
 .intro {
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 2rem;
@@ -347,21 +359,23 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .form-group small {
   display: block;
   margin-top: 0.25rem;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .btn-primary {
-  background: #0066cc;
-  color: white;
+  background: var(--link-color);
+  color: var(--bg-card);
   border: none;
   padding: 1rem 2rem;
   border-radius: 4px;
@@ -372,18 +386,19 @@
 }
 
 .btn-primary:hover {
-  background: #0052a3;
+  background: var(--link-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--border-color);
+  color: var(--text-tertiary);
   cursor: not-allowed;
 }
 
 .progress-container {
   margin: 2rem 0;
   padding: 1.5rem;
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   border-radius: 8px;
 }
 
@@ -398,16 +413,16 @@
 }
 
 .progress-step.complete {
-  color: #28a745;
+  color: #22c55e;
 }
 
 .progress-step.active {
-  color: #0066cc;
+  color: var(--link-color);
   font-weight: 600;
 }
 
 .progress-step.pending {
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 #progress-bar {
@@ -420,13 +435,13 @@
   display: block;
   text-align: center;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .error-message {
-  background: #ffebee;
-  border: 1px solid #ef5350;
-  color: #c62828;
+  background: color-mix(in srgb, var(--error-color) 15%, var(--bg-card));
+  border: 1px solid var(--error-color);
+  color: var(--error-color);
   padding: 1rem;
   border-radius: 4px;
   margin: 1rem 0;
@@ -442,16 +457,37 @@
 .coverage-table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .coverage-table th {
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   font-weight: 600;
 }
 
 .coverage-table tr:hover {
-  background: #fafafa;
+  background: var(--bg-secondary-hover);
+}
+
+.coverage-legend {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.coverage-legend p {
+  margin: 0 0 0.5rem 0;
+}
+
+.coverage-legend ul {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.coverage-legend li {
+  margin: 0.25rem 0;
 }
 
 #chart-container {
@@ -463,21 +499,21 @@
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
-<script src="/assets/libs/chart.js/chart.min.js?v=20260117.1629"></script>
-<script src="constants.js?v=20260117.1629"></script>
-<script src="coordinate-converter.js?v=20260117.1629"></script>
-<script src="pixel-extractor.js?v=20260117.1629"></script>
-<script src="route-sampler.js?v=20260117.1629"></script>
-<script src="tile-coverage-adapter.js?v=20260117.1629"></script>
-<script src="chart-renderer.js?v=20260117.1629"></script>
-<script src="coverage-analyzer.js?v=20260117.1629"></script>
+<script src="/assets/libs/chart.js/chart.min.js?v=20260117.1706"></script>
+<script src="constants.js?v=20260117.1706"></script>
+<script src="coordinate-converter.js?v=20260117.1706"></script>
+<script src="pixel-extractor.js?v=20260117.1706"></script>
+<script src="route-sampler.js?v=20260117.1706"></script>
+<script src="tile-coverage-adapter.js?v=20260117.1706"></script>
+<script src="chart-renderer.js?v=20260117.1706"></script>
+<script src="coverage-analyzer.js?v=20260117.1706"></script>
 
 
     </main>
 
     <footer style="text-align:center; padding:18px 24px; color:var(--text-secondary); font-size:0.9rem;">
       <div class="card" style="max-width:1080px; margin: 0 auto 32px; background:transparent; box-shadow:none; border:none; padding:0;">
-        <small>Site version: <strong>20260117.1629</strong></small>
+        <small>Site version: <strong>20260117.1706</strong></small>
       </div>
     </footer>
 

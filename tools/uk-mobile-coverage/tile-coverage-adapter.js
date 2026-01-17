@@ -8,7 +8,8 @@ function getConfig() {
   const defaults = {
     TILE_API_BASE: 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2',
     TILE_VERSION: '42',
-    STANDARD_ZOOM: 10
+    STANDARD_ZOOM: 10,
+    COLOR_TOLERANCE: 10
   };
   try {
     if (typeof window !== 'undefined' && window.UK_MOBILE_COVERAGE_CONSTANTS) {
@@ -16,7 +17,8 @@ function getConfig() {
       return {
         TILE_API_BASE: c.TILE_API_BASE || defaults.TILE_API_BASE,
         TILE_VERSION: c.TILE_VERSION || defaults.TILE_VERSION,
-        STANDARD_ZOOM: c.STANDARD_ZOOM || defaults.STANDARD_ZOOM
+        STANDARD_ZOOM: c.STANDARD_ZOOM || defaults.STANDARD_ZOOM,
+        COLOR_TOLERANCE: c.COLOR_TOLERANCE || defaults.COLOR_TOLERANCE
       };
     } else if (typeof require === 'function') {
       const c = require('./constants');
@@ -24,7 +26,8 @@ function getConfig() {
         return {
           TILE_API_BASE: c.TILE_API_BASE || defaults.TILE_API_BASE,
           TILE_VERSION: c.TILE_VERSION || defaults.TILE_VERSION,
-          STANDARD_ZOOM: c.STANDARD_ZOOM || defaults.STANDARD_ZOOM
+          STANDARD_ZOOM: c.STANDARD_ZOOM || defaults.STANDARD_ZOOM,
+          COLOR_TOLERANCE: c.COLOR_TOLERANCE || defaults.COLOR_TOLERANCE
         };
       }
     }
@@ -246,10 +249,10 @@ class TileCoverageAdapter {
   /**
    * Map a color to a coverage level
    * @param {string} hex - Hex color
-   * @param {number} tolerance - RGB tolerance (default 10)
+   * @param {number} tolerance - RGB tolerance (default from CONFIG.COLOR_TOLERANCE)
    * @returns {number|null} Coverage level (0-4) or null if no match
    */
-  mapColorToCoverageLevel(hex, tolerance = 10) {
+  mapColorToCoverageLevel(hex, tolerance = CONFIG.COLOR_TOLERANCE) {
     const extractedRgb = this.hexToRgb(hex);
     if (!extractedRgb) {
       return null;

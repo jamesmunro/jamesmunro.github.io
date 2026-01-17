@@ -130,7 +130,8 @@ class CoverageAnalyzer {
           distance: 0
         }];
       } else {
-        sampledPoints = sampleRouteByCount(route.coordinates, 150);
+        const { ROUTE_SAMPLE_COUNT } = window.UK_MOBILE_COVERAGE_CONSTANTS;
+        sampledPoints = sampleRouteByCount(route.coordinates, ROUTE_SAMPLE_COUNT);
       }
       this.updateProgress(40, `Sampling ${sampledPoints.length} point(s) along route...`);
       this.completeStep(3);
