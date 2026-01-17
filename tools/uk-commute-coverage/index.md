@@ -59,7 +59,11 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
 
   <!-- Route Preview Map -->
   <div id="preview-container" style="display:none;">
-    <div id="map-container" style="height: 400px; margin: 2rem 0;"></div>
+    <div id="route-options-container" style="margin-bottom: 1rem;">
+      <p><small><strong>Select typical route:</strong></small></p>
+      <div id="route-options" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+    </div>
+    <div id="map-container" style="height: 400px; margin: 1rem 0;"></div>
   </div>
 
   <!-- Step-by-Step Progress Indicator -->

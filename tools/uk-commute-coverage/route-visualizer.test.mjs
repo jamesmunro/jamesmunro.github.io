@@ -60,6 +60,7 @@ test('previewRoute successfully fetches and draws a route', async () => {
   const getRouteMock = mock.method(CoverageAnalyzer.prototype, 'getRoute');
   const initMapMock = mock.method(GoogleMap.prototype, 'initMap');
   const setDirectionsMock = mock.method(GoogleMap.prototype, 'setDirections');
+  const clearDirectionsMock = mock.method(GoogleMap.prototype, 'clearDirections');
   
   const routeData = { 
     coordinates: [[-0.1, 51.5], [-0.2, 51.6]],
@@ -81,6 +82,7 @@ test('previewRoute successfully fetches and draws a route', async () => {
   getRouteMock.mock.restore();
   initMapMock.mock.restore();
   setDirectionsMock.mock.restore();
+  clearDirectionsMock.mock.restore();
 });
 
 test('previewRoute handles errors from getRoute', async () => {

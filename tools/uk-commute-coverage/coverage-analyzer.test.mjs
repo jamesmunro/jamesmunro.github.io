@@ -19,7 +19,7 @@ const googleMock = {
       }
     },
     DirectionsService: class {
-      route({ origin, destination }, callback) {
+      route(request, callback) {
         callback({
           routes: [{
             overview_path: [
@@ -30,6 +30,27 @@ const googleMock = {
           }]
         }, 'OK');
       }
+    },
+    DirectionsRenderer: class {
+      constructor() {}
+      setMap() {}
+      setDirections() {}
+      setOptions() {}
+    },
+    LatLngBounds: class {
+      constructor() {}
+      extend() {}
+    },
+    Polyline: class {
+      constructor() {}
+      setMap() {}
+    },
+    Marker: class {
+      constructor() {}
+    },
+    Map: class {
+      constructor() {}
+      fitBounds() {}
     },
     TravelMode: { 
       DRIVING: 'DRIVING',

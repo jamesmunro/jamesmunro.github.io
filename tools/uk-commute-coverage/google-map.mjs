@@ -4,6 +4,8 @@ export class GoogleMap {
     this.logger = logger;
     this.map = null;
     this.directionsRenderer = null;
+    this.renderers = [];
+    this.overlays = [];
   }
 
   async initMap() {
@@ -28,12 +30,18 @@ export class GoogleMap {
       zoomControl: true
     });
 
-    this.directionsRenderer = new google.maps.DirectionsRenderer({
-      map: this.map,
-      suppressMarkers: false,
-    });
+    this.clearDirections();
+  }
 
-    this.overlays = [];
+  /**
+   * Clear all directions renderers
+   */
+  clearDirections() {
+    if (this.renderers) {
+      this.renderers.forEach(r => r.setMap(null));
+    }
+    this.renderers = [];
+    this.directionsRenderer = null;
   }
 
   /**
@@ -116,12 +124,72 @@ export class GoogleMap {
   }
 
   /**
-   * Alternatively, use DirectionsRenderer if we have the full result
+   * Show all routes from a directions result
    */
   setDirections(directionsResult) {
-    if (!this.directionsRenderer) {
-      this.initMap();
+    if (!this.map) return;
+    this.clearDirections();
+    
+    // Create a renderer for each route
+    this.renderers = directionsResult.routes.map((route, index) => {
+      const renderer = new google.maps.DirectionsRenderer({
+        map: this.map,
+        directions: directionsResult,
+        routeIndex: index,
+        suppressMarkers: index > 0,
+        preserveViewport: index > 0,
+        polylineOptions: {
+          strokeColor: index === 0 ? '#4285F4' : '#999999',
+          strokeOpacity: index === 0 ? 0.9 : 0.5,
+          strokeWeight: index === 0 ? 6 : 4,
+          zIndex: index === 0 ? 100 : 1
+        }
+      });
+      
+      if (index === 0) {
+        this.directionsRenderer = renderer;
+      }
+      
+      return renderer;
+    });
+
+    // Fit bounds to all routes
+    if (directionsResult.routes.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      directionsResult.routes.forEach(route => {
+        route.overview_path.forEach(point => bounds.extend(point));
+      });
+      this.map.fitBounds(bounds);
     }
-    this.directionsRenderer.setDirections(directionsResult);
+  }
+
+  /**
+   * Select a specific route by index
+   */
+  selectRoute(index) {
+    this.renderers.forEach((renderer, i) => {
+      const isSelected = i === index;
+      renderer.setOptions({
+        suppressMarkers: !isSelected,
+        polylineOptions: {
+          strokeColor: isSelected ? '#4285F4' : '#999999',
+          strokeOpacity: isSelected ? 0.9 : 0.5,
+          strokeWeight: isSelected ? 6 : 4,
+          zIndex: isSelected ? 100 : 1
+        }
+      });
+      if (isSelected) {
+        this.directionsRenderer = renderer;
+      }
+    });
+  }
+
+  /**
+   * Listen for directions changes (e.g. when user selects an alternative route)
+   * @param {Function} callback - Function called with the new directions result
+   */
+  onDirectionsChanged(callback) {
+    // For multiple renderers, we usually don't have 'directions_changed' 
+    // unless draggable is true. We'll handle selection via our own UI.
   }
 }

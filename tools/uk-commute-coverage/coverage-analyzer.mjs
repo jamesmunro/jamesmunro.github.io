@@ -25,6 +25,7 @@ export class CoverageAnalyzer {
     ];
     this.googleMapsLoaded = false;
     this.currentRouteCoordinates = null;
+    this.lastRouteResult = null; // Store full route object including distance and result
     this.coverageAdapter = new TileCoverageAdapter();
   }
 
@@ -99,7 +100,24 @@ export class CoverageAnalyzer {
     submitBtn.disabled = true;
 
     try {
-      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile, tileNetwork);
+      // Check if we can reuse the last route (if it matches the current inputs)
+      const lastStart = localStorage.getItem('route-start');
+      const lastEnd = localStorage.getItem('route-end');
+      const lastProfile = localStorage.getItem('route-profile');
+      
+      let prefetchedRoute = null;
+      if (this.lastRouteResult && 
+          startPostcode === lastStart && 
+          endPostcode === lastEnd && 
+          profile === lastProfile) {
+        prefetchedRoute = {
+          coordinates: this.currentRouteCoordinates, // Use currently selected coordinates
+          distance: this.lastRouteResult.distance,
+          fullResult: this.lastRouteResult.fullResult
+        };
+      }
+
+      await this.analyzeRoute(startPostcode, endPostcode, apiKey, profile, tileNetwork, prefetchedRoute);
     } catch (error) {
       this.showError(error.message);
     } finally {
@@ -148,7 +166,7 @@ export class CoverageAnalyzer {
     return this.fetchRoute(startCoords, endCoords, profile);
   }
 
-  async analyzeRoute(startPostcode, endPostcode, apiKey, profile, tileNetwork = '') {
+  async analyzeRoute(startPostcode, endPostcode, apiKey, profile, tileNetwork = '', prefetchedRoute = null) {
     this.showProgress();
     this.updateProgress(0, 'Initializing...');
 
@@ -171,9 +189,16 @@ export class CoverageAnalyzer {
       this.completeStep(2);
 
       this.setStep(3);
-      this.updateProgress(30, 'Fetching route from Google Directions...');
-      const route = await this.fetchRoute(startCoords, endCoords, profile);
+      let route;
+      if (prefetchedRoute) {
+        this.updateProgress(30, 'Using selected route...');
+        route = prefetchedRoute;
+      } else {
+        this.updateProgress(30, 'Fetching route from Google Directions...');
+        route = await this.fetchRoute(startCoords, endCoords, profile);
+      }
       this.currentRouteCoordinates = route.coordinates;
+      this.lastRouteResult = route;
       this.completeStep(3);
 
       // Initialize map and draw route
@@ -263,15 +288,24 @@ export class CoverageAnalyzer {
     const travelMode = modeMap[profile] || google.maps.TravelMode.DRIVING;
 
     return new Promise((resolve, reject) => {
-      directionsService.route({
+      const request = {
         origin: start,
         destination: end,
         travelMode: travelMode,
-      }, (result, status) => {
+      };
+
+      // Alternatives are only supported for driving, walking, or cycling in the JS API
+      if (travelMode !== google.maps.TravelMode.TRANSIT) {
+        request.provideRouteAlternatives = true;
+      }
+
+      directionsService.route(request, (result, status) => {
         if (status === 'OK') {
-          // overview_path is an array of LatLngs
-          const coordinates = result.routes[0].overview_path.map(latLng => [latLng.lng(), latLng.lat()]);
-          const distance = result.routes[0].legs[0].distance.value; // in meters
+          // overview_path is an array of LatLngs for the selected route
+          // By default we use the first one, but the user can now see alternatives
+          const routeIndex = 0; 
+          const coordinates = result.routes[routeIndex].overview_path.map(latLng => [latLng.lng(), latLng.lat()]);
+          const distance = result.routes[routeIndex].legs[0].distance.value; // in meters
           resolve({ coordinates, distance, fullResult: result });
         } else {
           reject(new Error(`Directions request failed: ${status}`));
