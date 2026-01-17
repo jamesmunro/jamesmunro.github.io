@@ -57,14 +57,24 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
           <th>Excellent</th>
           <th>Good</th>
           <th>Adequate</th>
-          <th>Best Network?</th>
+          <th>Poor/None</th>
+          <th>Rank</th>
         </tr>
       </thead>
       <tbody id="summary-body">
         <!-- Populated dynamically with percentages -->
       </tbody>
     </table>
-    <p><small>Coverage levels based on Ofcom tile coverage data (variable based on location, indoor/outdoor, and network conditions)</small></p>
+    <div class="coverage-legend">
+      <p><small><strong>Ofcom coverage levels:</strong></small></p>
+      <ul>
+        <li><strong>Excellent</strong> = Level 3-4: Good outdoor, variable in-home / Good outdoor and in-home</li>
+        <li><strong>Good</strong> = Level 2+: Good outdoor</li>
+        <li><strong>Adequate</strong> = Level 1+: Variable outdoor</li>
+        <li><strong>Poor/None</strong> = Level 0: Poor to none outdoor</li>
+      </ul>
+      <p><small><strong>Ranking:</strong> Networks ranked by average coverage level across all sampled points. Higher average = better rank. Ties receive the same rank.</small></p>
+    </div>
   </div>
 
   <!-- Error Display (Fail Fast) -->
@@ -203,6 +213,27 @@ hero_subtitle: Find the best network for your commute by analyzing mobile data c
 
 .coverage-table tr:hover {
   background: #fafafa;
+}
+
+.coverage-legend {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.coverage-legend p {
+  margin: 0 0 0.5rem 0;
+}
+
+.coverage-legend ul {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.coverage-legend li {
+  margin: 0.25rem 0;
 }
 
 #chart-container {
