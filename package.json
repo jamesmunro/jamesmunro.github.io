@@ -5,7 +5,7 @@
     "build": "eleventy && npm run build:jupyter",
     "build:jupyter": "jupyter lite build --output-dir=_site/tools/jupyter-lite",
     "dev": "test -d _site/tools/jupyter-lite || (echo 'Error: Run npm run build:jupyter first' && exit 1) && eleventy --serve",
-    "test": "node --test 'tools/**/*.test.mjs'",
+    "test": "node --test tools/*/*.test.mjs",
     "lint": "node --check tools/jwt-reader/jwt-reader.js"
   },
   "devDependencies": {
