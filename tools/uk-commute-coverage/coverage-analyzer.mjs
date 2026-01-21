@@ -166,11 +166,14 @@ export class CoverageAnalyzer {
     this.validatePostcode(startPostcode);
     this.validatePostcode(endPostcode);
 
-    // Step 3: Convert postcodes to coordinates
+    // Step 3: For transit, pass postcodes directly so Google can find nearby stations
+    // For other modes, geocode to coordinates for precision
+    if (profile === 'transit') {
+      return this.fetchRoute(`${startPostcode}, UK`, `${endPostcode}, UK`, profile);
+    }
+
     const startCoords = await this.postcodeToCoordinates(startPostcode);
     const endCoords = await this.postcodeToCoordinates(endPostcode);
-
-    // Step 4: Fetch route
     return this.fetchRoute(startCoords, endCoords, profile);
   }
 
@@ -203,7 +206,12 @@ export class CoverageAnalyzer {
         route = prefetchedRoute;
       } else {
         this.updateProgress(30, 'Fetching route from Google Directions...');
-        route = await this.fetchRoute(startCoords, endCoords, profile);
+        // For transit, pass postcodes directly so Google can find nearby stations
+        if (profile === 'transit') {
+          route = await this.fetchRoute(`${startPostcode}, UK`, `${endPostcode}, UK`, profile);
+        } else {
+          route = await this.fetchRoute(startCoords, endCoords, profile);
+        }
       }
       this.currentRouteCoordinates = route.coordinates;
       this.lastRouteResult = route;
@@ -318,9 +326,15 @@ export class CoverageAnalyzer {
       if (travelMode !== google.maps.TravelMode.TRANSIT) {
         request.provideRouteAlternatives = true;
       } else {
-        // Transit requires a departure time to find routes
+        // Transit requires a departure time - use next 8am for reliable commuter results
+        const now = new Date();
+        const departure = new Date(now);
+        departure.setHours(8, 0, 0, 0);
+        if (departure <= now) {
+          departure.setDate(departure.getDate() + 1);
+        }
         request.transitOptions = {
-          departureTime: new Date(),
+          departureTime: departure,
         };
       }
 
