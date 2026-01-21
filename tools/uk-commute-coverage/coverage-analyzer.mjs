@@ -135,15 +135,23 @@ export class CoverageAnalyzer {
     }
 
     return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
+      // Create a unique callback name to avoid conflicts
+      const callbackName = '_gmapsCallback_' + Date.now();
+
+      // Set up the callback that Google Maps will invoke when ready
+      window[callbackName] = () => {
         this.googleMapsLoaded = true;
+        delete window[callbackName];
         resolve(window.google.maps);
       };
-      script.onerror = () => reject(new Error('Failed to load Google Maps API. Check your API key.'));
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=geometry,places&callback=${callbackName}`;
+      script.async = true;
+      script.onerror = () => {
+        delete window[callbackName];
+        reject(new Error('Failed to load Google Maps API. Check your API key.'));
+      };
       document.head.appendChild(script);
     });
   }
@@ -309,6 +317,11 @@ export class CoverageAnalyzer {
       // Alternatives are only supported for driving, walking, or cycling in the JS API
       if (travelMode !== google.maps.TravelMode.TRANSIT) {
         request.provideRouteAlternatives = true;
+      } else {
+        // Transit requires a departure time to find routes
+        request.transitOptions = {
+          departureTime: new Date(),
+        };
       }
 
       directionsService.route(request, (result, status) => {
