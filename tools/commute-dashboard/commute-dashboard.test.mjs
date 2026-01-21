@@ -1,9 +1,16 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  getDefaultDirection,
+  getNextBusinessDay,
+  formatTime,
+  formatDelay,
+  weatherCodeToDescription,
+  getRouteConfig,
+  STATIONS,
+} from "./commute-dashboard.js";
 
-test("getDefaultDirection returns toLondon before noon on weekdays", async () => {
-  const { getDefaultDirection } = await import("./commute-dashboard.js");
-
+test("getDefaultDirection returns toLondon before noon on weekdays", () => {
   // Monday 9am
   const mondayMorning = new Date("2025-01-06T09:00:00");
   assert.equal(getDefaultDirection(mondayMorning), "toLondon");
@@ -13,9 +20,7 @@ test("getDefaultDirection returns toLondon before noon on weekdays", async () =>
   assert.equal(getDefaultDirection(fridayMorning), "toLondon");
 });
 
-test("getDefaultDirection returns toHome after noon on weekdays", async () => {
-  const { getDefaultDirection } = await import("./commute-dashboard.js");
-
+test("getDefaultDirection returns toHome after noon on weekdays", () => {
   // Monday 2pm
   const mondayAfternoon = new Date("2025-01-06T14:00:00");
   assert.equal(getDefaultDirection(mondayAfternoon), "toHome");
@@ -25,9 +30,7 @@ test("getDefaultDirection returns toHome after noon on weekdays", async () => {
   assert.equal(getDefaultDirection(wednesdayEvening), "toHome");
 });
 
-test("getDefaultDirection returns toLondon on weekends", async () => {
-  const { getDefaultDirection } = await import("./commute-dashboard.js");
-
+test("getDefaultDirection returns toLondon on weekends", () => {
   // Saturday morning
   const saturdayMorning = new Date("2025-01-04T09:00:00");
   assert.equal(getDefaultDirection(saturdayMorning), "toLondon");
@@ -37,9 +40,7 @@ test("getDefaultDirection returns toLondon on weekends", async () => {
   assert.equal(getDefaultDirection(sundayEvening), "toLondon");
 });
 
-test("getNextBusinessDay skips weekends", async () => {
-  const { getNextBusinessDay } = await import("./commute-dashboard.js");
-
+test("getNextBusinessDay skips weekends", () => {
   // Friday -> Monday
   const friday = new Date("2025-01-10");
   const afterFriday = getNextBusinessDay(friday);
@@ -51,18 +52,14 @@ test("getNextBusinessDay skips weekends", async () => {
   assert.equal(afterThursday.getDay(), 5); // Friday
 });
 
-test("getNextBusinessDay handles Saturday correctly", async () => {
-  const { getNextBusinessDay } = await import("./commute-dashboard.js");
-
+test("getNextBusinessDay handles Saturday correctly", () => {
   // Saturday -> Monday
   const saturday = new Date("2025-01-11");
   const afterSaturday = getNextBusinessDay(saturday);
   assert.equal(afterSaturday.getDay(), 1); // Monday
 });
 
-test("formatTime converts Date to HH:MM format", async () => {
-  const { formatTime } = await import("./commute-dashboard.js");
-
+test("formatTime converts Date to HH:MM format", () => {
   const date = new Date("2025-01-10T14:30:00");
   assert.equal(formatTime(date), "14:30");
 
@@ -70,9 +67,7 @@ test("formatTime converts Date to HH:MM format", async () => {
   assert.equal(formatTime(morning), "08:05");
 });
 
-test("formatDelay returns correct strings", async () => {
-  const { formatDelay } = await import("./commute-dashboard.js");
-
+test("formatDelay returns correct strings", () => {
   assert.equal(formatDelay(0), "On time");
   assert.equal(formatDelay(null), "On time");
   assert.equal(formatDelay(undefined), "On time");
@@ -80,9 +75,7 @@ test("formatDelay returns correct strings", async () => {
   assert.equal(formatDelay(-2), "2 min early");
 });
 
-test("weatherCodeToDescription returns correct descriptions", async () => {
-  const { weatherCodeToDescription } = await import("./commute-dashboard.js");
-
+test("weatherCodeToDescription returns correct descriptions", () => {
   assert.equal(weatherCodeToDescription(0), "Clear sky");
   assert.equal(weatherCodeToDescription(3), "Overcast");
   assert.equal(weatherCodeToDescription(63), "Rain");
@@ -90,9 +83,7 @@ test("weatherCodeToDescription returns correct descriptions", async () => {
   assert.equal(weatherCodeToDescription(999), "Unknown");
 });
 
-test("getRouteConfig returns correct config for toLondon", async () => {
-  const { getRouteConfig, STATIONS } = await import("./commute-dashboard.js");
-
+test("getRouteConfig returns correct config for toLondon", () => {
   const config = getRouteConfig("toLondon");
 
   assert.equal(config.rail.from, STATIONS.rail.harpenden);
@@ -101,9 +92,7 @@ test("getRouteConfig returns correct config for toLondon", async () => {
   assert.equal(config.railLabel, "Harpenden to St Pancras");
 });
 
-test("getRouteConfig returns correct config for toHome", async () => {
-  const { getRouteConfig, STATIONS } = await import("./commute-dashboard.js");
-
+test("getRouteConfig returns correct config for toHome", () => {
   const config = getRouteConfig("toHome");
 
   assert.equal(config.rail.from, STATIONS.rail.stPancras);

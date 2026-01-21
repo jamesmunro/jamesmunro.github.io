@@ -1,11 +1,6 @@
-/**
- * Unit tests for tile-based coverage implementation
- * Tests coordinate conversion, pixel extraction, and color mapping
- */
-
-const { describe, test, before } = require('node:test');
-const assert = require('node:assert');
-const { JSDOM } = require('jsdom');
+import { describe, test, before } from 'node:test';
+import assert from 'node:assert';
+import { JSDOM } from 'jsdom';
 
 // Setup minimal DOM environment
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
@@ -13,7 +8,7 @@ global.window = dom.window;
 global.document = dom.window.document;
 
 // Load actual modules
-const {
+import {
   latLonToBng,
   bngToTile,
   bngToPixelInTile,
@@ -21,25 +16,25 @@ const {
   latLonToPixelInTile,
   RESOLUTIONS,
   TILE_SIZE
-} = require('./coordinate-converter.js');
+} from './coordinate-converter.mjs';
 
-const {
+import {
   rgbToHex,
   hexToRgb,
   colorDistance,
   mapColorToCoverageLevel,
   COVERAGE_COLOR_MAP
-} = require('./pixel-extractor.js');
+} from './pixel-extractor.js';
 
-const { TileCoverageAdapter } = require('./tile-coverage-adapter.js');
+import { TileCoverageAdapter } from './tile-coverage-adapter.mjs';
 
 // Test coordinate converter with real proj4
 describe('Coordinate Converter', () => {
   describe('latLonToBng', () => {
-    test('converts London coordinates to BNG', () => {
+    test('converts London coordinates to BNG', async () => {
       // London: 51.5074, -0.1276
       // Expected BNG: approximately 530000, 180000
-      const result = latLonToBng(51.5074, -0.1276);
+      const result = await latLonToBng(51.5074, -0.1276);
 
       assert.ok(result.easting > 520000 && result.easting < 540000,
         `Easting ${result.easting} should be around 530000`);
@@ -47,10 +42,10 @@ describe('Coordinate Converter', () => {
         `Northing ${result.northing} should be around 180000`);
     });
 
-    test('converts Edinburgh coordinates to BNG', () => {
+    test('converts Edinburgh coordinates to BNG', async () => {
       // Edinburgh: 55.9533, -3.1883
       // Expected BNG: approximately 325000, 673000
-      const result = latLonToBng(55.9533, -3.1883);
+      const result = await latLonToBng(55.9533, -3.1883);
 
       assert.ok(result.easting > 315000 && result.easting < 335000,
         `Easting ${result.easting} should be around 325000`);
@@ -58,10 +53,10 @@ describe('Coordinate Converter', () => {
         `Northing ${result.northing} should be around 673000`);
     });
 
-    test('converts Cardiff coordinates to BNG', () => {
+    test('converts Cardiff coordinates to BNG', async () => {
       // Cardiff: 51.4816, -3.1791
       // Expected BNG: approximately 318000, 177000
-      const result = latLonToBng(51.4816, -3.1791);
+      const result = await latLonToBng(51.4816, -3.1791);
 
       assert.ok(result.easting > 308000 && result.easting < 328000,
         `Easting ${result.easting} should be around 318000`);
@@ -130,8 +125,8 @@ describe('Coordinate Converter', () => {
   });
 
   describe('latLonToTile', () => {
-    test('converts lat/lon to tile coordinates', () => {
-      const result = latLonToTile(51.5074, -0.1276, 10);
+    test('converts lat/lon to tile coordinates', async () => {
+      const result = await latLonToTile(51.5074, -0.1276, 10);
 
       assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
       assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
@@ -140,8 +135,8 @@ describe('Coordinate Converter', () => {
   });
 
   describe('latLonToPixelInTile', () => {
-    test('converts lat/lon to pixel position', () => {
-      const result = latLonToPixelInTile(51.5074, -0.1276, 10);
+    test('converts lat/lon to pixel position', async () => {
+      const result = await latLonToPixelInTile(51.5074, -0.1276, 10);
 
       assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE);
       assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE);
@@ -260,8 +255,6 @@ describe('TileCoverageAdapter', () => {
     // Mock indexedDB
     global.indexedDB = null;
 
-    // Mock latLonToPixelInTile on window for the adapter
-    global.window.latLonToPixelInTile = latLonToPixelInTile;
 
     adapter = new TileCoverageAdapter();
   });
@@ -315,6 +308,13 @@ describe('TileCoverageAdapter', () => {
       assert.strictEqual(adapter.getCoverageDescription(0), 'Poor to none outdoor');
       assert.strictEqual(adapter.getCoverageDescription(null), 'Unknown');
       assert.strictEqual(adapter.getCoverageDescription(undefined), 'Unknown');
+    });
+  });
+
+  describe('stats', () => {
+    test('initializes with zeroed stats', () => {
+      assert.strictEqual(adapter.stats.tilesFetched, 0);
+      assert.strictEqual(adapter.stats.tilesFromCache, 0);
     });
   });
 });

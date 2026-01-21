@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UK Mobile Coverage Analyzer | jamesmunro.github.io</title>
-    <meta name="site-version" content="20260117.1724">
+    <title>UK Commute Coverage Analyser | jamesmunro.github.io</title>
+    <meta name="site-version" content="20260121.2148">
     <link rel="icon" href="data:,">
     <style>
       :root {
@@ -254,9 +254,9 @@
         <span id="theme-icon">☀️</span>
         <span id="theme-text">Light</span>
       </button>
-      <h1>UK Mobile Coverage Analyzer</h1>
+      <h1>UK Commute Coverage Analyser</h1>
       
-      <p>Find the best network for your commute by analyzing mobile data coverage along your route</p>
+      <p>Find the best network for your commute by analysing mobile data coverage along your route</p>
       
     </header>
 
@@ -265,7 +265,7 @@
 
 <div class="coverage-tool">
   <div class="intro">
-    <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyze signal strength at 150 evenly-spaced points. Perfect for finding the best network for your commute.</p>
+    <p>Compare mobile coverage from EE, Vodafone, O2, and Three along any UK route. Uses Ofcom coverage tiles to analyse signal strength at 500 evenly-spaced points. Perfect for finding the best network for your commute.</p>
     <p><strong>How it works:</strong> Enter your route, and we'll fetch Ofcom's official coverage data and sample it along your journey. Results show coverage quality levels for each network.</p>
   </div>
   <form id="route-form">
@@ -280,18 +280,52 @@
 <small>UK postcode format (e.g., EC2N 2DB)</small>
 </div></p>
 <p><div class="form-group">
-<label for="ors-api-key">OpenRouteService API Key</label>
-<input type="text" id="ors-api-key" placeholder="Get free key at openrouteservice.org" required autocomplete="off">
-<small>Free tier: 2,000 requests/day | <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener">Sign up here</a></small>
+<label for="route-profile">Travel Mode</label>
+<select id="route-profile">
+<option value="driving-car">Driving (Car)</option>
+<option value="transit">Public Transport (Bus/Train)</option>
+<option value="cycling-regular">Cycling</option>
+<option value="foot-walking">Walking</option>
+</select>
 </div></p>
-<p><button type="submit" class="btn-primary">Analyze Route Coverage</button>
-<small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 150 evenly-spaced points using Ofcom coverage tiles</small></p>
+<p><div class="form-group">
+<label for="google-maps-api-key">Google Maps API Key</label>
+<input type="text" id="google-maps-api-key" placeholder="Enter your Google Maps API Key" required autocomplete="off">
+<small>Requires Geocoding, Directions, and Maps JavaScript APIs | <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Get a key here</a></small>
+</div></p>
+<p><div class="form-group">
+<label for="tile-network">Show coverage tiles on map</label>
+<select id="tile-network">
+<option value="">None</option>
+<option value="mno3">EE</option>
+<option value="mno1">Vodafone</option>
+<option value="mno2">O2</option>
+<option value="mno4">Three</option>
+</select>
+<small>Select a network to overlay its coverage tiles on the map</small>
+</div></p>
+<p><div class="button-group">
+<button type="button" id="preview-btn" class="btn-primary">Preview Route</button>
+<button type="submit" class="btn-primary">Analyse Route Coverage</button>
+</div>
+<small style="display:block; text-align:center; margin-top:0.5rem; color:var(--text-secondary);">Route sampled at 500 evenly-spaced points using Ofcom coverage tiles</small></p>
   </form>
+  <!-- Route Preview Map -->
+  <div id="preview-container" style="display:none;">
+    <div id="route-options-container" style="margin-bottom: 1rem;">
+      <p><small><strong>Select typical route:</strong></small></p>
+      <div id="route-options" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+    </div>
+    <div id="map-container" style="height: 400px; margin: 1rem 0;"></div>
+  </div>
   <!-- Step-by-Step Progress Indicator -->
   <div id="progress" class="progress-container" style="display:none">
     <div id="progress-steps"></div>
     <progress id="progress-bar" max="100" value="0"></progress>
-    <span id="progress-text">Initializing...</span>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+      <span id="progress-text">Initializing...</span>
+      <span id="stats-text" style="font-size: 0.85rem; color: var(--text-secondary); font-family: monospace;"></span>
+    </div>
   </div>
   <!-- Chart Canvas -->
   <div id="chart-container" style="display:none">
@@ -373,6 +407,11 @@
   font-size: 0.875rem;
 }
 
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
 .btn-primary {
   background: var(--link-color);
   color: var(--bg-card);
@@ -382,7 +421,7 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  width: 100%;
+  flex: 1;
 }
 
 .btn-primary:hover {
@@ -498,22 +537,17 @@
   margin-bottom: 1rem;
 }
 </style>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
-<script src="/assets/libs/chart.js/chart.min.js?v=20260117.1724"></script>
-<script src="constants.js?v=20260117.1724"></script>
-<script src="coordinate-converter.js?v=20260117.1724"></script>
-<script src="pixel-extractor.js?v=20260117.1724"></script>
-<script src="route-sampler.js?v=20260117.1724"></script>
-<script src="tile-coverage-adapter.js?v=20260117.1724"></script>
-<script src="chart-renderer.js?v=20260117.1724"></script>
-<script src="coverage-analyzer.js?v=20260117.1724"></script>
-
+<script type="module" src="main.mjs"></script>
 
     </main>
 
     <footer style="text-align:center; padding:18px 24px; color:var(--text-secondary); font-size:0.9rem;">
       <div class="card" style="max-width:1080px; margin: 0 auto 32px; background:transparent; box-shadow:none; border:none; padding:0;">
-        <small>Site version: <strong>20260117.1724</strong></small>
+        <small>Site version: <strong>20260121.2148</strong></small>
       </div>
     </footer>
 

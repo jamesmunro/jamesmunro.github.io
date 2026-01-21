@@ -57,11 +57,11 @@ class ChartRenderer {
 
     const datasets = networks.map(network => {
       const data = coverageResults.map(result => ({
-        x: result.point.distance / 1000, // Convert to km
+        x: (result.point.distance || 0) / 1000, // Convert to km
         y: this.getSignalLevel(result.coverage?.networks?.[network]),
-        postcode: result.postcode || 'Unknown',
-        lat: result.point.lat,
-        lng: result.point.lng
+        postcode: result.postcode,
+        lat: typeof result.point.lat === 'number' ? result.point.lat : NaN,
+        lng: typeof result.point.lng === 'number' ? result.point.lng : NaN
       }));
 
       return {
@@ -71,8 +71,8 @@ class ChartRenderer {
         backgroundColor: colors[network] + '20', // Add transparency
         borderWidth: 2,
         tension: 0,
-        stepped: true,
-        pointRadius: 0,
+        stepped: false,
+        pointRadius: 2,
         pointHoverRadius: 5
       };
     });
@@ -85,15 +85,31 @@ class ChartRenderer {
    * @param {Array} coverageResults - Array of coverage results
    */
   render(coverageResults) {
-    const canvas = document.getElementById(this.canvasId);
+    let canvas = document.getElementById(this.canvasId);
     if (!canvas) {
       throw new Error(`Canvas element ${this.canvasId} not found`);
     }
 
-    // Destroy existing chart if it exists
+    // Check for and destroy any existing chart instance on this canvas
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+
+    // Also destroy the instance tracked by this class
     if (this.chart) {
       this.chart.destroy();
     }
+
+    // Create a fresh canvas element to ensure no lingering state
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = this.canvasId;
+    newCanvas.className = canvas.className; // Preserve classes
+    // Preserve any inline styles if necessary, but typically controlled by CSS
+    // canvas.style.cssText = canvas.style.cssText; 
+    
+    canvas.parentNode.replaceChild(newCanvas, canvas);
+    canvas = newCanvas;
 
     const ctx = canvas.getContext('2d');
     const datasets = this.prepareChartData(coverageResults);
@@ -138,6 +154,22 @@ class ChartRenderer {
           }
         },
         plugins: {
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x',
+              threshold: 10
+            },
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'x',
+            }
+          },
           tooltip: {
             callbacks: {
               title: function(context) {
@@ -150,7 +182,10 @@ class ChartRenderer {
               },
               afterLabel: function(context) {
                 const point = context.raw;
-                return `Postcode: ${point.postcode}\nLat: ${point.lat.toFixed(4)}, Lng: ${point.lng.toFixed(4)}`;
+                const postcodeLine = point.postcode ? `Postcode: ${point.postcode}\n` : '';
+                const latStr = (typeof point.lat === 'number' && !isNaN(point.lat)) ? point.lat.toFixed(4) : 'N/A';
+                const lngStr = (typeof point.lng === 'number' && !isNaN(point.lng)) ? point.lng.toFixed(4) : 'N/A';
+                return `${postcodeLine}Lat: ${latStr}, Lng: ${lngStr}`;
               }
             }
           },
@@ -309,11 +344,4 @@ class ChartRenderer {
 }
 
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ChartRenderer };
-}
-
-// Export to global scope for browser
-if (typeof window !== 'undefined') {
-  window.ChartRenderer = ChartRenderer;
-}
+export { ChartRenderer };

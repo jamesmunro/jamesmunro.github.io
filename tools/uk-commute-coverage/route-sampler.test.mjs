@@ -3,9 +3,9 @@
  * Run with: npm test
  */
 
-const { describe, test } = require('node:test');
-const assert = require('node:assert');
-const { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance } = require('./route-sampler.js');
+import { describe, test } from 'node:test';
+import assert from 'node:assert';
+import { haversineDistance, sampleRoute, sampleRouteByCount, getTotalDistance } from './route-sampler.mjs';
 
 describe('Route Sampler', () => {
   describe('haversineDistance', () => {
@@ -141,7 +141,7 @@ describe('Route Sampler', () => {
   });
 
   describe('sampleRouteByCount', () => {
-    test('samples exactly 150 points by default', () => {
+    test('samples exactly 500 points by default', () => {
       const route = [
         [-0.1276, 51.5074],  // London
         [-0.0876, 51.5074]   // ~3km east
@@ -149,7 +149,7 @@ describe('Route Sampler', () => {
 
       const sampled = sampleRouteByCount(route);
 
-      assert.strictEqual(sampled.length, 150, 'Should have exactly 150 samples');
+      assert.strictEqual(sampled.length, 500, 'Should have exactly 500 samples');
     });
 
     test('samples requested number of points', () => {
@@ -220,9 +220,9 @@ describe('Route Sampler', () => {
     });
 
     test('throws error for invalid input', () => {
-      assert.throws(() => sampleRouteByCount([], 150), /at least 2 points/);
-      assert.throws(() => sampleRouteByCount([[-0.1276, 51.5074]], 150), /at least 2 points/);
-      assert.throws(() => sampleRouteByCount(null, 150), /at least 2 points/);
+      assert.throws(() => sampleRouteByCount([], 500), /at least 2 points/);
+      assert.throws(() => sampleRouteByCount([[-0.1276, 51.5074]], 500), /at least 2 points/);
+      assert.throws(() => sampleRouteByCount(null, 500), /at least 2 points/);
     });
 
     test('handles zero-length routes (same start and end point)', () => {
@@ -231,7 +231,7 @@ describe('Route Sampler', () => {
         [-0.1276, 51.5074]  // Same point
       ];
 
-      const sampled = sampleRouteByCount(route, 150);
+      const sampled = sampleRouteByCount(route, 500);
 
       // Should return at least one point at the location
       assert.ok(sampled.length > 0, 'Should return at least one point');
