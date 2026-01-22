@@ -13,8 +13,8 @@ module.exports = function (eleventyConfig) {
     return `${url}${separator}v=${version}`;
   });
 
-  eleventyConfig.addPassthroughCopy("tools/**/*.js");
-  eleventyConfig.addPassthroughCopy("tools/**/*.mjs");
+  // Copy compiled TypeScript from dist/ to site
+  eleventyConfig.addPassthroughCopy({ "dist/tools": "tools" });
   eleventyConfig.addPassthroughCopy({
     "node_modules/xterm/css/xterm.css": "assets/libs/xterm/xterm.css",
     "node_modules/xterm/lib/xterm.js": "assets/libs/xterm/xterm.js",

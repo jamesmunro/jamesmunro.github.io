@@ -1,0 +1,197 @@
+/**
+ * Route Sampling Module
+ * Provides functions for sampling points along a route at regular intervals
+ */
+
+import type { SampledPoint, RouteSegment } from '../../types/coverage.js';
+
+/** Coordinate pair [longitude, latitude] */
+type Coordinate = [number, number];
+
+/**
+ * Calculate distance between two geographic points using Haversine formula
+ * @param point1 - [longitude, latitude]
+ * @param point2 - [longitude, latitude]
+ * @returns Distance in meters
+ */
+export function haversineDistance(point1: Coordinate, point2: Coordinate): number {
+  const [lon1, lat1] = point1;
+  const [lon2, lat2] = point2;
+  const R = 6371000; // Earth radius in meters
+
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c; // Distance in meters
+}
+
+/**
+ * Sample points along a route at regular intervals
+ * @param coordinates - Array of [longitude, latitude] pairs from route
+ * @param intervalMeters - Distance between sample points (default 500m)
+ * @returns Array of sampled points with {lat, lng, distance}
+ */
+export function sampleRoute(coordinates: Coordinate[], intervalMeters = 500): SampledPoint[] {
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 2) {
+    throw new Error('Route must have at least 2 points');
+  }
+
+  // Validate and filter coordinates
+  const validCoordinates = coordinates.filter(c =>
+    Array.isArray(c) &&
+    c.length >= 2 &&
+    !isNaN(Number(c[0])) &&
+    !isNaN(Number(c[1]))
+  );
+
+  if (validCoordinates.length < 2) {
+    throw new Error('Route has no valid coordinate pairs');
+  }
+
+  const points: SampledPoint[] = [];
+  let distanceAlongRoute = 0;
+
+  // Always include the first point
+  points.push({
+    lat: Number(validCoordinates[0][1]),
+    lng: Number(validCoordinates[0][0]),
+    distance: 0
+  });
+
+  for (let i = 0; i < validCoordinates.length - 1; i++) {
+    const [p1, p2] = [validCoordinates[i], validCoordinates[i + 1]];
+    const segmentDist = haversineDistance(p1, p2);
+
+    if (segmentDist === 0) continue; // Skip zero-length segments
+
+    const numSamples = Math.ceil(segmentDist / intervalMeters);
+
+    // Sample points along this segment (skip j=0 to avoid duplicates)
+    for (let j = 1; j <= numSamples; j++) {
+      const fraction = j / numSamples;
+      const newDistance = distanceAlongRoute + segmentDist * fraction;
+
+      points.push({
+        lat: p1[1] + (p2[1] - p1[1]) * fraction,
+        lng: p1[0] + (p2[0] - p1[0]) * fraction,
+        distance: newDistance
+      });
+    }
+
+    distanceAlongRoute += segmentDist;
+  }
+
+  return points;
+}
+
+/**
+ * Get total distance of a route
+ * @param coordinates - Array of [longitude, latitude] pairs
+ * @returns Total distance in meters
+ */
+export function getTotalDistance(coordinates: Coordinate[]): number {
+  let total = 0;
+  for (let i = 0; i < coordinates.length - 1; i++) {
+    total += haversineDistance(coordinates[i], coordinates[i + 1]);
+  }
+  return total;
+}
+
+/**
+ * Sample a specific number of points evenly along a route
+ * @param coordinates - Array of [longitude, latitude] pairs from route
+ * @param targetSamples - Target number of sample points (default 500)
+ */
+export function sampleRouteByCount(coordinates: Coordinate[], targetSamples = 500): SampledPoint[] {
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length < 2) {
+    throw new Error('Route must have at least 2 points');
+  }
+
+  // Validate coordinates are [lng, lat] pairs of numbers
+  const validCoordinates = coordinates.filter(c =>
+    Array.isArray(c) &&
+    c.length >= 2 &&
+    !isNaN(Number(c[0])) &&
+    !isNaN(Number(c[1]))
+  );
+
+  if (validCoordinates.length < 2) {
+    // If we can't find 2 valid points, but have at least one, return that point
+    if (validCoordinates.length === 1) {
+      return Array(targetSamples).fill(0).map(() => ({
+        lat: Number(validCoordinates[0][1]),
+        lng: Number(validCoordinates[0][0]),
+        distance: 0
+      }));
+    }
+    throw new Error('Route has no valid coordinate pairs');
+  }
+
+  // Build segments with cumulative distances
+  const segments: RouteSegment[] = [];
+  let cumulativeDistance = 0;
+
+  for (let i = 0; i < validCoordinates.length - 1; i++) {
+    const segmentDist = haversineDistance(validCoordinates[i], validCoordinates[i + 1]);
+    if (segmentDist >= 0) {
+      segments.push({
+        start: validCoordinates[i],
+        end: validCoordinates[i + 1],
+        startDist: cumulativeDistance,
+        endDist: cumulativeDistance + segmentDist,
+        length: segmentDist
+      });
+      cumulativeDistance += segmentDist;
+    }
+  }
+
+  const totalDistance = cumulativeDistance;
+
+  // Handle zero-length routes (no valid segments)
+  if (segments.length === 0) {
+    return [{
+      lat: coordinates[0][1],
+      lng: coordinates[0][0],
+      distance: 0
+    }];
+  }
+
+  const points: SampledPoint[] = [];
+
+  // Sample exactly targetSamples points
+  for (let i = 0; i < targetSamples; i++) {
+    const targetDistance = (i / (targetSamples - 1)) * totalDistance;
+
+    // Find which segment this distance falls into
+    const segment = segments.find(s => targetDistance >= s.startDist && targetDistance <= s.endDist);
+
+    if (segment) {
+      // Interpolate within this segment
+      const distanceIntoSegment = targetDistance - segment.startDist;
+      const fraction = segment.length > 0 ? distanceIntoSegment / segment.length : 0;
+
+      points.push({
+        lat: segment.start[1] + (segment.end[1] - segment.start[1]) * fraction,
+        lng: segment.start[0] + (segment.end[0] - segment.start[0]) * fraction,
+        distance: targetDistance
+      });
+    } else {
+      // Edge case: should only happen for last point at total distance
+      const lastSegment = segments[segments.length - 1];
+      points.push({
+        lat: lastSegment.end[1],
+        lng: lastSegment.end[0],
+        distance: totalDistance
+      });
+    }
+  }
+
+  return points;
+}

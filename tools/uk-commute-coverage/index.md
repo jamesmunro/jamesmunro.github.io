@@ -294,4 +294,4 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
-<script type="module" src="main.mjs"></script>
+<script type="module" src="main.js"></script>

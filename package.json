@@ -2,15 +2,24 @@
   "name": "jamesmunro.github.io",
   "private": true,
   "scripts": {
-    "build": "eleventy && npm run build:jupyter",
+    "build": "npm run build:ts && eleventy && npm run build:jupyter",
+    "build:ts": "tsc",
     "build:jupyter": "jupyter lite build --output-dir=_site/tools/jupyter-lite",
-    "dev": "test -d _site/tools/jupyter-lite || (echo 'Error: Run npm run build:jupyter first' && exit 1) && eleventy --serve",
-    "test": "node --test tools/*/*.test.mjs",
-    "lint": "node --check tools/jwt-reader/jwt-reader.js"
+    "dev": "test -d _site/tools/jupyter-lite || (echo 'Error: Run npm run build:jupyter first' && exit 1) && concurrently \"tsc --watch\" \"eleventy --serve\"",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build:ts && node --test dist/tools/*/*.test.js",
+    "clean": "rimraf dist _site",
+    "lint": "tsc --noEmit"
   },
   "devDependencies": {
     "@11ty/eleventy": "^2.0.1",
-    "jsdom": "^27.4.0"
+    "@types/google.maps": "^3.58.1",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^25.0.10",
+    "concurrently": "^9.2.1",
+    "jsdom": "^27.4.0",
+    "rimraf": "^6.1.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "chart.js": "^4.4.0",
