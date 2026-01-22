@@ -12,13 +12,17 @@ This repository hosts a personal website and portfolio built as a static site. I
 - **Package Management:** `npm` (Node), `pip` (Python)
 
 ## Project Structure
-- **`_includes/`**: Nunjucks layouts and partials.
-- **`_data/`**: Global site data files (e.g., `site.json`).
+- **`_includes/layouts/`**: Nunjucks layouts (e.g., `tool.njk`).
+- **`_data/`**: Global site data files (`site.json`, `build.js`).
 - **`tools/`**: Contains individual interactive tools. Each tool usually has its own subdirectory with an `index.md` and associated scripts.
     - **`tools/tools.json`**: Directory data file applying `layouts/tool.njk` to all tools.
-    - **`tools/jwt-reader/`**: Example tool with client-side JS and tests.
+    - **`tools/jwt-reader/`**: JWT decoder with client-side JS.
     - **`tools/pyodide-terminal/`**: Python REPL using Pyodide (WASM) and xterm.js.
-- **`.eleventy.js`**: Main configuration file for Eleventy.
+    - **`tools/uk-commute-coverage/`**: Interactive commute coverage analyzer with map visualization.
+    - **`tools/commute-dashboard/`**: Commute metrics dashboard.
+    - **`tools/browser-llm/`**: Browser-embedded LLM chatbot tool.
+    - **`tools/world-clock/`**: World time zone clock.
+- **`.eleventy.js`**: Main configuration file for Eleventy (includes CORS proxy for dev server).
 - **`package.json`**: Node dependencies and scripts.
 - **`requirements.txt`**: Python dependencies for Jupyter Lite.
 
@@ -34,6 +38,11 @@ This repository hosts a personal website and portfolio built as a static site. I
     ```
 
 ### Running Locally
+- **First-time setup:** Build Jupyter Lite before running dev server:
+  ```sh
+  source .venv/bin/activate
+  npm run build:jupyter
+  ```
 - Start the development server (Eleventy):
   ```sh
   npm run dev
@@ -53,7 +62,7 @@ This repository hosts a personal website and portfolio built as a static site. I
   ```sh
   npm test
   ```
-  Uses Node's built-in test runner (`node --test`) to run all `*.test.js` files in `tools/`. This includes structural and syntax verification for tools like Pyodide Terminal.
+  Uses Node's built-in test runner (`node --test`) to run all `*.test.mjs` files in `tools/`. This includes structural and syntax verification for tools like Pyodide Terminal.
 - Run linting checks:
   ```sh
   npm run lint
@@ -62,14 +71,14 @@ This repository hosts a personal website and portfolio built as a static site. I
 ## Conventions & Guidelines
 
 ### External Libraries & Self-Hosting
-- **Prefer self-hosting:** Install libraries via `npm` and use `eleventyConfig.addPassthroughCopy` in `.eleventy.js` to mirror them into `assets/libs/`. 
-- **Example:** `xterm.js` and `Pyodide` are self-hosted to ensure offline reliability and performance on GitHub Pages.
+- **Prefer self-hosting:** Install libraries via `npm` and use `eleventyConfig.addPassthroughCopy` in `.eleventy.js` to mirror them into `assets/libs/`.
+- **Example:** `xterm.js`, `Pyodide`, and `chart.js` are self-hosted to ensure offline reliability and performance on GitHub Pages.
 
 ### Adding a New Tool
 1.  Create a directory in `tools/` (e.g., `tools/my-new-tool/`).
 2.  Add an `index.md` with front matter title.
 3.  Add necessary JavaScript/CSS assets in that folder.
-4.  If logic is complex, add a `.test.js` file and update `scripts.test` in `package.json` to include it (or ensure the test glob picks it up).
+4.  If logic is complex, add a `.test.mjs` file (the test glob `tools/*/*.test.mjs` will pick it up automatically).
 
 ### Code Style
 - **JavaScript:** Use modern ES6+ syntax. No compilation step for client scripts (currently), so keep it browser-compatible or update build pipeline.
