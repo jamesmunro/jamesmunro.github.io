@@ -1,4 +1,4 @@
-<h1>Gemini Project Context: jamesmunro.github.io</h1>
+<h1>Project Context: jamesmunro.github.io</h1>
 <h2>Project Overview</h2>
 <p>This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.</p>
 <h2>Tech Stack</h2>
@@ -12,16 +12,20 @@
 </ul>
 <h2>Project Structure</h2>
 <ul>
-<li><strong><code>_includes/</code></strong>: Nunjucks layouts and partials.</li>
-<li><strong><code>_data/</code></strong>: Global site data files (e.g., <code>site.json</code>).</li>
+<li><strong><code>_includes/layouts/</code></strong>: Nunjucks layouts (e.g., <code>tool.njk</code>).</li>
+<li><strong><code>_data/</code></strong>: Global site data files (<code>site.json</code>, <code>build.js</code>).</li>
 <li><strong><code>tools/</code></strong>: Contains individual interactive tools. Each tool usually has its own subdirectory with an <code>index.md</code> and associated scripts.
 <ul>
 <li><strong><code>tools/tools.json</code></strong>: Directory data file applying <code>layouts/tool.njk</code> to all tools.</li>
-<li><strong><code>tools/jwt-reader/</code></strong>: Example tool with client-side JS and tests.</li>
+<li><strong><code>tools/jwt-reader/</code></strong>: JWT decoder with client-side JS.</li>
 <li><strong><code>tools/pyodide-terminal/</code></strong>: Python REPL using Pyodide (WASM) and xterm.js.</li>
+<li><strong><code>tools/uk-commute-coverage/</code></strong>: Interactive commute coverage analyzer with map visualization.</li>
+<li><strong><code>tools/commute-dashboard/</code></strong>: Commute metrics dashboard.</li>
+<li><strong><code>tools/browser-llm/</code></strong>: Browser-embedded LLM chatbot tool.</li>
+<li><strong><code>tools/world-clock/</code></strong>: World time zone clock.</li>
 </ul>
 </li>
-<li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy.</li>
+<li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy (includes CORS proxy for dev server).</li>
 <li><strong><code>package.json</code></strong>: Node dependencies and scripts.</li>
 <li><strong><code>requirements.txt</code></strong>: Python dependencies for Jupyter Lite.</li>
 </ul>
@@ -37,6 +41,10 @@ pip install -r requirements.txt
 </ol>
 <h3>Running Locally</h3>
 <ul>
+<li><strong>First-time setup:</strong> Build Jupyter Lite before running dev server:<pre><code class="language-sh">source .venv/bin/activate
+npm run build:jupyter
+</code></pre>
+</li>
 <li>Start the development server (Eleventy):<pre><code class="language-sh">npm run dev
 </code></pre>
 Access at <code>http://localhost:8080</code>. The server is configured to bind to <code>0.0.0.0</code> to support access from WSL hosts or other devices on the network.</li>
@@ -53,7 +61,7 @@ npm run build
 <ul>
 <li>Run unit and structural tests:<pre><code class="language-sh">npm test
 </code></pre>
-Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.js</code> files in <code>tools/</code>. This includes structural and syntax verification for tools like Pyodide Terminal.</li>
+Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.mjs</code> files in <code>tools/</code>. This includes structural and syntax verification for tools like Pyodide Terminal.</li>
 <li>Run linting checks:<pre><code class="language-sh">npm run lint
 </code></pre>
 </li>
@@ -62,14 +70,14 @@ Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.t
 <h3>External Libraries &amp; Self-Hosting</h3>
 <ul>
 <li><strong>Prefer self-hosting:</strong> Install libraries via <code>npm</code> and use <code>eleventyConfig.addPassthroughCopy</code> in <code>.eleventy.js</code> to mirror them into <code>assets/libs/</code>.</li>
-<li><strong>Example:</strong> <code>xterm.js</code> and <code>Pyodide</code> are self-hosted to ensure offline reliability and performance on GitHub Pages.</li>
+<li><strong>Example:</strong> <code>xterm.js</code>, <code>Pyodide</code>, and <code>chart.js</code> are self-hosted to ensure offline reliability and performance on GitHub Pages.</li>
 </ul>
 <h3>Adding a New Tool</h3>
 <ol>
 <li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>).</li>
 <li>Add an <code>index.md</code> with front matter title.</li>
 <li>Add necessary JavaScript/CSS assets in that folder.</li>
-<li>If logic is complex, add a <code>.test.js</code> file and update <code>scripts.test</code> in <code>package.json</code> to include it (or ensure the test glob picks it up).</li>
+<li>If logic is complex, add a <code>.test.mjs</code> file (the test glob <code>tools/*/*.test.mjs</code> will pick it up automatically).</li>
 </ol>
 <h3>Code Style</h3>
 <ul>
