@@ -142,18 +142,33 @@ export class GoogleMap {
 
     // Add markers for start and end points with extra safety
     if (path.length > 0) {
-      this.logger.log("Adding markers at", path[0], "and", path[path.length - 1]);
+      const startPos = path[0];
+      const endPos = path[path.length - 1];
+      this.logger.log("Adding markers at", startPos, "and", endPos);
+
       try {
-        new google.maps.Marker({
-          position: path[0],
-          map: this.map,
-          title: 'Start'
-        });
-        new google.maps.Marker({
-          position: path[path.length - 1],
-          map: this.map,
-          title: 'End'
-        });
+        // Extra validation before marker creation
+        if (startPos && typeof startPos.lat === 'number' && typeof startPos.lng === 'number' &&
+            !isNaN(startPos.lat) && !isNaN(startPos.lng) && isFinite(startPos.lat) && isFinite(startPos.lng)) {
+          new google.maps.Marker({
+            position: startPos,
+            map: this.map,
+            title: 'Start'
+          });
+        } else {
+          this.logger.warn("Invalid start position for marker:", startPos);
+        }
+
+        if (endPos && typeof endPos.lat === 'number' && typeof endPos.lng === 'number' &&
+            !isNaN(endPos.lat) && !isNaN(endPos.lng) && isFinite(endPos.lat) && isFinite(endPos.lng)) {
+          new google.maps.Marker({
+            position: endPos,
+            map: this.map,
+            title: 'End'
+          });
+        } else {
+          this.logger.warn("Invalid end position for marker:", endPos);
+        }
       } catch (e) {
         this.logger.error("Failed to add start/end markers:", e);
       }
@@ -167,10 +182,47 @@ export class GoogleMap {
     this.logger.log("setDirections called");
     if (!this.map) return;
     this.clearDirections();
-    
+
     if (!directionsResult || !directionsResult.routes || directionsResult.routes.length === 0) {
       this.logger.warn("No valid routes in directionsResult.");
       return;
+    }
+
+    // Validate that routes have valid start/end locations before creating renderers
+    const firstRoute = directionsResult.routes[0];
+    if (firstRoute && firstRoute.legs && firstRoute.legs[0]) {
+      const leg = firstRoute.legs[0];
+      const startLoc = leg.start_location;
+      const endLoc = leg.end_location;
+
+      const getLatLng = (loc) => {
+        if (!loc) return { lat: NaN, lng: NaN };
+        const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
+        const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
+        return { lat, lng };
+      };
+
+      const start = getLatLng(startLoc);
+      const end = getLatLng(endLoc);
+
+      if (isNaN(start.lat) || isNaN(start.lng) || isNaN(end.lat) || isNaN(end.lng) ||
+          !isFinite(start.lat) || !isFinite(start.lng) || !isFinite(end.lat) || !isFinite(end.lng)) {
+        this.logger.error("DirectionsResult has invalid start/end locations:", { start, end });
+        // Fall back to drawRoute without markers
+        if (firstRoute.overview_path) {
+          const coords = firstRoute.overview_path
+            .map(p => {
+              const lat = typeof p.lat === 'function' ? p.lat() : p.lat;
+              const lng = typeof p.lng === 'function' ? p.lng() : p.lng;
+              return (isNaN(lat) || isNaN(lng)) ? null : [lng, lat];
+            })
+            .filter(c => c !== null);
+          if (coords.length > 0) {
+            this.drawRoute(coords);
+          }
+        }
+        return;
+      }
     }
 
     // Create a renderer for each route
@@ -201,8 +253,16 @@ export class GoogleMap {
       // If DirectionsRenderer fails, try to fall back to drawRoute for the first route
       if (directionsResult.routes[0] && directionsResult.routes[0].overview_path) {
         this.logger.log("Falling back to drawRoute due to DirectionsRenderer error");
-        const coords = directionsResult.routes[0].overview_path.map(p => [p.lng(), p.lat()]);
-        this.drawRoute(coords);
+        const coords = directionsResult.routes[0].overview_path
+          .map(p => {
+            const lat = typeof p.lat === 'function' ? p.lat() : p.lat;
+            const lng = typeof p.lng === 'function' ? p.lng() : p.lng;
+            return (isNaN(lat) || isNaN(lng)) ? null : [lng, lat];
+          })
+          .filter(c => c !== null);
+        if (coords.length > 0) {
+          this.drawRoute(coords);
+        }
       }
       return;
     }

@@ -1,4 +1,4 @@
-# Gemini Project Context: jamesmunro.github.io
+# Project Context: jamesmunro.github.io
 
 ## Project Overview
 This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.
