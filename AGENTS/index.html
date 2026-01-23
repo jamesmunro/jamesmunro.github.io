@@ -76,14 +76,7 @@ Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.t
 <li>Run linting checks:<pre><code class="language-sh">npm run lint
 </code></pre>
 </li>
-<li><strong>IMPORTANT:</strong> Always run tests before committing changes that affect code, especially when:
-<ul>
-<li>Removing or refactoring files</li>
-<li>Updating dependencies</li>
-<li>Changing build configurations</li>
-<li>Modifying tool logic</li>
-</ul>
-</li>
+<li><strong>IMPORTANT:</strong> Always run tests before committing.</li>
 </ul>
 <h2>Conventions &amp; Guidelines</h2>
 <h3>External Libraries &amp; Self-Hosting</h3>
@@ -97,6 +90,7 @@ Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.t
 <li>Add an <code>index.md</code> with front matter title.</li>
 <li>Add necessary TypeScript/CSS assets in that folder (<code>.ts</code> files).</li>
 <li>If logic is complex, add a <code>.test.ts</code> file (the test glob will pick up the compiled <code>.test.js</code> automatically after <code>npm run build:ts</code>).</li>
+<li>Update AGENTS.md</li>
 </ol>
 <h3>Code Style</h3>
 <ul>

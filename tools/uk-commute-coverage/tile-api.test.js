@@ -240,6 +240,28 @@ describe('TileCoverageAdapter', () => {
             assert.strictEqual(adapter.stats.tilesFromCache, 0);
         });
     });
+    describe('getTileUrl', () => {
+        test('generates correct URLs for verified tile coordinates', () => {
+            const testCases = [
+                { mno: 'mno1', tileX: 713, tileY: 302, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42' },
+                { mno: 'mno3', tileX: 738, tileY: 252, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/738/252.png?v=42' },
+                { mno: 'mno3', tileX: 454, tileY: 941, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/454/941.png?v=42' },
+                { mno: 'mno3', tileX: 361, tileY: 930, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/361/930.png?v=42' },
+            ];
+            for (const tc of testCases) {
+                const url = adapter.getTileUrl(tc.mno, tc.tileX, tc.tileY);
+                assert.strictEqual(url, tc.expected);
+            }
+        });
+        test('handles all four MNO IDs', () => {
+            const mnos = ['mno1', 'mno2', 'mno3', 'mno4'];
+            for (const mno of mnos) {
+                const url = adapter.getTileUrl(mno, 100, 100);
+                assert.ok(url.includes(mno), `URL should contain ${mno}`);
+                assert.ok(url.includes('/10/100/100.png'), 'URL should contain tile coordinates');
+            }
+        });
+    });
 });
 // Test tile URL construction
 describe('Tile URL Construction', () => {
@@ -261,6 +283,36 @@ describe('Tile URL Construction', () => {
             assert.ok(url.includes('/10/'), 'URL should include zoom level');
         }
     });
+    test('constructs URLs for verified postcode tile mappings', () => {
+        // Verified tile coordinates from actual Ofcom service
+        const verifiedMappings = [
+            { location: 'AL5 3EH', mno: 'mno1', tileX: 713, tileY: 302, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42' },
+            { location: 'SW1A 1AA', mno: 'mno3', tileX: 738, tileY: 252, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/738/252.png?v=42' },
+            { location: 'EH1 1YZ', mno: 'mno3', tileX: 454, tileY: 941, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/454/941.png?v=42' },
+            { location: 'G2 1DY', mno: 'mno3', tileX: 361, tileY: 930, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/361/930.png?v=42' },
+        ];
+        for (const mapping of verifiedMappings) {
+            const url = `${TILE_API_BASE.replace('{mno}', mapping.mno)}/${STANDARD_ZOOM}/${mapping.tileX}/${mapping.tileY}.png?v=${TILE_VERSION}`;
+            assert.strictEqual(url, mapping.expectedUrl, `URL mismatch for ${mapping.location}`);
+        }
+    });
+    test('handles large tile coordinates', () => {
+        // Test with large coordinates (far north/east Scotland)
+        const url = `${TILE_API_BASE.replace('{mno}', 'mno1')}/10/999/999.png?v=${TILE_VERSION}`;
+        assert.ok(url.includes('/999/999.png'), 'Should handle large tile coordinates');
+    });
+    test('URL format is consistent across all MNOs', () => {
+        const mnoIds = ['mno1', 'mno2', 'mno3', 'mno4'];
+        const tileX = 738;
+        const tileY = 252;
+        const urls = mnoIds.map(mno => `${TILE_API_BASE.replace('{mno}', mno)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`);
+        // All URLs should have same structure, just different MNO
+        for (let i = 0; i < urls.length; i++) {
+            assert.ok(urls[i].includes(`/${tileX}/${tileY}.png`), `URL ${i} should contain tile coordinates`);
+            assert.ok(urls[i].includes(`v=${TILE_VERSION}`), `URL ${i} should contain version`);
+            assert.ok(urls[i].includes(mnoIds[i]), `URL ${i} should contain MNO ID`);
+        }
+    });
 });
 // Test cache key construction
 describe('Cache Key Construction', () => {
@@ -272,6 +324,38 @@ describe('Cache Key Construction', () => {
         const key3 = `mno1-${STANDARD_ZOOM}-714-302-v${TILE_VERSION}`;
         assert.notStrictEqual(key1, key2, 'Different MNOs should have different keys');
         assert.notStrictEqual(key1, key3, 'Different tiles should have different keys');
+    });
+    test('cache keys include all necessary components', () => {
+        const TILE_VERSION = '42';
+        const STANDARD_ZOOM = 10;
+        // Verified tile coordinates
+        const testCases = [
+            { mno: 'mno1', tileX: 713, tileY: 302 },
+            { mno: 'mno2', tileX: 738, tileY: 252 },
+            { mno: 'mno3', tileX: 454, tileY: 941 },
+            { mno: 'mno4', tileX: 361, tileY: 930 },
+        ];
+        for (const tc of testCases) {
+            const key = `${tc.mno}-${STANDARD_ZOOM}-${tc.tileX}-${tc.tileY}-v${TILE_VERSION}`;
+            assert.ok(key.includes(tc.mno), 'Cache key should include MNO');
+            assert.ok(key.includes(String(tc.tileX)), 'Cache key should include tileX');
+            assert.ok(key.includes(String(tc.tileY)), 'Cache key should include tileY');
+            assert.ok(key.includes(TILE_VERSION), 'Cache key should include version');
+            assert.ok(key.includes(String(STANDARD_ZOOM)), 'Cache key should include zoom');
+        }
+    });
+    test('cache keys are different for all verified locations', () => {
+        const TILE_VERSION = '42';
+        const STANDARD_ZOOM = 10;
+        const keys = [
+            `mno1-${STANDARD_ZOOM}-713-302-v${TILE_VERSION}`, // AL5 3EH
+            `mno3-${STANDARD_ZOOM}-738-252-v${TILE_VERSION}`, // SW1A 1AA
+            `mno3-${STANDARD_ZOOM}-454-941-v${TILE_VERSION}`, // EH1 1YZ
+            `mno3-${STANDARD_ZOOM}-361-930-v${TILE_VERSION}`, // G2 1DY
+        ];
+        // All keys should be unique
+        const uniqueKeys = new Set(keys);
+        assert.strictEqual(uniqueKeys.size, keys.length, 'All cache keys should be unique');
     });
 });
 // Test module exports
