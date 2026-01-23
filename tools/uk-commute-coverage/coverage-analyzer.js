@@ -150,8 +150,8 @@ export class CoverageAnalyzer {
         if (!apiKey) {
             throw new Error('Google Maps API key is required');
         }
-        // Create and store the loading promise to prevent duplicate loads
-        this.googleMapsLoadingPromise = new Promise((resolve, reject) => {
+        // Create the promise executor function first
+        const promiseExecutor = (resolve, reject) => {
             // Check if a script is already in the DOM (from a previous session or external source)
             const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
             if (existingScript) {
@@ -188,7 +188,9 @@ export class CoverageAnalyzer {
                 reject(new Error('Failed to load Google Maps API. Check your API key.'));
             };
             document.head.appendChild(script);
-        });
+        };
+        // Assign the promise immediately to prevent race conditions
+        this.googleMapsLoadingPromise = new Promise(promiseExecutor);
         return this.googleMapsLoadingPromise;
     }
     /**
