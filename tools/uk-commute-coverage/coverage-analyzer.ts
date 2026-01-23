@@ -36,6 +36,7 @@ export class CoverageAnalyzer {
   private currentStep: number;
   private steps: string[];
   private googleMapsLoaded: boolean;
+  private googleMapsLoadingPromise: Promise<typeof google.maps> | null;
   public currentRouteCoordinates: Array<[number, number]> | null;
   public lastRouteResult: RouteResult | null;
 
@@ -54,6 +55,7 @@ export class CoverageAnalyzer {
       'Getting coverage data'
     ];
     this.googleMapsLoaded = false;
+    this.googleMapsLoadingPromise = null;
     this.currentRouteCoordinates = null;
     this.lastRouteResult = null;
   }
@@ -161,11 +163,21 @@ export class CoverageAnalyzer {
       return window.google.maps;
     }
 
-    // Check if a script is already loading
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
-    if (existingScript) {
-      // Wait for existing script to finish loading
-      return new Promise((resolve, reject) => {
+    // If a loading promise already exists, wait for it
+    if (this.googleMapsLoadingPromise) {
+      return this.googleMapsLoadingPromise;
+    }
+
+    if (!apiKey) {
+      throw new Error('Google Maps API key is required');
+    }
+
+    // Create and store the loading promise to prevent duplicate loads
+    this.googleMapsLoadingPromise = new Promise((resolve, reject) => {
+      // Check if a script is already in the DOM (from a previous session or external source)
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+      if (existingScript) {
+        // Wait for existing script to finish loading
         const checkInterval = setInterval(() => {
           if (window.google && window.google.maps) {
             clearInterval(checkInterval);
@@ -177,16 +189,12 @@ export class CoverageAnalyzer {
         // Timeout after 10 seconds
         setTimeout(() => {
           clearInterval(checkInterval);
+          this.googleMapsLoadingPromise = null;
           reject(new Error('Timeout waiting for Google Maps to load'));
         }, 10000);
-      });
-    }
+        return;
+      }
 
-    if (!apiKey) {
-      throw new Error('Google Maps API key is required');
-    }
-
-    return new Promise((resolve, reject) => {
       // Create a unique callback name to avoid conflicts
       const callbackName = '_gmapsCallback_' + Date.now();
 
@@ -202,10 +210,13 @@ export class CoverageAnalyzer {
       script.async = true;
       script.onerror = () => {
         delete (window as unknown as Record<string, () => void>)[callbackName];
+        this.googleMapsLoadingPromise = null;
         reject(new Error('Failed to load Google Maps API. Check your API key.'));
       };
       document.head.appendChild(script);
     });
+
+    return this.googleMapsLoadingPromise;
   }
 
   /**
