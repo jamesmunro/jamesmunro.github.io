@@ -16,6 +16,7 @@ export declare class CoverageAnalyzer {
     private currentStep;
     private steps;
     private googleMapsLoaded;
+    private googleMapsLoadingPromise;
     currentRouteCoordinates: Array<[number, number]> | null;
     lastRouteResult: RouteResult | null;
     constructor({ logger }?: CoverageAnalyzerConfig);

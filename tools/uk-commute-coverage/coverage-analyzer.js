@@ -28,6 +28,7 @@ export class CoverageAnalyzer {
     currentStep;
     steps;
     googleMapsLoaded;
+    googleMapsLoadingPromise;
     currentRouteCoordinates;
     lastRouteResult;
     constructor({ logger = console } = {}) {
@@ -45,6 +46,7 @@ export class CoverageAnalyzer {
             'Getting coverage data'
         ];
         this.googleMapsLoaded = false;
+        this.googleMapsLoadingPromise = null;
         this.currentRouteCoordinates = null;
         this.lastRouteResult = null;
     }
@@ -136,13 +138,39 @@ export class CoverageAnalyzer {
         }
     }
     async loadGoogleMapsApi(apiKey) {
-        if (this.googleMapsLoaded && window.google && window.google.maps) {
+        // Check if already loaded globally
+        if (window.google && window.google.maps) {
+            this.googleMapsLoaded = true;
             return window.google.maps;
+        }
+        // If a loading promise already exists, wait for it
+        if (this.googleMapsLoadingPromise) {
+            return this.googleMapsLoadingPromise;
         }
         if (!apiKey) {
             throw new Error('Google Maps API key is required');
         }
-        return new Promise((resolve, reject) => {
+        // Create and store the loading promise to prevent duplicate loads
+        this.googleMapsLoadingPromise = new Promise((resolve, reject) => {
+            // Check if a script is already in the DOM (from a previous session or external source)
+            const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+            if (existingScript) {
+                // Wait for existing script to finish loading
+                const checkInterval = setInterval(() => {
+                    if (window.google && window.google.maps) {
+                        clearInterval(checkInterval);
+                        this.googleMapsLoaded = true;
+                        resolve(window.google.maps);
+                    }
+                }, 100);
+                // Timeout after 10 seconds
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    this.googleMapsLoadingPromise = null;
+                    reject(new Error('Timeout waiting for Google Maps to load'));
+                }, 10000);
+                return;
+            }
             // Create a unique callback name to avoid conflicts
             const callbackName = '_gmapsCallback_' + Date.now();
             // Set up the callback that Google Maps will invoke when ready
@@ -156,10 +184,12 @@ export class CoverageAnalyzer {
             script.async = true;
             script.onerror = () => {
                 delete window[callbackName];
+                this.googleMapsLoadingPromise = null;
                 reject(new Error('Failed to load Google Maps API. Check your API key.'));
             };
             document.head.appendChild(script);
         });
+        return this.googleMapsLoadingPromise;
     }
     /**
      * Fetches the route between two postcodes.
@@ -450,27 +480,6 @@ export class CoverageAnalyzer {
         if (errorEl) {
             errorEl.textContent = message;
             errorEl.style.display = 'block';
-        }
-    }
-}
-// Initialize when DOM is ready
-if (typeof document !== 'undefined' && document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (window.location.pathname.includes('uk-commute-coverage')) {
-            const form = document.getElementById('route-form');
-            if (form) {
-                const analyzer = new CoverageAnalyzer();
-                analyzer.init();
-            }
-        }
-    });
-}
-else if (typeof document !== 'undefined') {
-    if (window.location.pathname.includes('uk-commute-coverage')) {
-        const form = document.getElementById('route-form');
-        if (form) {
-            const analyzer = new CoverageAnalyzer();
-            analyzer.init();
         }
     }
 }

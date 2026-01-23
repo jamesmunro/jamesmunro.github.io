@@ -125,8 +125,8 @@ export function sampleRouteByCount(coordinates, targetSamples = 500) {
     // Handle zero-length routes (no valid segments)
     if (segments.length === 0) {
         return [{
-                lat: coordinates[0][1],
-                lng: coordinates[0][0],
+                lat: Number(validCoordinates[0][1]),
+                lng: Number(validCoordinates[0][0]),
                 distance: 0
             }];
     }
