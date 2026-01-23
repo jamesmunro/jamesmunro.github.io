@@ -1,36 +1,111 @@
-<h1><a href="https://jamesmunro.github.io">jamesmunro.github.io</a></h1>
+<h1>Project Context: <a href="https://jamesmunro.github.io">jamesmunro.github.io</a></h1>
+<h2>Project Overview</h2>
+<p>This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.</p>
 <h2>Interactive Tools</h2>
-<p>This site includes several interactive web tools:</p>
+<p>The site includes several interactive web tools:</p>
 <ul>
 <li><strong><a href="https://jamesmunro.github.io/tools/commute-dashboard/">Commute Dashboard</a></strong> - Real-time train times, tube status, and weather for your commute</li>
 <li><strong><a href="https://jamesmunro.github.io/tools/jwt-reader/">JWT Reader</a></strong> - Decode JSON Web Tokens right in the browser</li>
 <li><strong><a href="https://jamesmunro.github.io/tools/pyodide-terminal/">Pyodide Terminal</a></strong> - Run Python code directly in your browser with Pyodide</li>
 <li><strong><a href="https://jamesmunro.github.io/tools/uk-commute-coverage/">UK Commute Coverage Analyser</a></strong> - Find the best network for your commute by analyzing mobile data coverage along your route</li>
 <li><strong><a href="https://jamesmunro.github.io/tools/world-clock/">World Clock</a></strong> - Large, multi-timezone clock with second-by-second updates</li>
+<li><strong><a href="https://jamesmunro.github.io/tools/browser-llm/">Browser LLM</a></strong> - Browser-embedded LLM chatbot tool</li>
 </ul>
-<h2>Local development</h2>
-<p>This site is built with <a href="https://www.11ty.dev/">Eleventy</a>.</p>
-<h3>Prerequisites</h3>
+<h2>Tech Stack</h2>
 <ul>
-<li>Node.js 20+</li>
-<li>Python 3.12+</li>
+<li><strong>Static Site Generator:</strong> <a href="https://www.11ty.dev/">Eleventy (11ty)</a></li>
+<li><strong>Templating:</strong> Nunjucks (<code>.njk</code>) and Markdown (<code>.md</code>)</li>
+<li><strong>Runtime (Build):</strong> Node.js 20+</li>
+<li><strong>Interactive Tools:</strong> TypeScript (compiled to vanilla JavaScript)</li>
+<li><strong>Data Analysis/Notebooks:</strong> Python 3.12+, Jupyter Lite</li>
+<li><strong>Package Management:</strong> <code>npm</code> (Node), <code>pip</code> (Python)</li>
 </ul>
-<h3>Install dependencies</h3>
-<pre><code class="language-sh">npm install
-# Setup Python environment for Jupyter Lite
-python3 -m venv .venv
+<h2>Project Structure</h2>
+<ul>
+<li><strong><code>_includes/layouts/</code></strong>: Nunjucks layouts (e.g., <code>tool.njk</code>).</li>
+<li><strong><code>_data/</code></strong>: Global site data files (<code>site.json</code>, <code>build.js</code>).</li>
+<li><strong><code>tools/</code></strong>: Contains individual interactive tools. Each tool usually has its own subdirectory with an <code>index.md</code> and associated scripts.
+<ul>
+<li><strong><code>tools/tools.json</code></strong>: Directory data file applying <code>layouts/tool.njk</code> to all tools.</li>
+<li><strong><code>tools/jwt-reader/</code></strong>: JWT decoder with client-side JS.</li>
+<li><strong><code>tools/pyodide-terminal/</code></strong>: Python REPL using Pyodide (WASM) and xterm.js.</li>
+<li><strong><code>tools/uk-commute-coverage/</code></strong>: Interactive commute coverage analyzer with map visualization.</li>
+<li><strong><code>tools/commute-dashboard/</code></strong>: Commute metrics dashboard.</li>
+<li><strong><code>tools/browser-llm/</code></strong>: Browser-embedded LLM chatbot tool.</li>
+<li><strong><code>tools/world-clock/</code></strong>: World time zone clock.</li>
+</ul>
+</li>
+<li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy (includes CORS proxy for dev server).</li>
+<li><strong><code>tsconfig.json</code></strong>: TypeScript compiler configuration. Compiles <code>tools/**/*.ts</code> to <code>dist/</code> directory.</li>
+<li><strong><code>package.json</code></strong>: Node dependencies and scripts.</li>
+<li><strong><code>requirements.txt</code></strong>: Python dependencies for Jupyter Lite.</li>
+</ul>
+<h2>Development Workflows</h2>
+<h3>Setup</h3>
+<ol>
+<li>Install Node.js dependencies: <code>npm install</code></li>
+<li>Setup Python virtual environment:<pre><code class="language-sh">python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 </code></pre>
-<h3>Build and preview locally</h3>
-<pre><code class="language-sh"># Ensure your virtual environment is active
-npm run dev
-</code></pre>
-<p>The server listens on <code>0.0.0.0:8080</code>, making it accessible from:</p>
+</li>
+</ol>
+<h3>Running Locally</h3>
 <ul>
-<li><strong>Localhost:</strong> <code>http://localhost:8080</code></li>
-<li><strong>WSL Host / Network:</strong> <code>http://&lt;YOUR_IP&gt;:8080</code> (e.g., from Windows via WSL IP)</li>
-</ul>
-<h3>Tests</h3>
-<pre><code class="language-sh">npm test
+<li><strong>First-time setup:</strong> Build Jupyter Lite before running dev server:<pre><code class="language-sh">source .venv/bin/activate
+npm run build:jupyter
 </code></pre>
+</li>
+<li>Start the development server (Eleventy):<pre><code class="language-sh">npm run dev
+</code></pre>
+Access at <code>http://localhost:8080</code>. The server is configured to bind to <code>0.0.0.0</code> to support access from WSL hosts or other devices on the network.</li>
+</ul>
+<h3>Building</h3>
+<ul>
+<li>Full build (Site + Jupyter Lite):<pre><code class="language-sh">source .venv/bin/activate
+npm run build
+</code></pre>
+</li>
+<li><strong>Note:</strong> Jupyter Lite build requires an active Python virtual environment and can be slow. For content-only changes, <code>eleventy</code> (or <code>npm run dev</code>) is sufficient.</li>
+</ul>
+<h3>Testing</h3>
+<ul>
+<li>Run unit and structural tests:<pre><code class="language-sh">npm test
+</code></pre>
+Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.js</code> files in <code>dist/tools/</code> (compiled from TypeScript). This includes structural and syntax verification for tools like Pyodide Terminal.</li>
+<li>Run linting checks:<pre><code class="language-sh">npm run lint
+</code></pre>
+</li>
+<li><strong>IMPORTANT:</strong> Always run tests before committing changes that affect code, especially when:
+<ul>
+<li>Removing or refactoring files</li>
+<li>Updating dependencies</li>
+<li>Changing build configurations</li>
+<li>Modifying tool logic</li>
+</ul>
+</li>
+</ul>
+<h2>Conventions &amp; Guidelines</h2>
+<h3>External Libraries &amp; Self-Hosting</h3>
+<ul>
+<li><strong>Prefer self-hosting:</strong> Install libraries via <code>npm</code> and use <code>eleventyConfig.addPassthroughCopy</code> in <code>.eleventy.js</code> to mirror them into <code>assets/libs/</code>.</li>
+<li><strong>Example:</strong> <code>xterm.js</code>, <code>Pyodide</code>, and <code>chart.js</code> are self-hosted to ensure offline reliability and performance on GitHub Pages.</li>
+</ul>
+<h3>Adding a New Tool</h3>
+<ol>
+<li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>).</li>
+<li>Add an <code>index.md</code> with front matter title.</li>
+<li>Add necessary TypeScript/CSS assets in that folder (<code>.ts</code> files).</li>
+<li>If logic is complex, add a <code>.test.ts</code> file (the test glob will pick up the compiled <code>.test.js</code> automatically after <code>npm run build:ts</code>).</li>
+</ol>
+<h3>Code Style</h3>
+<ul>
+<li><strong>TypeScript:</strong> All tool logic is written in TypeScript (<code>.ts</code> files) and compiled to JavaScript in <code>dist/tools/</code> using <code>npm run build:ts</code>. The compiled JavaScript is then copied to <code>_site/tools/</code> by Eleventy.</li>
+<li><strong>Source Files:</strong> Keep only <code>.ts</code> source files in <code>tools/</code>. The <code>.js</code> and <code>.mjs</code> files are generated artifacts in <code>dist/</code> (gitignored).</li>
+<li><strong>Templates:</strong> Prefer Nunjucks for logic/layouts.</li>
+<li><strong>Paths:</strong> Be mindful of relative paths in Eleventy. Use the <code>url</code> filter for internal links.</li>
+</ul>
+<h3>Jupyter Lite</h3>
+<ul>
+<li>Python dependencies for the <em>browser</em> environment must be handled within the Jupyter Lite configuration or pre-installed in the build step if custom packages are needed.</li>
+</ul>

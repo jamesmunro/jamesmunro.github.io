@@ -1,12 +1,22 @@
-<h1>Project Context: jamesmunro.github.io</h1>
+<h1>Project Context: <a href="https://jamesmunro.github.io">jamesmunro.github.io</a></h1>
 <h2>Project Overview</h2>
 <p>This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.</p>
+<h2>Interactive Tools</h2>
+<p>The site includes several interactive web tools:</p>
+<ul>
+<li><strong><a href="https://jamesmunro.github.io/tools/commute-dashboard/">Commute Dashboard</a></strong> - Real-time train times, tube status, and weather for your commute</li>
+<li><strong><a href="https://jamesmunro.github.io/tools/jwt-reader/">JWT Reader</a></strong> - Decode JSON Web Tokens right in the browser</li>
+<li><strong><a href="https://jamesmunro.github.io/tools/pyodide-terminal/">Pyodide Terminal</a></strong> - Run Python code directly in your browser with Pyodide</li>
+<li><strong><a href="https://jamesmunro.github.io/tools/uk-commute-coverage/">UK Commute Coverage Analyser</a></strong> - Find the best network for your commute by analyzing mobile data coverage along your route</li>
+<li><strong><a href="https://jamesmunro.github.io/tools/world-clock/">World Clock</a></strong> - Large, multi-timezone clock with second-by-second updates</li>
+<li><strong><a href="https://jamesmunro.github.io/tools/browser-llm/">Browser LLM</a></strong> - Browser-embedded LLM chatbot tool</li>
+</ul>
 <h2>Tech Stack</h2>
 <ul>
 <li><strong>Static Site Generator:</strong> <a href="https://www.11ty.dev/">Eleventy (11ty)</a></li>
 <li><strong>Templating:</strong> Nunjucks (<code>.njk</code>) and Markdown (<code>.md</code>)</li>
 <li><strong>Runtime (Build):</strong> Node.js 20+</li>
-<li><strong>Interactive Tools:</strong> Vanilla JavaScript</li>
+<li><strong>Interactive Tools:</strong> TypeScript (compiled to vanilla JavaScript)</li>
 <li><strong>Data Analysis/Notebooks:</strong> Python 3.12+, Jupyter Lite</li>
 <li><strong>Package Management:</strong> <code>npm</code> (Node), <code>pip</code> (Python)</li>
 </ul>
@@ -26,6 +36,7 @@
 </ul>
 </li>
 <li><strong><code>.eleventy.js</code></strong>: Main configuration file for Eleventy (includes CORS proxy for dev server).</li>
+<li><strong><code>tsconfig.json</code></strong>: TypeScript compiler configuration. Compiles <code>tools/**/*.ts</code> to <code>dist/</code> directory.</li>
 <li><strong><code>package.json</code></strong>: Node dependencies and scripts.</li>
 <li><strong><code>requirements.txt</code></strong>: Python dependencies for Jupyter Lite.</li>
 </ul>
@@ -61,9 +72,17 @@ npm run build
 <ul>
 <li>Run unit and structural tests:<pre><code class="language-sh">npm test
 </code></pre>
-Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.mjs</code> files in <code>tools/</code>. This includes structural and syntax verification for tools like Pyodide Terminal.</li>
+Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.test.js</code> files in <code>dist/tools/</code> (compiled from TypeScript). This includes structural and syntax verification for tools like Pyodide Terminal.</li>
 <li>Run linting checks:<pre><code class="language-sh">npm run lint
 </code></pre>
+</li>
+<li><strong>IMPORTANT:</strong> Always run tests before committing changes that affect code, especially when:
+<ul>
+<li>Removing or refactoring files</li>
+<li>Updating dependencies</li>
+<li>Changing build configurations</li>
+<li>Modifying tool logic</li>
+</ul>
 </li>
 </ul>
 <h2>Conventions &amp; Guidelines</h2>
@@ -76,12 +95,13 @@ Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.t
 <ol>
 <li>Create a directory in <code>tools/</code> (e.g., <code>tools/my-new-tool/</code>).</li>
 <li>Add an <code>index.md</code> with front matter title.</li>
-<li>Add necessary JavaScript/CSS assets in that folder.</li>
-<li>If logic is complex, add a <code>.test.mjs</code> file (the test glob <code>tools/*/*.test.mjs</code> will pick it up automatically).</li>
+<li>Add necessary TypeScript/CSS assets in that folder (<code>.ts</code> files).</li>
+<li>If logic is complex, add a <code>.test.ts</code> file (the test glob will pick up the compiled <code>.test.js</code> automatically after <code>npm run build:ts</code>).</li>
 </ol>
 <h3>Code Style</h3>
 <ul>
-<li><strong>JavaScript:</strong> Use modern ES6+ syntax. No compilation step for client scripts (currently), so keep it browser-compatible or update build pipeline.</li>
+<li><strong>TypeScript:</strong> All tool logic is written in TypeScript (<code>.ts</code> files) and compiled to JavaScript in <code>dist/tools/</code> using <code>npm run build:ts</code>. The compiled JavaScript is then copied to <code>_site/tools/</code> by Eleventy.</li>
+<li><strong>Source Files:</strong> Keep only <code>.ts</code> source files in <code>tools/</code>. The <code>.js</code> and <code>.mjs</code> files are generated artifacts in <code>dist/</code> (gitignored).</li>
 <li><strong>Templates:</strong> Prefer Nunjucks for logic/layouts.</li>
 <li><strong>Paths:</strong> Be mindful of relative paths in Eleventy. Use the <code>url</code> filter for internal links.</li>
 </ul>
