@@ -155,8 +155,31 @@ export class CoverageAnalyzer {
   }
 
   async loadGoogleMapsApi(apiKey: string): Promise<typeof google.maps> {
-    if (this.googleMapsLoaded && window.google && window.google.maps) {
+    // Check if already loaded globally
+    if (window.google && window.google.maps) {
+      this.googleMapsLoaded = true;
       return window.google.maps;
+    }
+
+    // Check if a script is already loading
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+    if (existingScript) {
+      // Wait for existing script to finish loading
+      return new Promise((resolve, reject) => {
+        const checkInterval = setInterval(() => {
+          if (window.google && window.google.maps) {
+            clearInterval(checkInterval);
+            this.googleMapsLoaded = true;
+            resolve(window.google.maps);
+          }
+        }, 100);
+
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          reject(new Error('Timeout waiting for Google Maps to load'));
+        }, 10000);
+      });
     }
 
     if (!apiKey) {
@@ -507,27 +530,6 @@ export class CoverageAnalyzer {
     if (errorEl) {
       errorEl.textContent = message;
       errorEl.style.display = 'block';
-    }
-  }
-}
-
-// Initialize when DOM is ready
-if (typeof document !== 'undefined' && document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.includes('uk-commute-coverage')) {
-      const form = document.getElementById('route-form');
-      if (form) {
-        const analyzer = new CoverageAnalyzer();
-        analyzer.init();
-      }
-    }
-  });
-} else if (typeof document !== 'undefined') {
-  if (window.location.pathname.includes('uk-commute-coverage')) {
-    const form = document.getElementById('route-form');
-    if (form) {
-      const analyzer = new CoverageAnalyzer();
-      analyzer.init();
     }
   }
 }
