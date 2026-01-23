@@ -3,16 +3,19 @@ import { TileCoverageAdapter } from './tile-coverage-adapter.js';
 import { GoogleMap } from './google-map.js';
 import { sampleRouteByCount } from './route-sampler.js';
 import { ROUTE_SAMPLE_COUNT } from './constants.js';
-/** Travel mode mapping */
-const TRAVEL_MODES = {
-    'driving-car': google.maps.TravelMode.DRIVING,
-    'driving-hgv': google.maps.TravelMode.DRIVING,
-    'cycling-regular': google.maps.TravelMode.BICYCLING,
-    'cycling-road': google.maps.TravelMode.BICYCLING,
-    'foot-walking': google.maps.TravelMode.WALKING,
-    'foot-hiking': google.maps.TravelMode.WALKING,
-    'transit': google.maps.TravelMode.TRANSIT,
-};
+/** Travel mode mapping - lazy loaded to avoid referencing google before it's loaded */
+function getTravelMode(profile) {
+    const TRAVEL_MODES = {
+        'driving-car': google.maps.TravelMode.DRIVING,
+        'driving-hgv': google.maps.TravelMode.DRIVING,
+        'cycling-regular': google.maps.TravelMode.BICYCLING,
+        'cycling-road': google.maps.TravelMode.BICYCLING,
+        'foot-walking': google.maps.TravelMode.WALKING,
+        'foot-hiking': google.maps.TravelMode.WALKING,
+        'transit': google.maps.TravelMode.TRANSIT,
+    };
+    return TRAVEL_MODES[profile] || google.maps.TravelMode.DRIVING;
+}
 /**
  * Main Coverage Analyzer Application
  * Orchestrates the entire coverage analysis workflow
@@ -291,7 +294,7 @@ export class CoverageAnalyzer {
     }
     async fetchRoute(start, end, profile = 'DRIVING') {
         const directionsService = new google.maps.DirectionsService();
-        const travelMode = TRAVEL_MODES[profile] || google.maps.TravelMode.DRIVING;
+        const travelMode = getTravelMode(profile);
         return new Promise((resolve, reject) => {
             const request = {
                 origin: start,

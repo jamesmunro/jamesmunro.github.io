@@ -269,7 +269,7 @@ export class GoogleMap {
                             lng = point.lng;
                         }
                         if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
-                            bounds.extend(point);
+                            bounds.extend({ lat, lng });
                             hasPoints = true;
                         }
                     }
