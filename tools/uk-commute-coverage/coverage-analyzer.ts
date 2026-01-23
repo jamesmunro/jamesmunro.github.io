@@ -10,16 +10,19 @@ interface CoverageAnalyzerConfig {
   logger?: Logger;
 }
 
-/** Travel mode mapping */
-const TRAVEL_MODES: Record<string, google.maps.TravelMode> = {
-  'driving-car': google.maps.TravelMode.DRIVING,
-  'driving-hgv': google.maps.TravelMode.DRIVING,
-  'cycling-regular': google.maps.TravelMode.BICYCLING,
-  'cycling-road': google.maps.TravelMode.BICYCLING,
-  'foot-walking': google.maps.TravelMode.WALKING,
-  'foot-hiking': google.maps.TravelMode.WALKING,
-  'transit': google.maps.TravelMode.TRANSIT,
-};
+/** Travel mode mapping - lazy loaded to avoid referencing google before it's loaded */
+function getTravelMode(profile: string): google.maps.TravelMode {
+  const TRAVEL_MODES: Record<string, google.maps.TravelMode> = {
+    'driving-car': google.maps.TravelMode.DRIVING,
+    'driving-hgv': google.maps.TravelMode.DRIVING,
+    'cycling-regular': google.maps.TravelMode.BICYCLING,
+    'cycling-road': google.maps.TravelMode.BICYCLING,
+    'foot-walking': google.maps.TravelMode.WALKING,
+    'foot-hiking': google.maps.TravelMode.WALKING,
+    'transit': google.maps.TravelMode.TRANSIT,
+  };
+  return TRAVEL_MODES[profile] || google.maps.TravelMode.DRIVING;
+}
 
 /**
  * Main Coverage Analyzer Application
@@ -335,7 +338,7 @@ export class CoverageAnalyzer {
   async fetchRoute(start: string | google.maps.LatLng, end: string | google.maps.LatLng, profile = 'DRIVING'): Promise<RouteResult> {
     const directionsService = new google.maps.DirectionsService();
 
-    const travelMode = TRAVEL_MODES[profile] || google.maps.TravelMode.DRIVING;
+    const travelMode = getTravelMode(profile);
 
     return new Promise((resolve, reject) => {
       const request: google.maps.DirectionsRequest = {
