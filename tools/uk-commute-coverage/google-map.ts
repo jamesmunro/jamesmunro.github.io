@@ -305,7 +305,7 @@ export class GoogleMap {
             }
 
             if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
-              bounds.extend(point);
+              bounds.extend({ lat, lng });
               hasPoints = true;
             }
           }
