@@ -7,7 +7,7 @@ This repository hosts a personal website and portfolio built as a static site. I
 - **Static Site Generator:** [Eleventy (11ty)](https://www.11ty.dev/)
 - **Templating:** Nunjucks (`.njk`) and Markdown (`.md`)
 - **Runtime (Build):** Node.js 20+
-- **Interactive Tools:** Vanilla JavaScript
+- **Interactive Tools:** TypeScript (compiled to vanilla JavaScript)
 - **Data Analysis/Notebooks:** Python 3.12+, Jupyter Lite
 - **Package Management:** `npm` (Node), `pip` (Python)
 
@@ -23,6 +23,7 @@ This repository hosts a personal website and portfolio built as a static site. I
     - **`tools/browser-llm/`**: Browser-embedded LLM chatbot tool.
     - **`tools/world-clock/`**: World time zone clock.
 - **`.eleventy.js`**: Main configuration file for Eleventy (includes CORS proxy for dev server).
+- **`tsconfig.json`**: TypeScript compiler configuration. Compiles `tools/**/*.ts` to `dist/` directory.
 - **`package.json`**: Node dependencies and scripts.
 - **`requirements.txt`**: Python dependencies for Jupyter Lite.
 
@@ -62,11 +63,16 @@ This repository hosts a personal website and portfolio built as a static site. I
   ```sh
   npm test
   ```
-  Uses Node's built-in test runner (`node --test`) to run all `*.test.mjs` files in `tools/`. This includes structural and syntax verification for tools like Pyodide Terminal.
+  Uses Node's built-in test runner (`node --test`) to run all `*.test.js` files in `dist/tools/` (compiled from TypeScript). This includes structural and syntax verification for tools like Pyodide Terminal.
 - Run linting checks:
   ```sh
   npm run lint
   ```
+- **IMPORTANT:** Always run tests before committing changes that affect code, especially when:
+  - Removing or refactoring files
+  - Updating dependencies
+  - Changing build configurations
+  - Modifying tool logic
 
 ## Conventions & Guidelines
 
@@ -77,11 +83,12 @@ This repository hosts a personal website and portfolio built as a static site. I
 ### Adding a New Tool
 1.  Create a directory in `tools/` (e.g., `tools/my-new-tool/`).
 2.  Add an `index.md` with front matter title.
-3.  Add necessary JavaScript/CSS assets in that folder.
-4.  If logic is complex, add a `.test.mjs` file (the test glob `tools/*/*.test.mjs` will pick it up automatically).
+3.  Add necessary TypeScript/CSS assets in that folder (`.ts` files).
+4.  If logic is complex, add a `.test.ts` file (the test glob will pick up the compiled `.test.js` automatically after `npm run build:ts`).
 
 ### Code Style
-- **JavaScript:** Use modern ES6+ syntax. No compilation step for client scripts (currently), so keep it browser-compatible or update build pipeline.
+- **TypeScript:** All tool logic is written in TypeScript (`.ts` files) and compiled to JavaScript in `dist/tools/` using `npm run build:ts`. The compiled JavaScript is then copied to `_site/tools/` by Eleventy.
+- **Source Files:** Keep only `.ts` source files in `tools/`. The `.js` and `.mjs` files are generated artifacts in `dist/` (gitignored).
 - **Templates:** Prefer Nunjucks for logic/layouts.
 - **Paths:** Be mindful of relative paths in Eleventy. Use the `url` filter for internal links.
 
