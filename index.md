@@ -48,5 +48,12 @@ title: Web Tools
       </div>
       <span aria-hidden="true">→</span>
     </a>
+    <a href="tools/browser-llm/">
+      <div class="tool-meta">
+        <span>Browser LLM Chat</span>
+        <span>Run a large language model entirely in your browser using WebLLM and WebGPU.</span>
+      </div>
+      <span aria-hidden="true">→</span>
+    </a>
   </div>
 </section>
