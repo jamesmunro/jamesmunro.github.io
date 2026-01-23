@@ -79,11 +79,7 @@ The site includes several interactive web tools:
   ```sh
   npm run lint
   ```
-- **IMPORTANT:** Always run tests before committing changes that affect code, especially when:
-  - Removing or refactoring files
-  - Updating dependencies
-  - Changing build configurations
-  - Modifying tool logic
+- **IMPORTANT:** Always run tests before committing.
 
 ## Conventions & Guidelines
 
@@ -96,6 +92,7 @@ The site includes several interactive web tools:
 2.  Add an `index.md` with front matter title.
 3.  Add necessary TypeScript/CSS assets in that folder (`.ts` files).
 4.  If logic is complex, add a `.test.ts` file (the test glob will pick up the compiled `.test.js` automatically after `npm run build:ts`).
+5.  Update AGENTS.md
 
 ### Code Style
 - **TypeScript:** All tool logic is written in TypeScript (`.ts` files) and compiled to JavaScript in `dist/tools/` using `npm run build:ts`. The compiled JavaScript is then copied to `_site/tools/` by Eleventy.
