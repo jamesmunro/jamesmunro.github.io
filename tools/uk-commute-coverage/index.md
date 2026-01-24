@@ -73,12 +73,10 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
     <span id="progress-text">Initializing...</span>
   </div>
 
-  <!-- Chart Canvas -->
+  <!-- Coverage Visualization -->
   <div id="chart-container" style="display:none">
     <h3>Coverage Along Route</h3>
-    <div style="height: 400px; position: relative;">
-      <canvas id="coverage-chart"></canvas>
-    </div>
+    <div id="coverage-chart"></div>
   </div>
 
   <!-- Network Comparison Summary -->
@@ -312,10 +310,79 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
 #chart-container h3 {
   margin-bottom: 1rem;
 }
+
+/* Coverage Bars Visualization */
+.coverage-bars-legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.coverage-bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.coverage-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.coverage-bar-label {
+  width: 70px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.coverage-bar {
+  flex: 1;
+  height: 28px;
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.coverage-segment {
+  height: 100%;
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+  min-width: 1px;
+}
+
+.coverage-segment:hover {
+  opacity: 0.8;
+}
+
+.coverage-bars-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  margin-left: 78px; /* Align with bars (70px label + 8px gap) */
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
 </style>
 
 <!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 <script type="module" src="main.js"></script>

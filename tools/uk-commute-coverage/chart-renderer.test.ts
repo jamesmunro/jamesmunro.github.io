@@ -6,7 +6,6 @@
 import { describe, test, before } from 'node:test';
 import assert from 'node:assert';
 import { JSDOM } from 'jsdom';
-import type { Chart as ChartJS } from 'chart.js';
 import type { CoverageResult, NetworkCoverageResult } from '../../types/coverage.js';
 
 // Setup minimal DOM environment for ChartRenderer
@@ -14,21 +13,13 @@ const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
 (global as unknown as { window: typeof dom.window }).window = dom.window;
 (global as unknown as { document: typeof dom.window.document }).document = dom.window.document;
 
-// Mock Chart.js (not testing chart rendering itself)
-class MockChart {
-  constructor() {}
-  destroy() {}
-  static getChart(): ChartJS | null { return null; }
-}
-(global as unknown as { Chart: typeof MockChart }).Chart = MockChart;
-
 const { ChartRenderer } = await import('./chart-renderer.js');
 
 describe('ChartRenderer', () => {
   let renderer: InstanceType<typeof ChartRenderer>;
 
   before(() => {
-    renderer = new ChartRenderer('test-canvas');
+    renderer = new ChartRenderer('test-container');
   });
 
   describe('getSignalLevel', () => {
@@ -172,74 +163,103 @@ describe('ChartRenderer', () => {
     });
   });
 
-  describe('prepareChartData', () => {
-    test('converts distances to kilometers', () => {
-      const coverageResults: CoverageResult[] = [
-        {
-          point: { distance: 1000, lat: 51.5, lng: -0.1 },
-          coverage: { latitude: 51.5, longitude: -0.1, networks: { EE: { level: 4 } } }
-        },
-        {
-          point: { distance: 5000, lat: 51.6, lng: -0.2 },
-          coverage: { latitude: 51.6, longitude: -0.2, networks: { EE: { level: 3 } } }
-        }
-      ];
-
-      const datasets = renderer.prepareChartData(coverageResults);
-      const eeDataset = datasets.find(d => d.label === 'EE');
-
-      assert.strictEqual(eeDataset!.data[0].x, 1, 'First point should be 1km');
-      assert.strictEqual(eeDataset!.data[1].x, 5, 'Second point should be 5km');
+  describe('groupIntoSegments', () => {
+    test('returns empty array for empty results', () => {
+      const segments = renderer.groupIntoSegments([], 'EE');
+      assert.strictEqual(segments.length, 0);
     });
 
-    test('creates datasets for all four networks', () => {
+    test('creates single segment for uniform coverage', () => {
       const coverageResults: CoverageResult[] = [
-        {
-          point: { distance: 0, lat: 51.5, lng: -0.1 },
-          coverage: { latitude: 51.5, longitude: -0.1, networks: { EE: { level: 4 }, Vodafone: { level: 3 }, O2: { level: 2 }, Three: { level: 1 } } }
-        }
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 5000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 10000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } }
       ];
 
-      const datasets = renderer.prepareChartData(coverageResults);
+      const segments = renderer.groupIntoSegments(coverageResults, 'EE');
 
-      assert.strictEqual(datasets.length, 4, 'Should have 4 datasets');
-      assert.ok(datasets.find(d => d.label === 'EE'), 'Should have EE dataset');
-      assert.ok(datasets.find(d => d.label === 'Vodafone'), 'Should have Vodafone dataset');
-      assert.ok(datasets.find(d => d.label === 'O2'), 'Should have O2 dataset');
-      assert.ok(datasets.find(d => d.label === 'Three'), 'Should have Three dataset');
+      assert.strictEqual(segments.length, 1, 'Should create single segment');
+      assert.strictEqual(segments[0].level, 4);
+      assert.strictEqual(segments[0].startDistance, 0);
+      assert.strictEqual(segments[0].endDistance, 10, '10000m = 10km');
+      assert.strictEqual(segments[0].widthPercent, 100);
     });
 
-    test('includes lat/lng in data points', () => {
+    test('groups consecutive points with same coverage level', () => {
       const coverageResults: CoverageResult[] = [
-        {
-          point: { distance: 0, lat: 51.5074, lng: -0.1276 },
-          coverage: { latitude: 51.5074, longitude: -0.1276, networks: { EE: { level: 4 } } }
-        }
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 2500, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 5000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } },
+        { point: { distance: 7500, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } },
+        { point: { distance: 10000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } }
       ];
 
-      const datasets = renderer.prepareChartData(coverageResults);
-      const eeDataset = datasets.find(d => d.label === 'EE');
+      const segments = renderer.groupIntoSegments(coverageResults, 'EE');
 
-      assert.strictEqual(eeDataset!.data[0].lat, 51.5074);
-      assert.strictEqual(eeDataset!.data[0].lng, -0.1276);
+      assert.strictEqual(segments.length, 2, 'Should create 2 segments');
+      assert.strictEqual(segments[0].level, 4);
+      assert.strictEqual(segments[0].startDistance, 0);
+      assert.strictEqual(segments[0].endDistance, 5, '5000m = 5km');
+      assert.strictEqual(segments[0].widthPercent, 50);
+
+      assert.strictEqual(segments[1].level, 2);
+      assert.strictEqual(segments[1].startDistance, 5);
+      assert.strictEqual(segments[1].endDistance, 10);
+      assert.strictEqual(segments[1].widthPercent, 50);
     });
 
-    test('uses correct brand colors', () => {
+    test('handles multiple level changes', () => {
       const coverageResults: CoverageResult[] = [
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: {} } }
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 2000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } },
+        { point: { distance: 4000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } },
+        { point: { distance: 6000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 1 } } } },
+        { point: { distance: 8000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 0 } } } },
+        { point: { distance: 10000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 0 } } } }
       ];
 
-      const datasets = renderer.prepareChartData(coverageResults);
+      const segments = renderer.groupIntoSegments(coverageResults, 'EE');
 
-      const eeDataset = datasets.find(d => d.label === 'EE');
-      const vodafoneDataset = datasets.find(d => d.label === 'Vodafone');
-      const o2Dataset = datasets.find(d => d.label === 'O2');
-      const threeDataset = datasets.find(d => d.label === 'Three');
+      assert.strictEqual(segments.length, 5, 'Should create 5 segments for 5 different levels');
+      assert.strictEqual(segments[0].level, 4);
+      assert.strictEqual(segments[1].level, 3);
+      assert.strictEqual(segments[2].level, 2);
+      assert.strictEqual(segments[3].level, 1);
+      assert.strictEqual(segments[4].level, 0);
+    });
 
-      assert.strictEqual(eeDataset!.borderColor, '#009a9a');
-      assert.strictEqual(vodafoneDataset!.borderColor, '#e60000');
-      assert.strictEqual(o2Dataset!.borderColor, '#0019a5');
-      assert.strictEqual(threeDataset!.borderColor, '#333333');
+    test('collects postcodes within segments', () => {
+      const coverageResults: CoverageResult[] = [
+        { point: { distance: 0, lat: 0, lng: 0 }, postcode: 'SW1A 1AA', coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 2500, lat: 0, lng: 0 }, postcode: 'SW1A 2AA', coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 5000, lat: 0, lng: 0 }, postcode: 'EC2N 2DB', coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } },
+        { point: { distance: 7500, lat: 0, lng: 0 }, postcode: 'EC2N 3AA', coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } },
+        { point: { distance: 10000, lat: 0, lng: 0 }, postcode: 'EC2N 3AA', coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } }
+      ];
+
+      const segments = renderer.groupIntoSegments(coverageResults, 'EE');
+
+      assert.strictEqual(segments[0].postcodes.length, 2, 'First segment should have 2 unique postcodes');
+      assert.ok(segments[0].postcodes.includes('SW1A 1AA'));
+      assert.ok(segments[0].postcodes.includes('SW1A 2AA'));
+
+      assert.strictEqual(segments[1].postcodes.length, 2, 'Second segment should have 2 unique postcodes (deduped)');
+      assert.ok(segments[1].postcodes.includes('EC2N 2DB'));
+      assert.ok(segments[1].postcodes.includes('EC2N 3AA'));
+    });
+
+    test('calculates width percentages correctly', () => {
+      const coverageResults: CoverageResult[] = [
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 2500, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } },
+        { point: { distance: 10000, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } }
+      ];
+
+      const segments = renderer.groupIntoSegments(coverageResults, 'EE');
+
+      assert.strictEqual(segments.length, 2);
+      assert.strictEqual(segments[0].widthPercent, 25, 'First segment 0-2.5km = 25% of 10km');
+      assert.strictEqual(segments[1].widthPercent, 75, 'Second segment 2.5-10km = 75% of 10km');
     });
   });
 });

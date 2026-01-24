@@ -1,11 +1,10 @@
 /**
  * Chart Renderer Module
- * Handles rendering the coverage visualization using Chart.js
+ * Handles rendering the coverage visualization as horizontal stacked bars
  */
 
-import type { Chart as ChartJS, ChartConfiguration, ChartDataset, TooltipItem } from 'chart.js';
-import type { CoverageResult, NetworkSummaryStats, ChartDataPoint, CoverageLevel, NetworkCoverageResult } from '../../types/coverage.js';
-import { NETWORK_COLORS, NETWORKS } from './constants.js';
+import type { CoverageResult, NetworkSummaryStats, NetworkCoverageResult } from '../../types/coverage.js';
+import { COVERAGE_COLORS, NETWORKS } from './constants.js';
 
 // Canonical Ofcom coverage level descriptions (used throughout)
 const COVERAGE_LEVELS: Record<number, string> = {
@@ -16,7 +15,7 @@ const COVERAGE_LEVELS: Record<number, string> = {
   0: 'Poor to none outdoor'
 };
 
-// Short labels for chart Y-axis
+// Short labels for legend
 const COVERAGE_LABELS_SHORT: Record<number, string> = {
   4: 'Indoor+',
   3: 'Indoor',
@@ -31,16 +30,23 @@ interface SortConfig {
   descending: boolean;
 }
 
+/** A segment of consecutive coverage points with same level */
+interface CoverageSegment {
+  level: number;
+  startDistance: number;
+  endDistance: number;
+  postcodes: string[];
+  widthPercent: number;
+}
+
 export class ChartRenderer {
-  private canvasId: string;
-  private chart: ChartJS | null;
+  private containerId: string;
   private summaryData: Record<string, NetworkSummaryStats> | null;
   private tableBodyId: string | null;
   private currentSort: SortConfig;
 
-  constructor(canvasId: string) {
-    this.canvasId = canvasId;
-    this.chart = null;
+  constructor(containerId: string) {
+    this.containerId = containerId;
     this.summaryData = null;
     this.tableBodyId = null;
     this.currentSort = { column: 'Rank', descending: false };
@@ -61,160 +67,143 @@ export class ChartRenderer {
   }
 
   /**
-   * Prepare chart data from coverage results
-   * @param coverageResults - Array of {point, coverage} objects
-   * @returns Chart.js datasets
+   * Group coverage results into segments of consecutive same-level coverage
+   * @param coverageResults - Array of coverage results
+   * @param network - Network name to extract coverage for
+   * @returns Array of coverage segments
    */
-  prepareChartData(coverageResults: CoverageResult[]): ChartDataset<'line', ChartDataPoint[]>[] {
-    const datasets = NETWORKS.map(network => {
-      const data: ChartDataPoint[] = coverageResults.map(result => ({
-        x: (result.point.distance || 0) / 1000, // Convert to km
-        y: this.getSignalLevel(result.coverage?.networks?.[network]),
-        postcode: result.postcode,
-        lat: typeof result.point.lat === 'number' ? result.point.lat : NaN,
-        lng: typeof result.point.lng === 'number' ? result.point.lng : NaN
-      }));
+  groupIntoSegments(coverageResults: CoverageResult[], network: string): CoverageSegment[] {
+    if (coverageResults.length === 0) return [];
 
-      return {
-        label: network,
-        data: data,
-        borderColor: NETWORK_COLORS[network],
-        backgroundColor: NETWORK_COLORS[network] + '20', // Add transparency
-        borderWidth: 2,
-        tension: 0,
-        stepped: false,
-        pointRadius: 2,
-        pointHoverRadius: 5
-      } as ChartDataset<'line', ChartDataPoint[]>;
+    const totalDistance = (coverageResults[coverageResults.length - 1].point.distance || 0) / 1000;
+    if (totalDistance === 0) return [];
+
+    const segments: CoverageSegment[] = [];
+    let currentLevel = this.getSignalLevel(coverageResults[0].coverage?.networks?.[network]);
+    let startDistance = 0;
+    let postcodes: string[] = [];
+    if (coverageResults[0].postcode) {
+      postcodes.push(coverageResults[0].postcode);
+    }
+
+    for (let i = 1; i < coverageResults.length; i++) {
+      const result = coverageResults[i];
+      const level = this.getSignalLevel(result.coverage?.networks?.[network]);
+      const distance = (result.point.distance || 0) / 1000;
+
+      if (level !== currentLevel) {
+        // End current segment
+        const endDistance = distance;
+        segments.push({
+          level: currentLevel,
+          startDistance,
+          endDistance,
+          postcodes: [...new Set(postcodes)], // Remove duplicates
+          widthPercent: ((endDistance - startDistance) / totalDistance) * 100
+        });
+
+        // Start new segment
+        currentLevel = level;
+        startDistance = distance;
+        postcodes = [];
+      }
+
+      if (result.postcode && !postcodes.includes(result.postcode)) {
+        postcodes.push(result.postcode);
+      }
+    }
+
+    // Add final segment
+    segments.push({
+      level: currentLevel,
+      startDistance,
+      endDistance: totalDistance,
+      postcodes: [...new Set(postcodes)],
+      widthPercent: ((totalDistance - startDistance) / totalDistance) * 100
     });
 
-    return datasets;
+    return segments;
   }
 
   /**
-   * Render the coverage chart
+   * Render the coverage visualization as horizontal bars
    * @param coverageResults - Array of coverage results
    */
   render(coverageResults: CoverageResult[]): void {
-    let canvas = document.getElementById(this.canvasId) as HTMLCanvasElement | null;
-    if (!canvas) {
-      throw new Error(`Canvas element ${this.canvasId} not found`);
+    const container = document.getElementById(this.containerId);
+    if (!container) {
+      throw new Error(`Container element ${this.containerId} not found`);
     }
 
-    // Check for and destroy any existing chart instance on this canvas
-    const existingChart = (Chart as unknown as { getChart(canvas: HTMLCanvasElement): ChartJS | undefined }).getChart(canvas);
-    if (existingChart) {
-      existingChart.destroy();
-    }
+    const totalDistanceKm = coverageResults.length > 0
+      ? (coverageResults[coverageResults.length - 1].point.distance || 0) / 1000
+      : 0;
 
-    // Also destroy the instance tracked by this class
-    if (this.chart) {
-      this.chart.destroy();
-    }
+    // Build HTML for the coverage bars
+    let html = `
+      <div class="coverage-bars-legend">
+        ${[4, 3, 2, 1, 0].map(level => `
+          <span class="legend-item">
+            <span class="legend-swatch" style="background:${COVERAGE_COLORS[level]}"></span>
+            ${COVERAGE_LABELS_SHORT[level]}
+          </span>
+        `).join('')}
+      </div>
+      <div class="coverage-bars-container">
+    `;
 
-    // Create a fresh canvas element to ensure no lingering state
-    const newCanvas = document.createElement('canvas');
-    newCanvas.id = this.canvasId;
-    newCanvas.className = canvas.className; // Preserve classes
+    // Create a bar for each network
+    for (const network of NETWORKS) {
+      const segments = this.groupIntoSegments(coverageResults, network);
 
-    canvas.parentNode?.replaceChild(newCanvas, canvas);
-    canvas = newCanvas;
+      html += `
+        <div class="coverage-bar-row">
+          <span class="coverage-bar-label">${network}</span>
+          <div class="coverage-bar">
+      `;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Could not get canvas 2D context');
-    }
-
-    const datasets = this.prepareChartData(coverageResults);
-
-    const config: ChartConfiguration<'line', ChartDataPoint[]> = {
-      type: 'line',
-      data: { datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        scales: {
-          x: {
-            type: 'linear',
-            title: {
-              display: true,
-              text: 'Distance (km)'
-            },
-            ticks: {
-              callback: function(value) {
-                return (value as number).toFixed(1);
-              }
-            }
-          },
-          y: {
-            type: 'linear',
-            min: 0,
-            max: 4,
-            title: {
-              display: true,
-              text: 'Coverage Level'
-            },
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                return COVERAGE_LABELS_SHORT[value as number] || '';
-              }
-            }
-          }
-        },
-        plugins: {
-          // chartjs-plugin-zoom types not in base Chart.js
-          ...({
-            zoom: {
-              pan: {
-                enabled: true,
-                mode: 'x',
-                threshold: 10
-              },
-              zoom: {
-                wheel: {
-                  enabled: true,
-                },
-                pinch: {
-                  enabled: true
-                },
-                mode: 'x',
-              }
-            }
-          } as Record<string, unknown>),
-          tooltip: {
-            callbacks: {
-              title: function(context: TooltipItem<'line'>[]) {
-                const point = context[0].raw as ChartDataPoint;
-                return `Distance: ${point.x.toFixed(2)} km`;
-              },
-              label: function(context: TooltipItem<'line'>) {
-                const y = context.parsed.y;
-                const levelLabel = y != null ? (COVERAGE_LEVELS[y] || 'Unknown') : 'Unknown';
-                return `${context.dataset.label}: ${levelLabel}`;
-              },
-              afterLabel: function(context: TooltipItem<'line'>) {
-                const point = context.raw as ChartDataPoint;
-                const postcodeLine = point.postcode ? `Postcode: ${point.postcode}\n` : '';
-                const latStr = (typeof point.lat === 'number' && !isNaN(point.lat)) ? point.lat.toFixed(4) : 'N/A';
-                const lngStr = (typeof point.lng === 'number' && !isNaN(point.lng)) ? point.lng.toFixed(4) : 'N/A';
-                return `${postcodeLine}Lat: ${latStr}, Lng: ${lngStr}`;
-              }
-            }
-          },
-          legend: {
-            display: true,
-            position: 'top'
-          }
-        }
+      for (const segment of segments) {
+        const tooltip = this.formatSegmentTooltip(segment);
+        html += `
+          <div class="coverage-segment"
+               style="width: ${segment.widthPercent}%; background: ${COVERAGE_COLORS[segment.level]}"
+               title="${tooltip}"
+               data-level="${segment.level}">
+          </div>
+        `;
       }
-    };
 
-    this.chart = new Chart(ctx, config as ChartConfiguration) as ChartJS;
+      html += `
+          </div>
+        </div>
+      `;
+    }
+
+    // Add distance axis
+    html += `
+      </div>
+      <div class="coverage-bars-axis">
+        <span>0 km</span>
+        <span>${(totalDistanceKm * 0.25).toFixed(0)} km</span>
+        <span>${(totalDistanceKm * 0.5).toFixed(0)} km</span>
+        <span>${(totalDistanceKm * 0.75).toFixed(0)} km</span>
+        <span>${totalDistanceKm.toFixed(0)} km</span>
+      </div>
+    `;
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * Format tooltip text for a coverage segment
+   */
+  private formatSegmentTooltip(segment: CoverageSegment): string {
+    const distanceRange = `${segment.startDistance.toFixed(1)} - ${segment.endDistance.toFixed(1)} km`;
+    const levelDesc = COVERAGE_LEVELS[segment.level] || 'Unknown';
+    const postcodeStr = segment.postcodes.length > 0
+      ? `Postcodes: ${segment.postcodes.slice(0, 3).join(', ')}${segment.postcodes.length > 3 ? '...' : ''}`
+      : '';
+    return `${distanceRange}\n${levelDesc}${postcodeStr ? '\n' + postcodeStr : ''}`;
   }
 
   /**
