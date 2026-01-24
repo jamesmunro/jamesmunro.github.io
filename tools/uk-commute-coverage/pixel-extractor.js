@@ -2,6 +2,7 @@
  * Pixel Extraction Module
  * Extracts pixel colors from PNG images and handles color matching
  */
+import { COVERAGE_COLORS } from './constants.js';
 /**
  * Extract RGB color from an image at specific pixel coordinates
  * Uses Canvas API to draw the image and get pixel data
@@ -126,12 +127,7 @@ export function mapColorToCoverageLevel(hex, colorMap, tolerance = 10) {
 /**
  * Standard coverage color map
  * Maps coverage levels to Ofcom tile colors
+ * @deprecated Use COVERAGE_COLORS from constants.ts directly
  */
-export const COVERAGE_COLOR_MAP = {
-    4: '#7d2093', // Good outdoor and in-home (purple)
-    3: '#cd7be4', // Good outdoor, variable in-home (light purple)
-    2: '#0081b3', // Good outdoor (blue)
-    1: '#83e5f6', // Variable outdoor (cyan)
-    0: '#d4d4d4' // Poor to none outdoor (gray)
-};
+export const COVERAGE_COLOR_MAP = COVERAGE_COLORS;
 //# sourceMappingURL=pixel-extractor.js.map

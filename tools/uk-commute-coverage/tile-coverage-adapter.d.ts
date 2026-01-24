@@ -52,10 +52,10 @@ export declare class TileCoverageAdapter {
     colorDistance(color1: RgbColor, color2: RgbColor): number;
     mapColorToCoverageLevel(hex: string, tolerance?: number): CoverageLevel;
     getCoverageDescription(level: CoverageLevel): string;
-    private loadTileCacheFromStorage;
-    private saveTileCacheToStorage;
-    private loadTileFromIndexedDB;
-    private saveTileToIndexedDB;
-    clearCache(): void;
+    clearCache(): Promise<void>;
+    /**
+     * Get the count of tiles stored in IndexedDB
+     */
+    getStoredTileCount(): Promise<number>;
 }
 export {};

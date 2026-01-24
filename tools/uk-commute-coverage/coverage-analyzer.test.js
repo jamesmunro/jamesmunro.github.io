@@ -91,10 +91,8 @@ global.document = {
     addEventListener: () => { },
     readyState: 'complete'
 };
-global.localStorage = {
-    getItem: () => null,
-    setItem: () => { }
-};
+// Mock indexedDB as null (tests run in Node without IndexedDB)
+global.indexedDB = null;
 // Now import after mocks are set
 const { CoverageAnalyzer } = await import('./coverage-analyzer.js');
 describe('CoverageAnalyzer', () => {

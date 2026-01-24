@@ -2,7 +2,8 @@ import { ChartRenderer } from './chart-renderer.js';
 import { TileCoverageAdapter } from './tile-coverage-adapter.js';
 import { GoogleMap } from './google-map.js';
 import { sampleRouteByCount } from './route-sampler.js';
-import { ROUTE_SAMPLE_COUNT } from './constants.js';
+import { ROUTE_SAMPLE_COUNT, SETTINGS_KEYS } from './constants.js';
+import { storage } from './storage-service.js';
 /** Travel mode mapping - lazy loaded to avoid referencing google before it's loaded */
 function getTravelMode(profile) {
     const TRAVEL_MODES = {
@@ -53,10 +54,10 @@ export class CoverageAnalyzer {
     /**
      * Initialize the application listeners
      */
-    init() {
+    async init() {
         const form = document.getElementById('route-form');
         if (form) {
-            this.loadFormValues();
+            await this.loadFormValues();
             form.addEventListener('submit', (e) => this.handleSubmit(e));
         }
         const tileNetworkSelect = document.getElementById('tile-network');
@@ -67,37 +68,41 @@ export class CoverageAnalyzer {
                 }
             });
         }
+        // Initialize cache monitor on page load (defer to ensure DOM is ready)
+        setTimeout(() => this.updateCacheMonitor(), 0);
     }
-    loadFormValues() {
+    async loadFormValues() {
         const startInput = document.getElementById('start');
         const endInput = document.getElementById('end');
         const apiKeyInput = document.getElementById('google-maps-api-key');
         const profileInput = document.getElementById('route-profile');
         const tileNetworkSelect = document.getElementById('tile-network');
-        if (startInput && localStorage.getItem('route-start')) {
-            startInput.value = localStorage.getItem('route-start');
-        }
-        if (endInput && localStorage.getItem('route-end')) {
-            endInput.value = localStorage.getItem('route-end');
-        }
-        if (apiKeyInput && localStorage.getItem('google-maps-api-key')) {
-            apiKeyInput.value = localStorage.getItem('google-maps-api-key');
-        }
-        if (profileInput && localStorage.getItem('route-profile')) {
-            profileInput.value = localStorage.getItem('route-profile');
-        }
-        if (tileNetworkSelect && localStorage.getItem('tile-network')) {
-            tileNetworkSelect.value = localStorage.getItem('tile-network');
-        }
+        const [start, end, apiKey, profile, tileNetwork] = await Promise.all([
+            storage.getSetting(SETTINGS_KEYS.ROUTE_START),
+            storage.getSetting(SETTINGS_KEYS.ROUTE_END),
+            storage.getSetting(SETTINGS_KEYS.GOOGLE_MAPS_API_KEY),
+            storage.getSetting(SETTINGS_KEYS.ROUTE_PROFILE),
+            storage.getSetting(SETTINGS_KEYS.TILE_NETWORK),
+        ]);
+        if (startInput && start)
+            startInput.value = start;
+        if (endInput && end)
+            endInput.value = end;
+        if (apiKeyInput && apiKey)
+            apiKeyInput.value = apiKey;
+        if (profileInput && profile)
+            profileInput.value = profile;
+        if (tileNetworkSelect && tileNetwork)
+            tileNetworkSelect.value = tileNetwork;
     }
-    saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork) {
-        localStorage.setItem('route-start', startPostcode);
-        localStorage.setItem('route-end', endPostcode);
-        localStorage.setItem('google-maps-api-key', apiKey);
-        if (profile)
-            localStorage.setItem('route-profile', profile);
-        if (tileNetwork !== undefined)
-            localStorage.setItem('tile-network', tileNetwork);
+    async saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork) {
+        await Promise.all([
+            storage.setSetting(SETTINGS_KEYS.ROUTE_START, startPostcode),
+            storage.setSetting(SETTINGS_KEYS.ROUTE_END, endPostcode),
+            storage.setSetting(SETTINGS_KEYS.GOOGLE_MAPS_API_KEY, apiKey),
+            profile ? storage.setSetting(SETTINGS_KEYS.ROUTE_PROFILE, profile) : Promise.resolve(),
+            tileNetwork !== undefined ? storage.setSetting(SETTINGS_KEYS.TILE_NETWORK, tileNetwork) : Promise.resolve(),
+        ]);
     }
     async handleSubmit(event) {
         event.preventDefault();
@@ -109,14 +114,16 @@ export class CoverageAnalyzer {
         const apiKey = document.getElementById('google-maps-api-key').value.trim();
         const profile = document.getElementById('route-profile').value;
         const tileNetwork = document.getElementById('tile-network').value;
-        this.saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork);
+        await this.saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork);
         const submitBtn = event.target.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         try {
             // Check if we can reuse the last route (if it matches the current inputs)
-            const lastStart = localStorage.getItem('route-start');
-            const lastEnd = localStorage.getItem('route-end');
-            const lastProfile = localStorage.getItem('route-profile');
+            const [lastStart, lastEnd, lastProfile] = await Promise.all([
+                storage.getSetting(SETTINGS_KEYS.ROUTE_START),
+                storage.getSetting(SETTINGS_KEYS.ROUTE_END),
+                storage.getSetting(SETTINGS_KEYS.ROUTE_PROFILE),
+            ]);
             let prefetchedRoute = null;
             if (this.lastRouteResult &&
                 startPostcode === lastStart &&
@@ -366,8 +373,6 @@ export class CoverageAnalyzer {
     }
     async getCoverageData(sampledPoints, startPostcode, endPostcode, tileNetwork = '') {
         const results = [];
-        const BATCH_SIZE = 5;
-        const DELAY_MS = 500;
         const displayedTiles = new Set();
         for (let i = 0; i < sampledPoints.length; i++) {
             const point = sampledPoints[i];
@@ -400,11 +405,8 @@ export class CoverageAnalyzer {
             }
             results.push(result);
             const progress = 40 + (i / sampledPoints.length) * 55;
-            const stats = `Tiles: ${this.coverageAdapter.stats.tilesFetched} fetched / ${this.coverageAdapter.stats.tilesFromCache} cached`;
-            this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} samples`, stats);
-            if (i < sampledPoints.length - 1 && (i + 1) % BATCH_SIZE === 0) {
-                await this.sleep(DELAY_MS);
-            }
+            this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} samples`);
+            this.updateCacheMonitor();
         }
         return results;
     }
@@ -421,7 +423,10 @@ export class CoverageAnalyzer {
                 const tileInfo = await this.coverageAdapter.getTileInfo(point.lat, point.lng, tileNetwork);
                 const tileKey = `${tileInfo.tileX}-${tileInfo.tileY}`;
                 if (!displayedTiles.has(tileKey)) {
-                    this.googleMap.addTileOverlay(tileInfo.url, tileInfo.bounds, 0.4);
+                    // Fetch tile through cache to warm it, then display using object URL
+                    const blob = await this.coverageAdapter.fetchTile(tileNetwork, tileInfo.tileX, tileInfo.tileY);
+                    const objectUrl = URL.createObjectURL(blob);
+                    this.googleMap.addTileOverlay(objectUrl, tileInfo.bounds, 0.4);
                     displayedTiles.add(tileKey);
                 }
             }
@@ -429,9 +434,7 @@ export class CoverageAnalyzer {
                 this.logger.warn('Failed to add tile overlay:', error);
             }
         }
-    }
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        this.updateCacheMonitor();
     }
     showProgress() {
         const container = document.getElementById('progress');
@@ -444,20 +447,21 @@ export class CoverageAnalyzer {
         }
     }
     hideProgress() { this.hideElement('progress'); }
-    updateProgress(percent, text, stats = null) {
+    updateProgress(percent, text) {
         const bar = document.getElementById('progress-bar');
         const textEl = document.getElementById('progress-text');
-        const statsEl = document.getElementById('stats-text');
         if (bar)
             bar.value = percent;
         if (textEl)
             textEl.textContent = text;
-        if (statsEl && stats) {
-            statsEl.textContent = stats;
-        }
-        else if (statsEl) {
-            statsEl.textContent = '';
-        }
+    }
+    async updateCacheMonitor() {
+        const storedEl = document.getElementById('cache-stored');
+        const hitsEl = document.getElementById('cache-hits');
+        if (storedEl)
+            storedEl.textContent = `Stored: ${await this.coverageAdapter.getStoredTileCount()} tiles`;
+        if (hitsEl)
+            hitsEl.textContent = `Hits: ${this.coverageAdapter.stats.tilesFromCache}`;
     }
     setStep(stepIndex) {
         const stepEl = document.getElementById(`step-${stepIndex}`);

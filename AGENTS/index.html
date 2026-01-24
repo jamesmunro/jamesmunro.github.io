@@ -29,7 +29,7 @@
 <li><strong><code>tools/tools.json</code></strong>: Directory data file applying <code>layouts/tool.njk</code> to all tools.</li>
 <li><strong><code>tools/jwt-reader/</code></strong>: JWT decoder with client-side JS.</li>
 <li><strong><code>tools/pyodide-terminal/</code></strong>: Python REPL using Pyodide (WASM) and xterm.js.</li>
-<li><strong><code>tools/uk-commute-coverage/</code></strong>: Interactive commute coverage analyzer with map visualization.</li>
+<li><strong><code>tools/uk-commute-coverage/</code></strong>: Interactive commute coverage analyzer with map visualization. See <code>tools/uk-commute-coverage/GEO.md</code> for Ofcom tile system technical specification.</li>
 <li><strong><code>tools/commute-dashboard/</code></strong>: Commute metrics dashboard.</li>
 <li><strong><code>tools/browser-llm/</code></strong>: Browser-embedded LLM chatbot tool.</li>
 <li><strong><code>tools/world-clock/</code></strong>: World time zone clock.</li>
@@ -77,6 +77,13 @@ Uses Node's built-in test runner (<code>node --test</code>) to run all <code>*.t
 </code></pre>
 </li>
 <li><strong>IMPORTANT:</strong> Always run tests before committing.</li>
+</ul>
+<h3>After TypeScript Changes</h3>
+<ul>
+<li><strong>IMPORTANT:</strong> After modifying any <code>.ts</code> files, you must rebuild both TypeScript AND the site for changes to appear in the browser:<pre><code class="language-sh">npm run build:ts &amp;&amp; npx eleventy
+</code></pre>
+</li>
+<li>The dev server (<code>npm run dev</code>) watches for file changes but compiled JS in <code>dist/</code> may not trigger automatic rebuilds. Always run the above command after TypeScript changes to ensure <code>_site/</code> has the latest code.</li>
 </ul>
 <h2>Conventions &amp; Guidelines</h2>
 <h3>External Libraries &amp; Self-Hosting</h3>

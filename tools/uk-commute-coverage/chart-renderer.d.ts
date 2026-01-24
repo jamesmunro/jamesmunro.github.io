@@ -1,16 +1,22 @@
 /**
  * Chart Renderer Module
- * Handles rendering the coverage visualization using Chart.js
+ * Handles rendering the coverage visualization as horizontal stacked bars
  */
-import type { ChartDataset } from 'chart.js';
-import type { CoverageResult, NetworkSummaryStats, ChartDataPoint, NetworkCoverageResult } from '../../types/coverage.js';
+import type { CoverageResult, NetworkSummaryStats, NetworkCoverageResult } from '../../types/coverage.js';
+/** A segment of consecutive coverage points with same level */
+interface CoverageSegment {
+    level: number;
+    startDistance: number;
+    endDistance: number;
+    postcodes: string[];
+    widthPercent: number;
+}
 export declare class ChartRenderer {
-    private canvasId;
-    private chart;
+    private containerId;
     private summaryData;
     private tableBodyId;
     private currentSort;
-    constructor(canvasId: string);
+    constructor(containerId: string);
     /**
      * Determine signal level from coverage data
      * @param networkData - Coverage data for a network {level, color, description}
@@ -18,20 +24,25 @@ export declare class ChartRenderer {
      */
     getSignalLevel(networkData: NetworkCoverageResult | undefined): number;
     /**
-     * Prepare chart data from coverage results
-     * @param coverageResults - Array of {point, coverage} objects
-     * @returns Chart.js datasets
+     * Group coverage results into segments of consecutive same-level coverage
+     * @param coverageResults - Array of coverage results
+     * @param network - Network name to extract coverage for
+     * @returns Array of coverage segments
      */
-    prepareChartData(coverageResults: CoverageResult[]): ChartDataset<'line', ChartDataPoint[]>[];
+    groupIntoSegments(coverageResults: CoverageResult[], network: string): CoverageSegment[];
     /**
-     * Render the coverage chart
+     * Render the coverage visualization as horizontal bars
      * @param coverageResults - Array of coverage results
      */
     render(coverageResults: CoverageResult[]): void;
     /**
+     * Format tooltip text for a coverage segment
+     */
+    private formatSegmentTooltip;
+    /**
      * Calculate summary statistics
      * @param coverageResults - Array of coverage results
-     * @returns Summary stats per network
+     * @returns Summary stats per network (cumulative "or better" percentages)
      */
     calculateSummary(coverageResults: CoverageResult[]): Record<string, NetworkSummaryStats>;
     /**
@@ -53,3 +64,4 @@ export declare class ChartRenderer {
      */
     private renderSummaryRows;
 }
+export {};

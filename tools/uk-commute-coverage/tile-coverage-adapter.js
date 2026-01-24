@@ -2,16 +2,9 @@
  * Tile-Based Coverage Data Adapter
  * Fetches coverage data from Ofcom tile API and extracts coverage colors
  */
-import { TILE_API_BASE, TILE_VERSION, STANDARD_ZOOM, COLOR_TOLERANCE } from './constants.js';
+import { TILE_API_BASE, TILE_VERSION, STANDARD_ZOOM, COLOR_TOLERANCE, COVERAGE_COLORS, MNO_MAP, MNO_IDS, } from './constants.js';
 import { latLonToPixelInTile, tileToWgs84Bounds } from './coordinate-converter.js';
-// Mobile Network Operator mapping
-const MNO_MAP = {
-    mno1: 'Vodafone',
-    mno2: 'O2',
-    mno3: 'EE',
-    mno4: 'Three'
-};
-const MNO_IDS = ['mno1', 'mno2', 'mno3', 'mno4'];
+import { storage } from './storage-service.js';
 /**
  * Tile-based coverage adapter using Ofcom tile API
  */
@@ -20,18 +13,12 @@ export class TileCoverageAdapter {
     stats;
     colorMap;
     constructor() {
-        this.tileCache = this.loadTileCacheFromStorage();
+        this.tileCache = {}; // In-memory only, populated on-demand
         this.stats = {
             tilesFetched: 0,
             tilesFromCache: 0
         };
-        this.colorMap = {
-            4: '#7d2093', // Good outdoor and in-home
-            3: '#cd7be4', // Good outdoor, variable in-home
-            2: '#0081b3', // Good outdoor
-            1: '#83e5f6', // Variable outdoor
-            0: '#d4d4d4' // Poor to none outdoor
-        };
+        this.colorMap = COVERAGE_COLORS;
     }
     /**
      * Get coverage data for coordinates (lat/lon)
@@ -102,19 +89,19 @@ export class TileCoverageAdapter {
      */
     async fetchTile(mnoId, tileX, tileY) {
         const cacheKey = `${mnoId}-${STANDARD_ZOOM}-${tileX}-${tileY}-v${TILE_VERSION}`;
-        const cached = this.tileCache[cacheKey];
-        if (cached instanceof Blob) {
+        // Check in-memory cache
+        if (this.tileCache[cacheKey]) {
             this.stats.tilesFromCache++;
+            return this.tileCache[cacheKey];
+        }
+        // Check IndexedDB
+        const cached = await storage.getTile(cacheKey);
+        if (cached) {
+            this.stats.tilesFromCache++;
+            this.tileCache[cacheKey] = cached;
             return cached;
         }
-        if (cached && cached.timestamp) {
-            const blob = await this.loadTileFromIndexedDB(cacheKey);
-            if (blob) {
-                this.stats.tilesFromCache++;
-                this.tileCache[cacheKey] = blob;
-                return blob;
-            }
-        }
+        // Fetch from network
         const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`;
         try {
             const response = await fetch(url);
@@ -124,7 +111,7 @@ export class TileCoverageAdapter {
             const blob = await response.blob();
             this.stats.tilesFetched++;
             this.tileCache[cacheKey] = blob;
-            this.saveTileCacheToStorage(cacheKey, blob);
+            storage.setTile(cacheKey, blob); // Fire and forget
             return blob;
         }
         catch (error) {
@@ -214,88 +201,15 @@ export class TileCoverageAdapter {
         };
         return level !== null ? (descriptions[level] || descriptions.null) : descriptions.null;
     }
-    loadTileCacheFromStorage() {
-        try {
-            const cached = localStorage.getItem('tile-cache-index');
-            return cached ? JSON.parse(cached) : {};
-        }
-        catch (error) {
-            console.warn('Failed to load tile cache from storage:', error);
-            return {};
-        }
-    }
-    saveTileCacheToStorage(key, blob) {
-        try {
-            const index = this.loadTileCacheFromStorage();
-            index[key] = { timestamp: Date.now(), size: blob.size, version: TILE_VERSION };
-            localStorage.setItem('tile-cache-index', JSON.stringify(index));
-            if (typeof window !== 'undefined' && window.indexedDB)
-                this.saveTileToIndexedDB(key, blob);
-        }
-        catch (error) {
-            console.warn('Failed to save tile cache:', error);
-        }
-    }
-    loadTileFromIndexedDB(key) {
-        return new Promise((resolve) => {
-            try {
-                if (typeof window === 'undefined' || !window.indexedDB) {
-                    resolve(null);
-                    return;
-                }
-                const request = indexedDB.open('tile-cache', 1);
-                request.onerror = () => resolve(null);
-                request.onsuccess = (event) => {
-                    const db = event.target.result;
-                    const transaction = db.transaction(['tiles'], 'readonly');
-                    const store = transaction.objectStore('tiles');
-                    const query = store.get(key);
-                    query.onsuccess = () => {
-                        const result = query.result;
-                        resolve(result && result.blob ? result.blob : null);
-                    };
-                    query.onerror = () => resolve(null);
-                };
-            }
-            catch (error) {
-                console.warn('Error loading tile from IndexedDB:', error);
-                resolve(null);
-            }
-        });
-    }
-    saveTileToIndexedDB(key, blob) {
-        try {
-            const request = indexedDB.open('tile-cache', 1);
-            request.onerror = () => console.warn('Failed to open IndexedDB');
-            request.onsuccess = (event) => {
-                const db = event.target.result;
-                const transaction = db.transaction(['tiles'], 'readwrite');
-                const store = transaction.objectStore('tiles');
-                store.put({ key, blob });
-            };
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('tiles')) {
-                    db.createObjectStore('tiles', { keyPath: 'key' });
-                }
-            };
-        }
-        catch (error) {
-            console.warn('IndexedDB not available:', error);
-        }
-    }
-    clearCache() {
+    async clearCache() {
         this.tileCache = {};
-        try {
-            localStorage.removeItem('tile-cache-index');
-            if (typeof window !== 'undefined' && window.indexedDB) {
-                const request = indexedDB.deleteDatabase('tile-cache');
-                request.onsuccess = () => console.log('Tile cache cleared');
-            }
-        }
-        catch (error) {
-            console.warn('Failed to clear cache:', error);
-        }
+        await storage.clearTiles();
+    }
+    /**
+     * Get the count of tiles stored in IndexedDB
+     */
+    async getStoredTileCount() {
+        return storage.getTileCount();
     }
 }
 //# sourceMappingURL=tile-coverage-adapter.js.map

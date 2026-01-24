@@ -44,5 +44,6 @@ export declare function mapColorToCoverageLevel(hex: string, colorMap: CoverageC
 /**
  * Standard coverage color map
  * Maps coverage levels to Ofcom tile colors
+ * @deprecated Use COVERAGE_COLORS from constants.ts directly
  */
 export declare const COVERAGE_COLOR_MAP: CoverageColorMap;

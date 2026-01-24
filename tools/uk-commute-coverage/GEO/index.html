@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title> | Personal Tools &amp; Portfolio</title>
-    <meta name="site-version" content="20260124.1812">
+    <meta name="site-version" content="20260124.2100">
     <link rel="icon" href="data:,">
     <style>
       :root {
@@ -406,16 +406,12 @@
 <pre><code class="language-javascript">const resolutions = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
 const TILE_SIZE = 256;
 
-// BNG origin for the tile grid (standard OSGB origin)
-const ORIGIN_X = 0;         // Easting origin
-const ORIGIN_Y = 0;         // Northing origin
-
 function bngToTile(easting, northing, zoom) {
     const resolution = resolutions[zoom];
     const tileSpan = resolution * TILE_SIZE;
 
-    const x = Math.floor((easting - ORIGIN_X) / tileSpan);
-    const y = Math.floor((northing - ORIGIN_Y) / tileSpan);  // TMS: y increases northward
+    const x = Math.floor(easting / tileSpan);
+    const y = Math.floor(northing / tileSpan);  // TMS: y increases northward
 
     return { x, y, z: zoom };
 }
@@ -459,12 +455,12 @@ const tile = latLonToTile(51.5074, -0.1278, 10);
     const resolution = resolutions[zoom];
     const tileSpan = resolution * TILE_SIZE;
 
-    const x = Math.floor((easting - ORIGIN_X) / tileSpan);
-    const y = Math.floor((northing - ORIGIN_Y) / tileSpan);
+    const x = Math.floor(easting / tileSpan);
+    const y = Math.floor(northing / tileSpan);
 
     // Pixel offset within the tile
-    const pixelX = Math.floor(((easting - ORIGIN_X) % tileSpan) / resolution);
-    const pixelY = TILE_SIZE - 1 - Math.floor(((northing - ORIGIN_Y) % tileSpan) / resolution);
+    const pixelX = Math.floor((easting % tileSpan) / resolution);
+    const pixelY = TILE_SIZE - 1 - Math.floor((northing % tileSpan) / resolution);
     // Note: pixelY is inverted because PNG pixel 0 is at top, but BNG northing increases upward
 
     return { tileX: x, tileY: y, pixelX, pixelY };
@@ -491,7 +487,7 @@ const tile = latLonToTile(51.5074, -0.1278, 10);
 
     <footer style="text-align:center; padding:18px 24px; color:var(--text-secondary); font-size:0.9rem;">
       <div class="card" style="max-width:1080px; margin: 0 auto 32px; background:transparent; box-shadow:none; border:none; padding:0;">
-        <small>Site version: <strong>20260124.1812</strong></small>
+        <small>Site version: <strong>20260124.2100</strong></small>
       </div>
     </footer>
 

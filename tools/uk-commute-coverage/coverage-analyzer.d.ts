@@ -23,7 +23,7 @@ export declare class CoverageAnalyzer {
     /**
      * Initialize the application listeners
      */
-    init(): void;
+    init(): Promise<void>;
     private loadFormValues;
     private saveFormValues;
     private handleSubmit;
@@ -38,10 +38,10 @@ export declare class CoverageAnalyzer {
     fetchRoute(start: string | google.maps.LatLng, end: string | google.maps.LatLng, profile?: string): Promise<RouteResult>;
     getCoverageData(sampledPoints: SampledPoint[], startPostcode: string, endPostcode: string, tileNetwork?: string): Promise<CoverageResult[]>;
     updateMapTiles(tileNetwork: string, coordinates: Array<[number, number]>): Promise<void>;
-    private sleep;
     private showProgress;
     private hideProgress;
     private updateProgress;
+    private updateCacheMonitor;
     private setStep;
     private completeStep;
     showElement(id: string): void;
