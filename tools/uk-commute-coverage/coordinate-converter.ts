@@ -46,9 +46,6 @@ export const RESOLUTIONS = [
   2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4
 ];
 export const TILE_SIZE = 256;
-// OSGB grid origin (standard BNG origin)
-const ORIGIN_X = 0;
-const ORIGIN_Y = 0;
 
 export const DEFAULT_ZOOM = STANDARD_ZOOM;
 
@@ -91,8 +88,8 @@ export function bngToTile(easting: number, northing: number, zoom = DEFAULT_ZOOM
   }
   const resolution = RESOLUTIONS[zoom];
   const tileSpan = resolution * TILE_SIZE;
-  const tileX = Math.floor((easting - ORIGIN_X) / tileSpan);
-  const tileY = Math.floor((northing - ORIGIN_Y) / tileSpan);
+  const tileX = Math.floor(easting / tileSpan);
+  const tileY = Math.floor(northing / tileSpan);
   return { tileX, tileY, z: zoom };
 }
 
@@ -109,10 +106,10 @@ export function bngToPixelInTile(easting: number, northing: number, zoom = DEFAU
   }
   const resolution = RESOLUTIONS[zoom];
   const tileSpan = resolution * TILE_SIZE;
-  const tileX = Math.floor((easting - ORIGIN_X) / tileSpan);
-  const tileY = Math.floor((northing - ORIGIN_Y) / tileSpan);
-  const pixelX = Math.floor(((easting - ORIGIN_X) % tileSpan) / resolution);
-  const pixelY = TILE_SIZE - 1 - Math.floor(((northing - ORIGIN_Y) % tileSpan) / resolution);
+  const tileX = Math.floor(easting / tileSpan);
+  const tileY = Math.floor(northing / tileSpan);
+  const pixelX = Math.floor((easting % tileSpan) / resolution);
+  const pixelY = TILE_SIZE - 1 - Math.floor((northing % tileSpan) / resolution);
   return { tileX, tileY, pixelX, pixelY, z: zoom };
 }
 
@@ -150,10 +147,10 @@ export async function latLonToPixelInTile(lat: number, lon: number, zoom = DEFAU
 export function tileToBngBounds(tileX: number, tileY: number, zoom = DEFAULT_ZOOM): BngBounds {
   const resolution = RESOLUTIONS[zoom];
   const tileSpan = resolution * TILE_SIZE;
-  const west = tileX * tileSpan + ORIGIN_X;
-  const south = tileY * tileSpan + ORIGIN_Y;
-  const east = (tileX + 1) * tileSpan + ORIGIN_X;
-  const north = (tileY + 1) * tileSpan + ORIGIN_Y;
+  const west = tileX * tileSpan;
+  const south = tileY * tileSpan;
+  const east = (tileX + 1) * tileSpan;
+  const north = (tileY + 1) * tileSpan;
   return { west, south, east, north };
 }
 

@@ -22,13 +22,11 @@ const VERIFIED_TILES_Z10 = [
 function calculateExpectedTile(easting: number, northing: number, zoom: number) {
   const RESOLUTIONS = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
   const TILE_SIZE = 256;
-  const ORIGIN_X = 0;
-  const ORIGIN_Y = 0;
   const resolution = RESOLUTIONS[zoom];
   const tileSpan = resolution * TILE_SIZE;
   return {
-    tileX: Math.floor((easting - ORIGIN_X) / tileSpan),
-    tileY: Math.floor((northing - ORIGIN_Y) / tileSpan),
+    tileX: Math.floor(easting / tileSpan),
+    tileY: Math.floor(northing / tileSpan),
   };
 }
 
@@ -115,13 +113,11 @@ test('Coordinate Converter - Multi-Zoom Support', async (t) => {
 test('Coordinate Converter - Zoom 10 Reference Tests', async (t) => {
   await t.test('tileToBngBounds returns correct bounds at zoom 10', () => {
     const tileSpan = 2.8 * 256; // 716.8
-    const ORIGIN_X = 0;
-    const ORIGIN_Y = 0;
     const bounds = converter.tileToBngBounds(300, 400, 10);
-    assert.strictEqual(bounds.west, 300 * tileSpan + ORIGIN_X);
-    assert.strictEqual(bounds.south, 400 * tileSpan + ORIGIN_Y);
-    assert.strictEqual(bounds.east, 301 * tileSpan + ORIGIN_X);
-    assert.strictEqual(bounds.north, 401 * tileSpan + ORIGIN_Y);
+    assert.strictEqual(bounds.west, 300 * tileSpan);
+    assert.strictEqual(bounds.south, 400 * tileSpan);
+    assert.strictEqual(bounds.east, 301 * tileSpan);
+    assert.strictEqual(bounds.north, 401 * tileSpan);
   });
 
   await t.test('verified tile coordinates are correct at zoom 10', async () => {
@@ -153,13 +149,11 @@ test('Coordinate Converter - Zoom 10 Reference Tests', async (t) => {
 test('Coordinate Converter - Zoom 8 Reference Tests', async (t) => {
   await t.test('tileToBngBounds returns correct bounds at zoom 8', () => {
     const tileSpan = 11.2 * 256; // 2867.2
-    const ORIGIN_X = 0;
-    const ORIGIN_Y = 0;
     const bounds = converter.tileToBngBounds(100, 50, 8);
-    assert.strictEqual(bounds.west, 100 * tileSpan + ORIGIN_X);
-    assert.strictEqual(bounds.south, 50 * tileSpan + ORIGIN_Y);
-    assert.strictEqual(bounds.east, 101 * tileSpan + ORIGIN_X);
-    assert.strictEqual(bounds.north, 51 * tileSpan + ORIGIN_Y);
+    assert.strictEqual(bounds.west, 100 * tileSpan);
+    assert.strictEqual(bounds.south, 50 * tileSpan);
+    assert.strictEqual(bounds.east, 101 * tileSpan);
+    assert.strictEqual(bounds.north, 51 * tileSpan);
   });
 
   await t.test('zoom 8 tile contains corresponding zoom 10 tiles', () => {

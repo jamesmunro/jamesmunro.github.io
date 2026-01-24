@@ -77,16 +77,12 @@ This is the opposite of the "XYZ" / "Slippy Map" convention used by Google Maps 
 const resolutions = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
 const TILE_SIZE = 256;
 
-// BNG origin for the tile grid (standard OSGB origin)
-const ORIGIN_X = 0;         // Easting origin
-const ORIGIN_Y = 0;         // Northing origin
-
 function bngToTile(easting, northing, zoom) {
     const resolution = resolutions[zoom];
     const tileSpan = resolution * TILE_SIZE;
 
-    const x = Math.floor((easting - ORIGIN_X) / tileSpan);
-    const y = Math.floor((northing - ORIGIN_Y) / tileSpan);  // TMS: y increases northward
+    const x = Math.floor(easting / tileSpan);
+    const y = Math.floor(northing / tileSpan);  // TMS: y increases northward
 
     return { x, y, z: zoom };
 }
@@ -139,12 +135,12 @@ function bngToPixelInTile(easting, northing, zoom) {
     const resolution = resolutions[zoom];
     const tileSpan = resolution * TILE_SIZE;
 
-    const x = Math.floor((easting - ORIGIN_X) / tileSpan);
-    const y = Math.floor((northing - ORIGIN_Y) / tileSpan);
+    const x = Math.floor(easting / tileSpan);
+    const y = Math.floor(northing / tileSpan);
 
     // Pixel offset within the tile
-    const pixelX = Math.floor(((easting - ORIGIN_X) % tileSpan) / resolution);
-    const pixelY = TILE_SIZE - 1 - Math.floor(((northing - ORIGIN_Y) % tileSpan) / resolution);
+    const pixelX = Math.floor((easting % tileSpan) / resolution);
+    const pixelY = TILE_SIZE - 1 - Math.floor((northing % tileSpan) / resolution);
     // Note: pixelY is inverted because PNG pixel 0 is at top, but BNG northing increases upward
 
     return { tileX: x, tileY: y, pixelX, pixelY };
