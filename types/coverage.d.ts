@@ -98,13 +98,6 @@ export interface RouteSegment {
   length: number;
 }
 
-/** Tile cache entry metadata */
-export interface TileCacheEntry {
-  timestamp: number;
-  size: number;
-  version: string;
-}
-
 /** Tile information for map overlay */
 export interface TileInfo {
   url: string;

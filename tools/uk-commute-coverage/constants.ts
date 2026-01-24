@@ -14,23 +14,22 @@ export const TILE_API_BASE = (typeof window !== 'undefined' && window.location.h
 	: 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
 
 // =============================================================================
-// Storage Keys
+// IndexedDB Configuration
 // =============================================================================
-export const STORAGE_KEYS = {
-	// localStorage keys for form persistence
+export const INDEXED_DB = {
+	DATABASE_NAME: 'tile-cache',
+	DATABASE_VERSION: 2,  // Bumped for schema change (added settings store)
+	TILES_STORE: 'tiles',
+	SETTINGS_STORE: 'settings',
+} as const;
+
+// Settings keys (for IndexedDB settings store)
+export const SETTINGS_KEYS = {
 	ROUTE_START: 'route-start',
 	ROUTE_END: 'route-end',
 	GOOGLE_MAPS_API_KEY: 'google-maps-api-key',
 	ROUTE_PROFILE: 'route-profile',
 	TILE_NETWORK: 'tile-network',
-	// Tile cache
-	TILE_CACHE_INDEX: 'tile-cache-index',
-} as const;
-
-export const INDEXED_DB = {
-	DATABASE_NAME: 'tile-cache',
-	DATABASE_VERSION: 1,
-	STORE_NAME: 'tiles',
 } as const;
 
 // =============================================================================

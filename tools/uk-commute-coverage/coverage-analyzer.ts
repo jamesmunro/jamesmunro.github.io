@@ -2,7 +2,8 @@ import { ChartRenderer } from './chart-renderer.js';
 import { TileCoverageAdapter } from './tile-coverage-adapter.js';
 import { GoogleMap } from './google-map.js';
 import { sampleRouteByCount } from './route-sampler.js';
-import { ROUTE_SAMPLE_COUNT, STORAGE_KEYS } from './constants.js';
+import { ROUTE_SAMPLE_COUNT, SETTINGS_KEYS } from './constants.js';
+import { storage } from './storage-service.js';
 import type { Logger, CoverageResult, RouteResult, SampledPoint, CoverageData } from '../../types/coverage.js';
 
 /** Configuration for CoverageAnalyzer */
@@ -63,10 +64,10 @@ export class CoverageAnalyzer {
   /**
    * Initialize the application listeners
    */
-  init(): void {
+  async init(): Promise<void> {
     const form = document.getElementById('route-form') as HTMLFormElement | null;
     if (form) {
-      this.loadFormValues();
+      await this.loadFormValues();
       form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
 
@@ -83,36 +84,36 @@ export class CoverageAnalyzer {
     setTimeout(() => this.updateCacheMonitor(), 0);
   }
 
-  private loadFormValues(): void {
+  private async loadFormValues(): Promise<void> {
     const startInput = document.getElementById('start') as HTMLInputElement | null;
     const endInput = document.getElementById('end') as HTMLInputElement | null;
     const apiKeyInput = document.getElementById('google-maps-api-key') as HTMLInputElement | null;
     const profileInput = document.getElementById('route-profile') as HTMLSelectElement | null;
     const tileNetworkSelect = document.getElementById('tile-network') as HTMLSelectElement | null;
 
-    if (startInput && localStorage.getItem(STORAGE_KEYS.ROUTE_START)) {
-      startInput.value = localStorage.getItem(STORAGE_KEYS.ROUTE_START)!;
-    }
-    if (endInput && localStorage.getItem(STORAGE_KEYS.ROUTE_END)) {
-      endInput.value = localStorage.getItem(STORAGE_KEYS.ROUTE_END)!;
-    }
-    if (apiKeyInput && localStorage.getItem(STORAGE_KEYS.GOOGLE_MAPS_API_KEY)) {
-      apiKeyInput.value = localStorage.getItem(STORAGE_KEYS.GOOGLE_MAPS_API_KEY)!;
-    }
-    if (profileInput && localStorage.getItem(STORAGE_KEYS.ROUTE_PROFILE)) {
-      profileInput.value = localStorage.getItem(STORAGE_KEYS.ROUTE_PROFILE)!;
-    }
-    if (tileNetworkSelect && localStorage.getItem(STORAGE_KEYS.TILE_NETWORK)) {
-      tileNetworkSelect.value = localStorage.getItem(STORAGE_KEYS.TILE_NETWORK)!;
-    }
+    const [start, end, apiKey, profile, tileNetwork] = await Promise.all([
+      storage.getSetting(SETTINGS_KEYS.ROUTE_START),
+      storage.getSetting(SETTINGS_KEYS.ROUTE_END),
+      storage.getSetting(SETTINGS_KEYS.GOOGLE_MAPS_API_KEY),
+      storage.getSetting(SETTINGS_KEYS.ROUTE_PROFILE),
+      storage.getSetting(SETTINGS_KEYS.TILE_NETWORK),
+    ]);
+
+    if (startInput && start) startInput.value = start;
+    if (endInput && end) endInput.value = end;
+    if (apiKeyInput && apiKey) apiKeyInput.value = apiKey;
+    if (profileInput && profile) profileInput.value = profile;
+    if (tileNetworkSelect && tileNetwork) tileNetworkSelect.value = tileNetwork;
   }
 
-  private saveFormValues(startPostcode: string, endPostcode: string, apiKey: string, profile?: string, tileNetwork?: string): void {
-    localStorage.setItem(STORAGE_KEYS.ROUTE_START, startPostcode);
-    localStorage.setItem(STORAGE_KEYS.ROUTE_END, endPostcode);
-    localStorage.setItem(STORAGE_KEYS.GOOGLE_MAPS_API_KEY, apiKey);
-    if (profile) localStorage.setItem(STORAGE_KEYS.ROUTE_PROFILE, profile);
-    if (tileNetwork !== undefined) localStorage.setItem(STORAGE_KEYS.TILE_NETWORK, tileNetwork);
+  private async saveFormValues(startPostcode: string, endPostcode: string, apiKey: string, profile?: string, tileNetwork?: string): Promise<void> {
+    await Promise.all([
+      storage.setSetting(SETTINGS_KEYS.ROUTE_START, startPostcode),
+      storage.setSetting(SETTINGS_KEYS.ROUTE_END, endPostcode),
+      storage.setSetting(SETTINGS_KEYS.GOOGLE_MAPS_API_KEY, apiKey),
+      profile ? storage.setSetting(SETTINGS_KEYS.ROUTE_PROFILE, profile) : Promise.resolve(),
+      tileNetwork !== undefined ? storage.setSetting(SETTINGS_KEYS.TILE_NETWORK, tileNetwork) : Promise.resolve(),
+    ]);
   }
 
   private async handleSubmit(event: Event): Promise<void> {
@@ -128,16 +129,18 @@ export class CoverageAnalyzer {
     const profile = (document.getElementById('route-profile') as HTMLSelectElement).value;
     const tileNetwork = (document.getElementById('tile-network') as HTMLSelectElement).value;
 
-    this.saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork);
+    await this.saveFormValues(startPostcode, endPostcode, apiKey, profile, tileNetwork);
 
     const submitBtn = (event.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
     submitBtn.disabled = true;
 
     try {
       // Check if we can reuse the last route (if it matches the current inputs)
-      const lastStart = localStorage.getItem(STORAGE_KEYS.ROUTE_START);
-      const lastEnd = localStorage.getItem(STORAGE_KEYS.ROUTE_END);
-      const lastProfile = localStorage.getItem(STORAGE_KEYS.ROUTE_PROFILE);
+      const [lastStart, lastEnd, lastProfile] = await Promise.all([
+        storage.getSetting(SETTINGS_KEYS.ROUTE_START),
+        storage.getSetting(SETTINGS_KEYS.ROUTE_END),
+        storage.getSetting(SETTINGS_KEYS.ROUTE_PROFILE),
+      ]);
 
       let prefetchedRoute: RouteResult | null = null;
       if (this.lastRouteResult &&
@@ -525,10 +528,10 @@ export class CoverageAnalyzer {
     if (textEl) textEl.textContent = text;
   }
 
-  private updateCacheMonitor(): void {
+  private async updateCacheMonitor(): Promise<void> {
     const storedEl = document.getElementById('cache-stored');
     const hitsEl = document.getElementById('cache-hits');
-    if (storedEl) storedEl.textContent = `Stored: ${this.coverageAdapter.getStoredTileCount()} tiles`;
+    if (storedEl) storedEl.textContent = `Stored: ${await this.coverageAdapter.getStoredTileCount()} tiles`;
     if (hitsEl) hitsEl.textContent = `Hits: ${this.coverageAdapter.stats.tilesFromCache}`;
   }
 

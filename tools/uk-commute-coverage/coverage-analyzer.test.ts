@@ -135,10 +135,8 @@ interface MockDocument {
   readyState: 'complete'
 };
 
-(global as unknown as { localStorage: { getItem: () => null; setItem: () => void } }).localStorage = {
-  getItem: () => null,
-  setItem: () => {}
-};
+// Mock indexedDB as null (tests run in Node without IndexedDB)
+(global as unknown as { indexedDB: null }).indexedDB = null;
 
 // Now import after mocks are set
 const { CoverageAnalyzer } = await import('./coverage-analyzer.js');

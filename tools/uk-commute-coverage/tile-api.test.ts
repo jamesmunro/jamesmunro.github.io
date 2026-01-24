@@ -304,22 +304,7 @@ describe('TileCoverageAdapter', () => {
   let adapter: TileCoverageAdapter;
 
   before(() => {
-    // Mock localStorage
-    interface MockLocalStorage {
-      data: Record<string, string>;
-      getItem(key: string): string | null;
-      setItem(key: string, value: string): void;
-      removeItem(key: string): void;
-    }
-
-    (global as unknown as { localStorage: MockLocalStorage }).localStorage = {
-      data: {},
-      getItem(key: string) { return this.data[key] || null; },
-      setItem(key: string, value: string) { this.data[key] = value; },
-      removeItem(key: string) { delete this.data[key]; }
-    };
-
-    // Mock indexedDB
+    // Mock indexedDB as null (tests run in Node without IndexedDB)
     (global as unknown as { indexedDB: null }).indexedDB = null;
 
     adapter = new TileCoverageAdapter();

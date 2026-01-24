@@ -10,11 +10,10 @@ import {
   COVERAGE_COLORS,
   MNO_MAP,
   MNO_IDS,
-  STORAGE_KEYS,
-  INDEXED_DB,
 } from './constants.js';
 import { latLonToPixelInTile, tileToWgs84Bounds } from './coordinate-converter.js';
-import type { CoverageData, NetworkCoverageResult, TileInfo, CoverageLevel, MnoId, OperatorName, TileCacheEntry, RgbColor, ExtractedColor } from '../../types/coverage.js';
+import { storage } from './storage-service.js';
+import type { CoverageData, NetworkCoverageResult, TileInfo, CoverageLevel, MnoId, OperatorName, RgbColor, ExtractedColor } from '../../types/coverage.js';
 
 /** Tile cache statistics */
 interface TileStats {
@@ -22,22 +21,16 @@ interface TileStats {
   tilesFromCache: number;
 }
 
-/** IndexedDB tile record */
-interface TileRecord {
-  key: string;
-  blob: Blob;
-}
-
 /**
  * Tile-based coverage adapter using Ofcom tile API
  */
 export class TileCoverageAdapter {
-  private tileCache: Record<string, Blob | TileCacheEntry>;
+  private tileCache: Record<string, Blob>;
   public stats: TileStats;
   private colorMap: Record<number, string>;
 
   constructor() {
-    this.tileCache = this.loadTileCacheFromStorage();
+    this.tileCache = {};  // In-memory only, populated on-demand
     this.stats = {
       tilesFetched: 0,
       tilesFromCache: 0
@@ -121,21 +114,21 @@ export class TileCoverageAdapter {
   async fetchTile(mnoId: MnoId, tileX: number, tileY: number): Promise<Blob> {
     const cacheKey = `${mnoId}-${STANDARD_ZOOM}-${tileX}-${tileY}-v${TILE_VERSION}`;
 
-    const cached = this.tileCache[cacheKey];
-    if (cached instanceof Blob) {
+    // Check in-memory cache
+    if (this.tileCache[cacheKey]) {
       this.stats.tilesFromCache++;
+      return this.tileCache[cacheKey];
+    }
+
+    // Check IndexedDB
+    const cached = await storage.getTile(cacheKey);
+    if (cached) {
+      this.stats.tilesFromCache++;
+      this.tileCache[cacheKey] = cached;
       return cached;
     }
 
-    if (cached && (cached as TileCacheEntry).timestamp) {
-      const blob = await this.loadTileFromIndexedDB(cacheKey);
-      if (blob) {
-        this.stats.tilesFromCache++;
-        this.tileCache[cacheKey] = blob;
-        return blob;
-      }
-    }
-
+    // Fetch from network
     const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`;
 
     try {
@@ -146,7 +139,7 @@ export class TileCoverageAdapter {
       const blob = await response.blob();
       this.stats.tilesFetched++;
       this.tileCache[cacheKey] = blob;
-      this.saveTileCacheToStorage(cacheKey, blob);
+      storage.setTile(cacheKey, blob);  // Fire and forget
       return blob;
     } catch (error) {
       throw new Error(`Failed to fetch tile ${mnoId}/${STANDARD_ZOOM}/${tileX}/${tileY}: ${error instanceof Error ? error.message : String(error)}`);
@@ -239,106 +232,15 @@ export class TileCoverageAdapter {
     return level !== null ? (descriptions[level] || descriptions.null) : descriptions.null;
   }
 
-  private loadTileCacheFromStorage(): Record<string, TileCacheEntry> {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEYS.TILE_CACHE_INDEX);
-      return cached ? JSON.parse(cached) : {};
-    } catch (error) {
-      console.warn('Failed to load tile cache from storage:', error);
-      return {};
-    }
-  }
-
-  private saveTileCacheToStorage(key: string, blob: Blob): void {
-    try {
-      const index = this.loadTileCacheFromStorage();
-      index[key] = { timestamp: Date.now(), size: blob.size, version: TILE_VERSION };
-      localStorage.setItem(STORAGE_KEYS.TILE_CACHE_INDEX, JSON.stringify(index));
-      if (typeof window !== 'undefined' && window.indexedDB) this.saveTileToIndexedDB(key, blob);
-    } catch (error) {
-      console.warn('Failed to save tile cache:', error);
-    }
-  }
-
-  private loadTileFromIndexedDB(key: string): Promise<Blob | null> {
-    return new Promise((resolve) => {
-      try {
-        if (typeof window === 'undefined' || !window.indexedDB) { resolve(null); return; }
-        const request = indexedDB.open(INDEXED_DB.DATABASE_NAME, INDEXED_DB.DATABASE_VERSION);
-        request.onerror = () => resolve(null);
-        request.onupgradeneeded = (event) => {
-          // Create object store if it doesn't exist (for robustness)
-          const db = (event.target as IDBOpenDBRequest).result;
-          if (!db.objectStoreNames.contains(INDEXED_DB.STORE_NAME)) {
-            db.createObjectStore(INDEXED_DB.STORE_NAME, { keyPath: 'key' });
-          }
-        };
-        request.onsuccess = (event) => {
-          try {
-            const db = (event.target as IDBOpenDBRequest).result;
-            if (!db.objectStoreNames.contains(INDEXED_DB.STORE_NAME)) {
-              resolve(null);
-              return;
-            }
-            const transaction = db.transaction([INDEXED_DB.STORE_NAME], 'readonly');
-            const store = transaction.objectStore(INDEXED_DB.STORE_NAME);
-            const query = store.get(key);
-            query.onsuccess = () => {
-              const result = query.result as TileRecord | undefined;
-              resolve(result && result.blob ? result.blob : null);
-            };
-            query.onerror = () => resolve(null);
-          } catch (error) {
-            console.warn('Error accessing IndexedDB store:', error);
-            resolve(null);
-          }
-        };
-      } catch (error) {
-        console.warn('Error loading tile from IndexedDB:', error);
-        resolve(null);
-      }
-    });
-  }
-
-  private saveTileToIndexedDB(key: string, blob: Blob): void {
-    try {
-      const request = indexedDB.open(INDEXED_DB.DATABASE_NAME, INDEXED_DB.DATABASE_VERSION);
-      request.onerror = () => console.warn('Failed to open IndexedDB');
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction([INDEXED_DB.STORE_NAME], 'readwrite');
-        const store = transaction.objectStore(INDEXED_DB.STORE_NAME);
-        store.put({ key, blob } as TileRecord);
-      };
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains(INDEXED_DB.STORE_NAME)) {
-          db.createObjectStore(INDEXED_DB.STORE_NAME, { keyPath: 'key' });
-        }
-      };
-    } catch (error) {
-      console.warn('IndexedDB not available:', error);
-    }
-  }
-
-  clearCache(): void {
+  async clearCache(): Promise<void> {
     this.tileCache = {};
-    try {
-      localStorage.removeItem(STORAGE_KEYS.TILE_CACHE_INDEX);
-      if (typeof window !== 'undefined' && window.indexedDB) {
-        const request = indexedDB.deleteDatabase(INDEXED_DB.DATABASE_NAME);
-        request.onsuccess = () => console.log('Tile cache cleared');
-      }
-    } catch (error) {
-      console.warn('Failed to clear cache:', error);
-    }
+    await storage.clearTiles();
   }
 
   /**
-   * Get the count of tiles stored in localStorage index
+   * Get the count of tiles stored in IndexedDB
    */
-  getStoredTileCount(): number {
-    const index = this.loadTileCacheFromStorage();
-    return Object.keys(index).length;
+  async getStoredTileCount(): Promise<number> {
+    return storage.getTileCount();
   }
 }

@@ -118,6 +118,7 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
 
   <!-- Cache Monitor Footer -->
   <footer class="cache-monitor">
+    <span class="cache-label">Tile cache:</span>
     <span id="cache-stored">Stored: 0 tiles</span>
     <span id="cache-hits">Hits: 0</span>
   </footer>
@@ -244,7 +245,12 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
   font-family: monospace;
   color: var(--text-secondary);
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
+}
+
+.cache-monitor .cache-label {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .error-message {
