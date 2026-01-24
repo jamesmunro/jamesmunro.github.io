@@ -1,4 +1,4 @@
-# Project Context: [jamesmunro.github.io](https://jamesmunro.github.io)
+# Project Context: Static Site Tools
 
 ## Project Overview
 This repository hosts a personal website and portfolio built as a static site. It features interactive web tools and integrates Jupyter Lite for running Python notebooks in the browser.
@@ -7,12 +7,12 @@ This repository hosts a personal website and portfolio built as a static site. I
 
 The site includes several interactive web tools:
 
-- **[Commute Dashboard](https://jamesmunro.github.io/tools/commute-dashboard/)** - Real-time train times, tube status, and weather for your commute
-- **[JWT Reader](https://jamesmunro.github.io/tools/jwt-reader/)** - Decode JSON Web Tokens right in the browser
-- **[Pyodide Terminal](https://jamesmunro.github.io/tools/pyodide-terminal/)** - Run Python code directly in your browser with Pyodide
-- **[UK Commute Coverage Analyser](https://jamesmunro.github.io/tools/uk-commute-coverage/)** - Find the best network for your commute by analyzing mobile data coverage along your route
-- **[World Clock](https://jamesmunro.github.io/tools/world-clock/)** - Large, multi-timezone clock with second-by-second updates
-- **[Browser LLM](https://jamesmunro.github.io/tools/browser-llm/)** - Browser-embedded LLM chatbot tool
+- **Commute Dashboard** (`/tools/commute-dashboard/`) - Real-time train times, tube status, and weather for your commute
+- **JWT Reader** (`/tools/jwt-reader/`) - Decode JSON Web Tokens right in the browser
+- **Pyodide Terminal** (`/tools/pyodide-terminal/`) - Run Python code directly in your browser with Pyodide
+- **UK Commute Coverage Analyser** (`/tools/uk-commute-coverage/`) - Find the best network for your commute by analyzing mobile data coverage along your route
+- **World Clock** (`/tools/world-clock/`) - Large, multi-timezone clock with second-by-second updates
+- **Browser LLM** (`/tools/browser-llm/`) - Browser-embedded LLM chatbot tool
 
 ## Tech Stack
 - **Static Site Generator:** [Eleventy (11ty)](https://www.11ty.dev/)

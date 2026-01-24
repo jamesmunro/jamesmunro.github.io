@@ -1,5 +1,5 @@
 {
-  "name": "jamesmunro.github.io",
+  "name": "static-site-tools",
   "private": true,
   "scripts": {
     "build": "npm run build:ts && eleventy && npm run build:jupyter",
