@@ -29,7 +29,7 @@ The site includes several interactive web tools:
     - **`tools/tools.json`**: Directory data file applying `layouts/tool.njk` to all tools.
     - **`tools/jwt-reader/`**: JWT decoder with client-side JS.
     - **`tools/pyodide-terminal/`**: Python REPL using Pyodide (WASM) and xterm.js.
-    - **`tools/uk-commute-coverage/`**: Interactive commute coverage analyzer with map visualization.
+    - **`tools/uk-commute-coverage/`**: Interactive commute coverage analyzer with map visualization. See `tools/uk-commute-coverage/GEO.md` for Ofcom tile system technical specification.
     - **`tools/commute-dashboard/`**: Commute metrics dashboard.
     - **`tools/browser-llm/`**: Browser-embedded LLM chatbot tool.
     - **`tools/world-clock/`**: World time zone clock.
