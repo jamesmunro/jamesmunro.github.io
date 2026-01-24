@@ -266,16 +266,32 @@ export class TileCoverageAdapter {
         if (typeof window === 'undefined' || !window.indexedDB) { resolve(null); return; }
         const request = indexedDB.open(INDEXED_DB.DATABASE_NAME, INDEXED_DB.DATABASE_VERSION);
         request.onerror = () => resolve(null);
-        request.onsuccess = (event) => {
+        request.onupgradeneeded = (event) => {
+          // Create object store if it doesn't exist (for robustness)
           const db = (event.target as IDBOpenDBRequest).result;
-          const transaction = db.transaction([INDEXED_DB.STORE_NAME], 'readonly');
-          const store = transaction.objectStore(INDEXED_DB.STORE_NAME);
-          const query = store.get(key);
-          query.onsuccess = () => {
-            const result = query.result as TileRecord | undefined;
-            resolve(result && result.blob ? result.blob : null);
-          };
-          query.onerror = () => resolve(null);
+          if (!db.objectStoreNames.contains(INDEXED_DB.STORE_NAME)) {
+            db.createObjectStore(INDEXED_DB.STORE_NAME, { keyPath: 'key' });
+          }
+        };
+        request.onsuccess = (event) => {
+          try {
+            const db = (event.target as IDBOpenDBRequest).result;
+            if (!db.objectStoreNames.contains(INDEXED_DB.STORE_NAME)) {
+              resolve(null);
+              return;
+            }
+            const transaction = db.transaction([INDEXED_DB.STORE_NAME], 'readonly');
+            const store = transaction.objectStore(INDEXED_DB.STORE_NAME);
+            const query = store.get(key);
+            query.onsuccess = () => {
+              const result = query.result as TileRecord | undefined;
+              resolve(result && result.blob ? result.blob : null);
+            };
+            query.onerror = () => resolve(null);
+          } catch (error) {
+            console.warn('Error accessing IndexedDB store:', error);
+            resolve(null);
+          }
         };
       } catch (error) {
         console.warn('Error loading tile from IndexedDB:', error);
