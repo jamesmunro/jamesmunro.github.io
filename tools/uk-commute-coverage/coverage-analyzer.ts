@@ -2,7 +2,7 @@ import { ChartRenderer } from './chart-renderer.js';
 import { TileCoverageAdapter } from './tile-coverage-adapter.js';
 import { GoogleMap } from './google-map.js';
 import { sampleRouteByCount } from './route-sampler.js';
-import { ROUTE_SAMPLE_COUNT } from './constants.js';
+import { ROUTE_SAMPLE_COUNT, STORAGE_KEYS } from './constants.js';
 import type { Logger, CoverageResult, RouteResult, SampledPoint, CoverageData } from '../../types/coverage.js';
 
 /** Configuration for CoverageAnalyzer */
@@ -87,29 +87,29 @@ export class CoverageAnalyzer {
     const profileInput = document.getElementById('route-profile') as HTMLSelectElement | null;
     const tileNetworkSelect = document.getElementById('tile-network') as HTMLSelectElement | null;
 
-    if (startInput && localStorage.getItem('route-start')) {
-      startInput.value = localStorage.getItem('route-start')!;
+    if (startInput && localStorage.getItem(STORAGE_KEYS.ROUTE_START)) {
+      startInput.value = localStorage.getItem(STORAGE_KEYS.ROUTE_START)!;
     }
-    if (endInput && localStorage.getItem('route-end')) {
-      endInput.value = localStorage.getItem('route-end')!;
+    if (endInput && localStorage.getItem(STORAGE_KEYS.ROUTE_END)) {
+      endInput.value = localStorage.getItem(STORAGE_KEYS.ROUTE_END)!;
     }
-    if (apiKeyInput && localStorage.getItem('google-maps-api-key')) {
-      apiKeyInput.value = localStorage.getItem('google-maps-api-key')!;
+    if (apiKeyInput && localStorage.getItem(STORAGE_KEYS.GOOGLE_MAPS_API_KEY)) {
+      apiKeyInput.value = localStorage.getItem(STORAGE_KEYS.GOOGLE_MAPS_API_KEY)!;
     }
-    if (profileInput && localStorage.getItem('route-profile')) {
-      profileInput.value = localStorage.getItem('route-profile')!;
+    if (profileInput && localStorage.getItem(STORAGE_KEYS.ROUTE_PROFILE)) {
+      profileInput.value = localStorage.getItem(STORAGE_KEYS.ROUTE_PROFILE)!;
     }
-    if (tileNetworkSelect && localStorage.getItem('tile-network')) {
-      tileNetworkSelect.value = localStorage.getItem('tile-network')!;
+    if (tileNetworkSelect && localStorage.getItem(STORAGE_KEYS.TILE_NETWORK)) {
+      tileNetworkSelect.value = localStorage.getItem(STORAGE_KEYS.TILE_NETWORK)!;
     }
   }
 
   private saveFormValues(startPostcode: string, endPostcode: string, apiKey: string, profile?: string, tileNetwork?: string): void {
-    localStorage.setItem('route-start', startPostcode);
-    localStorage.setItem('route-end', endPostcode);
-    localStorage.setItem('google-maps-api-key', apiKey);
-    if (profile) localStorage.setItem('route-profile', profile);
-    if (tileNetwork !== undefined) localStorage.setItem('tile-network', tileNetwork);
+    localStorage.setItem(STORAGE_KEYS.ROUTE_START, startPostcode);
+    localStorage.setItem(STORAGE_KEYS.ROUTE_END, endPostcode);
+    localStorage.setItem(STORAGE_KEYS.GOOGLE_MAPS_API_KEY, apiKey);
+    if (profile) localStorage.setItem(STORAGE_KEYS.ROUTE_PROFILE, profile);
+    if (tileNetwork !== undefined) localStorage.setItem(STORAGE_KEYS.TILE_NETWORK, tileNetwork);
   }
 
   private async handleSubmit(event: Event): Promise<void> {
@@ -132,9 +132,9 @@ export class CoverageAnalyzer {
 
     try {
       // Check if we can reuse the last route (if it matches the current inputs)
-      const lastStart = localStorage.getItem('route-start');
-      const lastEnd = localStorage.getItem('route-end');
-      const lastProfile = localStorage.getItem('route-profile');
+      const lastStart = localStorage.getItem(STORAGE_KEYS.ROUTE_START);
+      const lastEnd = localStorage.getItem(STORAGE_KEYS.ROUTE_END);
+      const lastProfile = localStorage.getItem(STORAGE_KEYS.ROUTE_PROFILE);
 
       let prefetchedRoute: RouteResult | null = null;
       if (this.lastRouteResult &&

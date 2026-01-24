@@ -5,6 +5,7 @@
 
 import type { Chart as ChartJS, ChartConfiguration, ChartDataset, TooltipItem } from 'chart.js';
 import type { CoverageResult, NetworkSummaryStats, ChartDataPoint, CoverageLevel, NetworkCoverageResult } from '../../types/coverage.js';
+import { NETWORK_COLORS, NETWORKS } from './constants.js';
 
 // Canonical Ofcom coverage level descriptions (used throughout)
 const COVERAGE_LEVELS: Record<number, string> = {
@@ -23,17 +24,6 @@ const COVERAGE_LABELS_SHORT: Record<number, string> = {
   1: 'Variable',
   0: 'Poor/None'
 };
-
-/** Network colors for chart */
-const NETWORK_COLORS: Record<string, string> = {
-  EE: '#009a9a',
-  Vodafone: '#e60000',
-  O2: '#0019a5',
-  Three: '#333333'
-};
-
-/** Network names in display order */
-const NETWORKS = ['EE', 'Vodafone', 'O2', 'Three'] as const;
 
 /** Sort configuration state */
 interface SortConfig {

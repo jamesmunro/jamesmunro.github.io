@@ -2,19 +2,19 @@
  * Tile-Based Coverage Data Adapter
  * Fetches coverage data from Ofcom tile API and extracts coverage colors
  */
-import { TILE_API_BASE, TILE_VERSION, STANDARD_ZOOM, COLOR_TOLERANCE } from './constants.js';
+import {
+  TILE_API_BASE,
+  TILE_VERSION,
+  STANDARD_ZOOM,
+  COLOR_TOLERANCE,
+  COVERAGE_COLORS,
+  MNO_MAP,
+  MNO_IDS,
+  STORAGE_KEYS,
+  INDEXED_DB,
+} from './constants.js';
 import { latLonToPixelInTile, tileToWgs84Bounds } from './coordinate-converter.js';
 import type { CoverageData, NetworkCoverageResult, TileInfo, CoverageLevel, MnoId, OperatorName, TileCacheEntry, RgbColor, ExtractedColor } from '../../types/coverage.js';
-
-// Mobile Network Operator mapping
-const MNO_MAP: Record<MnoId, OperatorName> = {
-  mno1: 'Vodafone',
-  mno2: 'O2',
-  mno3: 'EE',
-  mno4: 'Three'
-};
-
-const MNO_IDS: MnoId[] = ['mno1', 'mno2', 'mno3', 'mno4'];
 
 /** Tile cache statistics */
 interface TileStats {
@@ -42,13 +42,7 @@ export class TileCoverageAdapter {
       tilesFetched: 0,
       tilesFromCache: 0
     };
-    this.colorMap = {
-      4: '#7d2093', // Good outdoor and in-home
-      3: '#cd7be4', // Good outdoor, variable in-home
-      2: '#0081b3', // Good outdoor
-      1: '#83e5f6', // Variable outdoor
-      0: '#d4d4d4'  // Poor to none outdoor
-    };
+    this.colorMap = COVERAGE_COLORS;
   }
 
   /**
@@ -247,7 +241,7 @@ export class TileCoverageAdapter {
 
   private loadTileCacheFromStorage(): Record<string, TileCacheEntry> {
     try {
-      const cached = localStorage.getItem('tile-cache-index');
+      const cached = localStorage.getItem(STORAGE_KEYS.TILE_CACHE_INDEX);
       return cached ? JSON.parse(cached) : {};
     } catch (error) {
       console.warn('Failed to load tile cache from storage:', error);
@@ -259,7 +253,7 @@ export class TileCoverageAdapter {
     try {
       const index = this.loadTileCacheFromStorage();
       index[key] = { timestamp: Date.now(), size: blob.size, version: TILE_VERSION };
-      localStorage.setItem('tile-cache-index', JSON.stringify(index));
+      localStorage.setItem(STORAGE_KEYS.TILE_CACHE_INDEX, JSON.stringify(index));
       if (typeof window !== 'undefined' && window.indexedDB) this.saveTileToIndexedDB(key, blob);
     } catch (error) {
       console.warn('Failed to save tile cache:', error);
@@ -270,12 +264,12 @@ export class TileCoverageAdapter {
     return new Promise((resolve) => {
       try {
         if (typeof window === 'undefined' || !window.indexedDB) { resolve(null); return; }
-        const request = indexedDB.open('tile-cache', 1);
+        const request = indexedDB.open(INDEXED_DB.DATABASE_NAME, INDEXED_DB.DATABASE_VERSION);
         request.onerror = () => resolve(null);
         request.onsuccess = (event) => {
           const db = (event.target as IDBOpenDBRequest).result;
-          const transaction = db.transaction(['tiles'], 'readonly');
-          const store = transaction.objectStore('tiles');
+          const transaction = db.transaction([INDEXED_DB.STORE_NAME], 'readonly');
+          const store = transaction.objectStore(INDEXED_DB.STORE_NAME);
           const query = store.get(key);
           query.onsuccess = () => {
             const result = query.result as TileRecord | undefined;
@@ -292,18 +286,18 @@ export class TileCoverageAdapter {
 
   private saveTileToIndexedDB(key: string, blob: Blob): void {
     try {
-      const request = indexedDB.open('tile-cache', 1);
+      const request = indexedDB.open(INDEXED_DB.DATABASE_NAME, INDEXED_DB.DATABASE_VERSION);
       request.onerror = () => console.warn('Failed to open IndexedDB');
       request.onsuccess = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction(['tiles'], 'readwrite');
-        const store = transaction.objectStore('tiles');
+        const transaction = db.transaction([INDEXED_DB.STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(INDEXED_DB.STORE_NAME);
         store.put({ key, blob } as TileRecord);
       };
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains('tiles')) {
-          db.createObjectStore('tiles', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains(INDEXED_DB.STORE_NAME)) {
+          db.createObjectStore(INDEXED_DB.STORE_NAME, { keyPath: 'key' });
         }
       };
     } catch (error) {
@@ -314,9 +308,9 @@ export class TileCoverageAdapter {
   clearCache(): void {
     this.tileCache = {};
     try {
-      localStorage.removeItem('tile-cache-index');
+      localStorage.removeItem(STORAGE_KEYS.TILE_CACHE_INDEX);
       if (typeof window !== 'undefined' && window.indexedDB) {
-        const request = indexedDB.deleteDatabase('tile-cache');
+        const request = indexedDB.deleteDatabase(INDEXED_DB.DATABASE_NAME);
         request.onsuccess = () => console.log('Tile cache cleared');
       }
     } catch (error) {

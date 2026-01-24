@@ -1,9 +1,72 @@
 // Shared constants for uk-commute-coverage tools
+
+// =============================================================================
+// Tile System
+// =============================================================================
 export const STANDARD_ZOOM = 8;
 export const TILE_VERSION = '42';
 export const ROUTE_SAMPLE_COUNT = 500;
 export const COLOR_TOLERANCE = 10;
+
 // Use local proxy on localhost to avoid CORS, direct URL in production
 export const TILE_API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
 	? '/api/tiles/gbof_{mno}_raster_bng2'
 	: 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
+
+// =============================================================================
+// Storage Keys
+// =============================================================================
+export const STORAGE_KEYS = {
+	// localStorage keys for form persistence
+	ROUTE_START: 'route-start',
+	ROUTE_END: 'route-end',
+	GOOGLE_MAPS_API_KEY: 'google-maps-api-key',
+	ROUTE_PROFILE: 'route-profile',
+	TILE_NETWORK: 'tile-network',
+	// Tile cache
+	TILE_CACHE_INDEX: 'tile-cache-index',
+} as const;
+
+export const INDEXED_DB = {
+	DATABASE_NAME: 'tile-cache',
+	DATABASE_VERSION: 1,
+	STORE_NAME: 'tiles',
+} as const;
+
+// =============================================================================
+// Coverage Level Colors (Ofcom tile color scheme)
+// =============================================================================
+export const COVERAGE_COLORS: Record<number, string> = {
+	4: '#7d2093', // Good outdoor and in-home (purple)
+	3: '#cd7be4', // Good outdoor, variable in-home (light purple)
+	2: '#0081b3', // Good outdoor (blue)
+	1: '#83e5f6', // Variable outdoor (cyan)
+	0: '#d4d4d4', // Poor to none outdoor (gray)
+};
+
+// =============================================================================
+// Network Operator Colors (for charts)
+// =============================================================================
+export const NETWORK_COLORS: Record<string, string> = {
+	EE: '#009a9a',
+	Vodafone: '#e60000',
+	O2: '#0019a5',
+	Three: '#333333',
+};
+
+// =============================================================================
+// Mobile Network Operator Mapping
+// =============================================================================
+export type MnoId = 'mno1' | 'mno2' | 'mno3' | 'mno4';
+export type OperatorName = 'Vodafone' | 'O2' | 'EE' | 'Three';
+
+export const MNO_MAP: Record<MnoId, OperatorName> = {
+	mno1: 'Vodafone',
+	mno2: 'O2',
+	mno3: 'EE',
+	mno4: 'Three',
+};
+
+export const MNO_IDS: MnoId[] = ['mno1', 'mno2', 'mno3', 'mno4'];
+
+export const NETWORKS: readonly OperatorName[] = ['EE', 'Vodafone', 'O2', 'Three'];
