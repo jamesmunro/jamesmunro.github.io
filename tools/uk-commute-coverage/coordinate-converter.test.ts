@@ -23,7 +23,7 @@ function calculateExpectedTile(easting: number, northing: number, zoom: number) 
   const RESOLUTIONS = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
   const TILE_SIZE = 256;
   const ORIGIN_X = 0;
-  const ORIGIN_Y = -1433.6;
+  const ORIGIN_Y = 0;
   const resolution = RESOLUTIONS[zoom];
   const tileSpan = resolution * TILE_SIZE;
   return {
@@ -60,7 +60,7 @@ test('Coordinate Converter - Multi-Zoom Support', async (t) => {
   await t.test('latLonToTile returns correct indices for London at zoom 10', async () => {
     const tile = await converter.latLonToTile(51.5074, -0.1278, 10);
     assert.strictEqual(tile.tileX, 739);
-    assert.strictEqual(tile.tileY, 253);
+    assert.strictEqual(tile.tileY, 251);
     assert.strictEqual(tile.z, 10);
   });
 
@@ -68,7 +68,7 @@ test('Coordinate Converter - Multi-Zoom Support', async (t) => {
     const tile = await converter.latLonToTile(51.5074, -0.1278, 8);
     // At zoom 8, tiles are 4x larger, so coordinates are ~1/4
     assert.strictEqual(tile.tileX, 184);
-    assert.strictEqual(tile.tileY, 63);
+    assert.strictEqual(tile.tileY, 62);
     assert.strictEqual(tile.z, 8);
   });
 
@@ -116,7 +116,7 @@ test('Coordinate Converter - Zoom 10 Reference Tests', async (t) => {
   await t.test('tileToBngBounds returns correct bounds at zoom 10', () => {
     const tileSpan = 2.8 * 256; // 716.8
     const ORIGIN_X = 0;
-    const ORIGIN_Y = -1433.6;
+    const ORIGIN_Y = 0;
     const bounds = converter.tileToBngBounds(300, 400, 10);
     assert.strictEqual(bounds.west, 300 * tileSpan + ORIGIN_X);
     assert.strictEqual(bounds.south, 400 * tileSpan + ORIGIN_Y);
@@ -154,7 +154,7 @@ test('Coordinate Converter - Zoom 8 Reference Tests', async (t) => {
   await t.test('tileToBngBounds returns correct bounds at zoom 8', () => {
     const tileSpan = 11.2 * 256; // 2867.2
     const ORIGIN_X = 0;
-    const ORIGIN_Y = -1433.6;
+    const ORIGIN_Y = 0;
     const bounds = converter.tileToBngBounds(100, 50, 8);
     assert.strictEqual(bounds.west, 100 * tileSpan + ORIGIN_X);
     assert.strictEqual(bounds.south, 50 * tileSpan + ORIGIN_Y);
@@ -164,7 +164,7 @@ test('Coordinate Converter - Zoom 8 Reference Tests', async (t) => {
 
   await t.test('zoom 8 tile contains corresponding zoom 10 tiles', () => {
     // A zoom 8 tile should contain exactly 16 zoom 10 tiles (4x4)
-    const z8Tile = { x: 184, y: 63 }; // London at zoom 8
+    const z8Tile = { x: 184, y: 62 }; // London at zoom 8
     const z8Bounds = converter.tileToBngBounds(z8Tile.x, z8Tile.y, 8);
 
     // Check corners at zoom 10
@@ -180,12 +180,12 @@ test('Coordinate Converter - Zoom 8 Reference Tests', async (t) => {
   });
 
   await t.test('adjacent tiles have continuous boundaries at zoom 8', () => {
-    const tile1 = converter.tileToBngBounds(184, 63, 8);
-    const tile2 = converter.tileToBngBounds(185, 63, 8);
+    const tile1 = converter.tileToBngBounds(184, 62, 8);
+    const tile2 = converter.tileToBngBounds(185, 62, 8);
     assert.strictEqual(tile1.east, tile2.west, 'Horizontally adjacent tiles should share boundary');
 
-    const tile3 = converter.tileToBngBounds(184, 63, 8);
-    const tile4 = converter.tileToBngBounds(184, 64, 8);
+    const tile3 = converter.tileToBngBounds(184, 62, 8);
+    const tile4 = converter.tileToBngBounds(184, 63, 8);
     assert.strictEqual(tile3.north, tile4.south, 'Vertically adjacent tiles should share boundary');
   });
 
@@ -257,7 +257,7 @@ test('Coordinate Converter - Edge Cases', async (t) => {
   });
 
   await t.test('handles boundary coordinates consistently', () => {
-    const bounds = converter.tileToBngBounds(184, 63, 8);
+    const bounds = converter.tileToBngBounds(184, 62, 8);
 
     // Point on western boundary belongs to this tile
     const westTile = converter.bngToTile(bounds.west, bounds.south + 500, 8);

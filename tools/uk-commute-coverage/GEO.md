@@ -77,9 +77,9 @@ This is the opposite of the "XYZ" / "Slippy Map" convention used by Google Maps 
 const resolutions = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
 const TILE_SIZE = 256;
 
-// BNG origin for the tile grid
+// BNG origin for the tile grid (standard OSGB origin)
 const ORIGIN_X = 0;         // Easting origin
-const ORIGIN_Y = -1433.6;   // Northing origin (offset to match Ofcom tile indices)
+const ORIGIN_Y = 0;         // Northing origin
 
 function bngToTile(easting, northing, zoom) {
     const resolution = resolutions[zoom];
@@ -127,7 +127,7 @@ function latLonToTile(lat, lon, zoom) {
 
 // Example: London (51.5074, -0.1278)
 const tile = latLonToTile(51.5074, -0.1278, 10);
-// Returns: { x: 739, y: 253, z: 10 }
+// Returns: { x: 739, y: 251, z: 10 }
 ```
 
 ## Pixel Position Within a Tile

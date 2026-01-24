@@ -46,9 +46,9 @@ export const RESOLUTIONS = [
   2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4
 ];
 export const TILE_SIZE = 256;
-// OSGB grid origin - adjusted Y to match Ofcom tile indices
+// OSGB grid origin (standard BNG origin)
 const ORIGIN_X = 0;
-const ORIGIN_Y = -1433.6;
+const ORIGIN_Y = 0;
 
 export const DEFAULT_ZOOM = STANDARD_ZOOM;
 
