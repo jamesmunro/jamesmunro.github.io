@@ -4,22 +4,25 @@ import * as converter from './coordinate-converter.js';
 
 test('Coordinate Converter - Reverse Conversion', async (t) => {
   await t.test('tileToBngBounds should return correct BNG bounds', () => {
-    // Zoom 10, tile span = 1000
+    // Zoom 10, tile span = 716.8m (2.8 m/px * 256)
     // Tile (300, 400)
-    // ORIGIN_X = -183000, ORIGIN_Y = -122000
+    // ORIGIN_X = 0, ORIGIN_Y = -1433.6
+    const tileSpan = 2.8 * 256; // 716.8
+    const ORIGIN_X = 0;
+    const ORIGIN_Y = -1433.6;
     const bounds = converter.tileToBngBounds(300, 400, 10);
-    assert.strictEqual(bounds.west, 300 * 1000 - 183000);
-    assert.strictEqual(bounds.south, 400 * 1000 - 122000);
-    assert.strictEqual(bounds.east, 301 * 1000 - 183000);
-    assert.strictEqual(bounds.north, 401 * 1000 - 122000);
+    assert.strictEqual(bounds.west, 300 * tileSpan + ORIGIN_X);
+    assert.strictEqual(bounds.south, 400 * tileSpan + ORIGIN_Y);
+    assert.strictEqual(bounds.east, 301 * tileSpan + ORIGIN_X);
+    assert.strictEqual(bounds.north, 401 * tileSpan + ORIGIN_Y);
   });
 
   await t.test('latLonToTile should return correct indices for London', async () => {
-    // London: 51.5074, -0.1278
-    // Matches example in GEO.md: { x: 713, y: 302, z: 10 }
+    // London: 51.5074, -0.1278 (Trafalgar Square area)
+    // With 716.8m tiles and OSGB origin
     const tile = await converter.latLonToTile(51.5074, -0.1278, 10);
-    assert.strictEqual(tile.tileX, 713);
-    assert.strictEqual(tile.tileY, 302);
+    assert.strictEqual(tile.tileX, 739);
+    assert.strictEqual(tile.tileY, 253);
   });
 
   await t.test('bngToLatLon and latLonToBng should be near-reciprocal', async () => {
@@ -59,11 +62,12 @@ test('Coordinate Converter - Reverse Conversion', async (t) => {
       for (let ty = 300; ty < 305; ty++) {
         const current = converter.tileToBngBounds(tx, ty, 10);
 
-        // Verify tile dimensions are consistent
+        // Verify tile dimensions are consistent (716.8m at zoom 10)
         const width = current.east - current.west;
         const height = current.north - current.south;
-        assert.strictEqual(width, 1000, `Tile ${tx},${ty} should be 1000m wide at zoom 10`);
-        assert.strictEqual(height, 1000, `Tile ${tx},${ty} should be 1000m tall at zoom 10`);
+        const expectedSpan = 2.8 * 256; // 716.8m
+        assert.ok(Math.abs(width - expectedSpan) < 0.001, `Tile ${tx},${ty} should be ~${expectedSpan}m wide at zoom 10`);
+        assert.ok(Math.abs(height - expectedSpan) < 0.001, `Tile ${tx},${ty} should be ~${expectedSpan}m tall at zoom 10`);
 
         // Verify right neighbor aligns
         const right = converter.tileToBngBounds(tx + 1, ty, 10);

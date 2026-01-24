@@ -42,22 +42,22 @@ Valid ranges for Great Britain:
 
 ### Resolution Array (meters per pixel)
 
-Each zoom level has a fixed resolution:
+Each zoom level has a fixed resolution (verified against ground distance measurements):
 
 | Zoom | Resolution (m/px) | Tile Coverage (m) |
 |------|-------------------|-------------------|
-| 0 | 5734.4 | 1,468,006 |
-| 1 | 2867.2 | 734,003 |
-| 2 | 1433.6 | 367,002 |
-| 3 | 716.8 | 183,501 |
-| 4 | 358.4 | 91,750 |
-| 5 | 179.2 | 45,875 |
-| 6 | 89.6 | 22,938 |
-| 7 | 44.8 | 11,469 |
-| 8 | 22.4 | 5,734 |
-| 9 | 11.2 | 2,867 |
-| 10 | 5.6 | 1,434 |
-| 11 | 2.8 | 717 |
+| 0 | 2867.2 | 734,003 |
+| 1 | 1433.6 | 367,002 |
+| 2 | 716.8 | 183,501 |
+| 3 | 358.4 | 91,750 |
+| 4 | 179.2 | 45,875 |
+| 5 | 89.6 | 22,938 |
+| 6 | 44.8 | 11,469 |
+| 7 | 22.4 | 5,734 |
+| 8 | 11.2 | 2,867 |
+| 9 | 5.6 | 1,434 |
+| 10 | 2.8 | 717 |
+| 11 | 1.4 | 358 |
 
 Tile coverage = resolution × 256 (tile size in pixels)
 
@@ -74,12 +74,12 @@ This is the opposite of the "XYZ" / "Slippy Map" convention used by Google Maps 
 ### From British National Grid (Easting/Northing) to Tile (x, y, z)
 
 ```javascript
-const resolutions = [5734.4, 2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8];
+const resolutions = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
 const TILE_SIZE = 256;
 
-// BNG origin for the tile grid (bottom-left corner)
-const ORIGIN_X = 0;       // Easting origin
-const ORIGIN_Y = 0;       // Northing origin
+// BNG origin for the tile grid
+const ORIGIN_X = 0;         // Easting origin
+const ORIGIN_Y = -1433.6;   // Northing origin (offset to match Ofcom tile indices)
 
 function bngToTile(easting, northing, zoom) {
     const resolution = resolutions[zoom];
@@ -127,7 +127,7 @@ function latLonToTile(lat, lon, zoom) {
 
 // Example: London (51.5074, -0.1278)
 const tile = latLonToTile(51.5074, -0.1278, 10);
-// Returns approximately: { x: 713, y: 302, z: 10 }
+// Returns: { x: 739, y: 253, z: 10 }
 ```
 
 ## Pixel Position Within a Tile
@@ -166,10 +166,7 @@ The original implementation uses these Leaflet options:
 ```javascript
 L.tileLayer(tileURL, {
     tms: true,        // TMS y-axis convention
-    zoomOffset: -1,   // Request tiles one zoom level lower
     noWrap: true,     // Don't wrap around the world
     opacity: 0.8
 });
 ```
-
-The `zoomOffset: -1` means when the map is at zoom level N, it requests tiles from zoom level N-1 on the server.

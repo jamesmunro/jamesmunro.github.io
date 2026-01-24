@@ -39,17 +39,16 @@ async function initProj4(): Promise<void> {
 
 /**
  * Resolution array for each zoom level (meters per pixel)
- * Based on 1km tiles at zoom level 10 (tile span = 1000m)
- * Resolution = tileSpan / TILE_SIZE = 1000 / 256 = 3.90625 at Z10
- * Z0 resolution = 3.90625 * 2^10 = 4000
+ * Based on 717m tiles at zoom level 10 (verified against Ofcom ground distance)
+ * Resolution = tileSpan / TILE_SIZE = 717 / 256 ≈ 2.8 at Z10
  */
 export const RESOLUTIONS = [
-  4000, 2000, 1000, 500, 250, 125, 62.5, 31.25, 15.625, 7.8125, 3.90625, 1.953125
+  2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4
 ];
 export const TILE_SIZE = 256;
-// MBNL/Ofcom grid origin
-const ORIGIN_X = -183000;
-const ORIGIN_Y = -122000;
+// OSGB grid origin - adjusted Y to match Ofcom tile indices
+const ORIGIN_X = 0;
+const ORIGIN_Y = -1433.6;
 
 export const DEFAULT_ZOOM = STANDARD_ZOOM;
 
