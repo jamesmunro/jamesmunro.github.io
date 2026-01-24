@@ -18,8 +18,8 @@ const COVERAGE_LEVELS: Record<number, string> = {
 
 // Short labels for chart Y-axis
 const COVERAGE_LABELS_SHORT: Record<number, string> = {
-  4: 'In-home',
-  3: 'Variable in-home',
+  4: 'Indoor+',
+  3: 'Indoor',
   2: 'Outdoor',
   1: 'Variable',
   0: 'Poor/None'
@@ -220,7 +220,7 @@ export class ChartRenderer {
   /**
    * Calculate summary statistics
    * @param coverageResults - Array of coverage results
-   * @returns Summary stats per network
+   * @returns Summary stats per network (cumulative "or better" percentages)
    */
   calculateSummary(coverageResults: CoverageResult[]): Record<string, NetworkSummaryStats> {
     const summary: Record<string, NetworkSummaryStats> = {};
@@ -231,16 +231,18 @@ export class ChartRenderer {
       );
 
       const total = levels.length;
-      // Count points with coverage at each threshold (Ofcom "or better" style)
-      const indoor = levels.filter(l => l >= 3).length;    // Level 3-4: Indoor coverage or better
-      const outdoor = levels.filter(l => l >= 2).length;   // Level 2+: Outdoor coverage or better
-      const variable = levels.filter(l => l >= 1).length;  // Level 1+: Variable outdoor or better
-      const poorNone = levels.filter(l => l === 0).length; // Level 0: Poor/None
+      // Cumulative "or better" counts for each coverage level
+      const indoorPlus = levels.filter(l => l >= 4).length;  // Level ≥4: Good outdoor and in-home
+      const indoor = levels.filter(l => l >= 3).length;      // Level ≥3: Good outdoor, variable in-home or better
+      const outdoor = levels.filter(l => l >= 2).length;     // Level ≥2: Good outdoor or better
+      const variable = levels.filter(l => l >= 1).length;    // Level ≥1: Variable outdoor or better
+      const poorNone = levels.filter(l => l === 0).length;   // Level =0: Poor to none
 
       summary[network] = {
-        'Indoor+': total > 0 ? Math.round((indoor / total) * 100) : 0,
-        'Outdoor+': total > 0 ? Math.round((outdoor / total) * 100) : 0,
-        'Variable+': total > 0 ? Math.round((variable / total) * 100) : 0,
+        'Indoor+': total > 0 ? Math.round((indoorPlus / total) * 100) : 0,
+        'Indoor': total > 0 ? Math.round((indoor / total) * 100) : 0,
+        'Outdoor': total > 0 ? Math.round((outdoor / total) * 100) : 0,
+        'Variable': total > 0 ? Math.round((variable / total) * 100) : 0,
         'Poor/None': total > 0 ? Math.round((poorNone / total) * 100) : 0,
         avgLevel: total > 0 ? (levels.reduce((a, b) => a + b, 0) / total) : 0
       };
@@ -299,10 +301,11 @@ export class ChartRenderer {
     const headers = table.querySelectorAll('th');
     const sortableColumns: Record<number, string> = {
       1: 'Indoor+',
-      2: 'Outdoor+',
-      3: 'Variable+',
-      4: 'Poor/None',
-      5: 'Rank'
+      2: 'Indoor',
+      3: 'Outdoor',
+      4: 'Variable',
+      5: 'Poor/None',
+      6: 'Rank'
     };
 
     headers.forEach((th, index) => {
@@ -354,8 +357,9 @@ export class ChartRenderer {
       row.innerHTML = `
         <td><strong>${network}</strong></td>
         <td>${stats['Indoor+']}%</td>
-        <td>${stats['Outdoor+']}%</td>
-        <td>${stats['Variable+']}%</td>
+        <td>${stats['Indoor']}%</td>
+        <td>${stats['Outdoor']}%</td>
+        <td>${stats['Variable']}%</td>
         <td>${stats['Poor/None']}%</td>
         <td>${stats['Rank']}</td>
       `;

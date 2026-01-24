@@ -64,7 +64,7 @@ describe('ChartRenderer', () => {
   });
 
   describe('calculateSummary', () => {
-    test('calculates correct percentages for uniform coverage', () => {
+    test('calculates correct cumulative percentages for uniform coverage', () => {
       // All points have level 4 for all networks
       const coverageResults: CoverageResult[] = Array(10).fill(null).map(() => ({
         point: { distance: 0, lat: 0, lng: 0 },
@@ -82,14 +82,16 @@ describe('ChartRenderer', () => {
 
       const summary = renderer.calculateSummary(coverageResults);
 
-      assert.strictEqual(summary.EE['Indoor+'], 100);
-      assert.strictEqual(summary.EE['Outdoor+'], 100);
-      assert.strictEqual(summary.EE['Variable+'], 100);
-      assert.strictEqual(summary.EE['Poor/None'], 0);
+      // All cumulative columns should be 100% since all points are level 4
+      assert.strictEqual(summary.EE['Indoor+'], 100, 'Level ≥4');
+      assert.strictEqual(summary.EE['Indoor'], 100, 'Level ≥3');
+      assert.strictEqual(summary.EE['Outdoor'], 100, 'Level ≥2');
+      assert.strictEqual(summary.EE['Variable'], 100, 'Level ≥1');
+      assert.strictEqual(summary.EE['Poor/None'], 0, 'Level =0');
       assert.strictEqual(summary.EE.avgLevel, 4);
     });
 
-    test('calculates correct percentages for mixed coverage', () => {
+    test('calculates correct cumulative percentages for mixed coverage', () => {
       // 5 points with level 4, 5 points with level 0
       const coverageResults: CoverageResult[] = [
         ...Array(5).fill(null).map(() => ({
@@ -104,8 +106,12 @@ describe('ChartRenderer', () => {
 
       const summary = renderer.calculateSummary(coverageResults);
 
-      assert.strictEqual(summary.EE['Indoor+'], 50);
-      assert.strictEqual(summary.EE['Poor/None'], 50);
+      // 5 of 10 points are level 4, so cumulative percentages reflect this
+      assert.strictEqual(summary.EE['Indoor+'], 50, '5/10 points are ≥4');
+      assert.strictEqual(summary.EE['Indoor'], 50, '5/10 points are ≥3');
+      assert.strictEqual(summary.EE['Outdoor'], 50, '5/10 points are ≥2');
+      assert.strictEqual(summary.EE['Variable'], 50, '5/10 points are ≥1');
+      assert.strictEqual(summary.EE['Poor/None'], 50, '5/10 points are =0');
       assert.strictEqual(summary.EE.avgLevel, 2);
     });
 
@@ -127,26 +133,28 @@ describe('ChartRenderer', () => {
       const summary = renderer.calculateSummary([]);
 
       assert.strictEqual(summary.EE['Indoor+'], 0);
-      assert.strictEqual(summary.EE['Outdoor+'], 0);
+      assert.strictEqual(summary.EE['Outdoor'], 0);
       assert.strictEqual(summary.EE.avgLevel, 0);
     });
 
-    test('correctly categorizes coverage levels', () => {
-      // Level 3+ = Indoor+, Level 2+ = Outdoor+, Level 1+ = Variable+, Level 0 = Poor/None
+    test('correctly calculates cumulative "or better" percentages', () => {
+      // Each level appears once: 4, 3, 2, 1, 0
       const coverageResults: CoverageResult[] = [
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } }, // Indoor+
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } }, // Indoor+
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } }, // Outdoor+ (not indoor)
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 1 } } } }, // Variable+ (not outdoor)
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 0 } } } }, // Poor/None
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } },
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } },
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } },
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 1 } } } },
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 0 } } } },
       ];
 
       const summary = renderer.calculateSummary(coverageResults);
 
-      assert.strictEqual(summary.EE['Indoor+'], 40, '2 of 5 points are level 3+');
-      assert.strictEqual(summary.EE['Outdoor+'], 60, '3 of 5 points are level 2+');
-      assert.strictEqual(summary.EE['Variable+'], 80, '4 of 5 points are level 1+');
-      assert.strictEqual(summary.EE['Poor/None'], 20, '1 of 5 points is level 0');
+      // Cumulative "or better" percentages:
+      assert.strictEqual(summary.EE['Indoor+'], 20, '1/5 points are ≥4 (level 4)');
+      assert.strictEqual(summary.EE['Indoor'], 40, '2/5 points are ≥3 (levels 4,3)');
+      assert.strictEqual(summary.EE['Outdoor'], 60, '3/5 points are ≥2 (levels 4,3,2)');
+      assert.strictEqual(summary.EE['Variable'], 80, '4/5 points are ≥1 (levels 4,3,2,1)');
+      assert.strictEqual(summary.EE['Poor/None'], 20, '1/5 points are =0');
     });
 
     test('calculates average level correctly', () => {

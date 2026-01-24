@@ -113,12 +113,13 @@ export interface TileInfo {
   tileY: number;
 }
 
-/** Coverage statistics for a network (Ofcom "or better" style) */
+/** Coverage statistics for a network (cumulative "or better" percentages) */
 export interface NetworkSummaryStats {
-  'Indoor+': number;   // Level 3-4: Indoor coverage or better
-  'Outdoor+': number;  // Level 2+: Outdoor coverage or better
-  'Variable+': number; // Level 1+: Variable outdoor or better
-  'Poor/None': number; // Level 0: Poor/None
+  'Indoor+': number;   // Level ≥4: Good outdoor and in-home
+  'Indoor': number;    // Level ≥3: Good outdoor, variable in-home or better
+  'Outdoor': number;   // Level ≥2: Good outdoor or better
+  'Variable': number;  // Level ≥1: Variable outdoor or better
+  'Poor/None': number; // Level =0: Poor to none
   avgLevel: number;
   Rank?: number;
 }
