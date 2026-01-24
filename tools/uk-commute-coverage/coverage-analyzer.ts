@@ -482,13 +482,21 @@ export class CoverageAnalyzer {
         const tileInfo = await this.coverageAdapter.getTileInfo(point.lat, point.lng, tileNetwork);
         const tileKey = `${tileInfo.tileX}-${tileInfo.tileY}`;
         if (!displayedTiles.has(tileKey)) {
-          this.googleMap.addTileOverlay(tileInfo.url, tileInfo.bounds, 0.4);
+          // Fetch tile through cache to warm it, then display using object URL
+          const blob = await this.coverageAdapter.fetchTile(
+            tileNetwork as 'mno1' | 'mno2' | 'mno3' | 'mno4',
+            tileInfo.tileX,
+            tileInfo.tileY
+          );
+          const objectUrl = URL.createObjectURL(blob);
+          this.googleMap.addTileOverlay(objectUrl, tileInfo.bounds, 0.4);
           displayedTiles.add(tileKey);
         }
       } catch (error) {
         this.logger.warn('Failed to add tile overlay:', error);
       }
     }
+    this.updateCacheMonitor();
   }
 
   private sleep(ms: number): Promise<void> {

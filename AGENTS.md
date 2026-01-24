@@ -81,6 +81,13 @@ The site includes several interactive web tools:
   ```
 - **IMPORTANT:** Always run tests before committing.
 
+### After TypeScript Changes
+- **IMPORTANT:** After modifying any `.ts` files, you must rebuild both TypeScript AND the site for changes to appear in the browser:
+  ```sh
+  npm run build:ts && npx eleventy
+  ```
+- The dev server (`npm run dev`) watches for file changes but compiled JS in `dist/` may not trigger automatic rebuilds. Always run the above command after TypeScript changes to ensure `_site/` has the latest code.
+
 ## Conventions & Guidelines
 
 ### External Libraries & Self-Hosting
