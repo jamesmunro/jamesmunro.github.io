@@ -1,5 +1,5 @@
 // Shared constants for uk-commute-coverage tools
-export const STANDARD_ZOOM = 10;
+export const STANDARD_ZOOM = 8;
 export const TILE_VERSION = '42';
 export const ROUTE_SAMPLE_COUNT = 500;
 export const COLOR_TOLERANCE = 10;

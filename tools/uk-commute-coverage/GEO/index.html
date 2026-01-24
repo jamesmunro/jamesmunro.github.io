@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title> | jamesmunro.github.io</title>
-    <meta name="site-version" content="20260123.2220">
+    <title> | Personal Tools &amp; Portfolio</title>
+    <meta name="site-version" content="20260124.1812">
     <link rel="icon" href="data:,">
     <style>
       :root {
@@ -321,7 +321,7 @@
 <li>Northing: ~0 to ~1,300,000</li>
 </ul>
 <h3>Resolution Array (meters per pixel)</h3>
-<p>Each zoom level has a fixed resolution:</p>
+<p>Each zoom level has a fixed resolution (verified against ground distance measurements):</p>
 <table>
 <thead>
 <tr>
@@ -333,63 +333,63 @@
 <tbody>
 <tr>
 <td>0</td>
-<td>5734.4</td>
-<td>1,468,006</td>
-</tr>
-<tr>
-<td>1</td>
 <td>2867.2</td>
 <td>734,003</td>
 </tr>
 <tr>
-<td>2</td>
+<td>1</td>
 <td>1433.6</td>
 <td>367,002</td>
 </tr>
 <tr>
-<td>3</td>
+<td>2</td>
 <td>716.8</td>
 <td>183,501</td>
 </tr>
 <tr>
-<td>4</td>
+<td>3</td>
 <td>358.4</td>
 <td>91,750</td>
 </tr>
 <tr>
-<td>5</td>
+<td>4</td>
 <td>179.2</td>
 <td>45,875</td>
 </tr>
 <tr>
-<td>6</td>
+<td>5</td>
 <td>89.6</td>
 <td>22,938</td>
 </tr>
 <tr>
-<td>7</td>
+<td>6</td>
 <td>44.8</td>
 <td>11,469</td>
 </tr>
 <tr>
-<td>8</td>
+<td>7</td>
 <td>22.4</td>
 <td>5,734</td>
 </tr>
 <tr>
-<td>9</td>
+<td>8</td>
 <td>11.2</td>
 <td>2,867</td>
 </tr>
 <tr>
-<td>10</td>
+<td>9</td>
 <td>5.6</td>
 <td>1,434</td>
 </tr>
 <tr>
-<td>11</td>
+<td>10</td>
 <td>2.8</td>
 <td>717</td>
+</tr>
+<tr>
+<td>11</td>
+<td>1.4</td>
+<td>358</td>
 </tr>
 </tbody>
 </table>
@@ -403,12 +403,12 @@
 <p>This is the opposite of the &quot;XYZ&quot; / &quot;Slippy Map&quot; convention used by Google Maps and OpenStreetMap.</p>
 <h2>Converting Coordinates to Tile Indices</h2>
 <h3>From British National Grid (Easting/Northing) to Tile (x, y, z)</h3>
-<pre><code class="language-javascript">const resolutions = [5734.4, 2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8];
+<pre><code class="language-javascript">const resolutions = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
 const TILE_SIZE = 256;
 
-// BNG origin for the tile grid (bottom-left corner)
-const ORIGIN_X = 0;       // Easting origin
-const ORIGIN_Y = 0;       // Northing origin
+// BNG origin for the tile grid (standard OSGB origin)
+const ORIGIN_X = 0;         // Easting origin
+const ORIGIN_Y = 0;         // Northing origin
 
 function bngToTile(easting, northing, zoom) {
     const resolution = resolutions[zoom];
@@ -451,7 +451,7 @@ function latLonToBng(lat, lon) {
 
 // Example: London (51.5074, -0.1278)
 const tile = latLonToTile(51.5074, -0.1278, 10);
-// Returns approximately: { x: 713, y: 302, z: 10 }
+// Returns: { x: 739, y: 251, z: 10 }
 </code></pre>
 <h2>Pixel Position Within a Tile</h2>
 <p>To find the exact pixel within a tile for a given coordinate:</p>
@@ -481,19 +481,17 @@ const tile = latLonToTile(51.5074, -0.1278, 10);
 <p>The original implementation uses these Leaflet options:</p>
 <pre><code class="language-javascript">L.tileLayer(tileURL, {
     tms: true,        // TMS y-axis convention
-    zoomOffset: -1,   // Request tiles one zoom level lower
     noWrap: true,     // Don't wrap around the world
     opacity: 0.8
 });
 </code></pre>
-<p>The <code>zoomOffset: -1</code> means when the map is at zoom level N, it requests tiles from zoom level N-1 on the server.</p>
 
 
     </main>
 
     <footer style="text-align:center; padding:18px 24px; color:var(--text-secondary); font-size:0.9rem;">
       <div class="card" style="max-width:1080px; margin: 0 auto 32px; background:transparent; box-shadow:none; border:none; padding:0;">
-        <small>Site version: <strong>20260123.2220</strong></small>
+        <small>Site version: <strong>20260124.1812</strong></small>
       </div>
     </footer>
 

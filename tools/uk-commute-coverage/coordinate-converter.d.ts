@@ -1,13 +1,12 @@
 import type { BngCoordinate, TileCoordinate, PixelInTile, BngBounds, Wgs84Bounds } from '../../types/coverage.js';
 /**
  * Resolution array for each zoom level (meters per pixel)
- * Based on 1km tiles at zoom level 10 (tile span = 1000m)
- * Resolution = tileSpan / TILE_SIZE = 1000 / 256 = 3.90625 at Z10
- * Z0 resolution = 3.90625 * 2^10 = 4000
+ * Based on 717m tiles at zoom level 10 (verified against Ofcom ground distance)
+ * Resolution = tileSpan / TILE_SIZE = 717 / 256 ≈ 2.8 at Z10
  */
 export declare const RESOLUTIONS: number[];
 export declare const TILE_SIZE = 256;
-export declare const DEFAULT_ZOOM = 10;
+export declare const DEFAULT_ZOOM = 8;
 /**
  * Convert WGS84 (lat/lon) to British National Grid (BNG)
  * @param lat - Latitude

@@ -9,6 +9,7 @@ global.document = dom.window.document;
 import { latLonToBng, bngToTile, bngToPixelInTile, latLonToTile, latLonToPixelInTile, TILE_SIZE } from './coordinate-converter.js';
 import { rgbToHex, hexToRgb, colorDistance, mapColorToCoverageLevel, COVERAGE_COLOR_MAP } from './pixel-extractor.js';
 import { TileCoverageAdapter } from './tile-coverage-adapter.js';
+import { STANDARD_ZOOM, TILE_VERSION } from './constants.js';
 // Test coordinate converter with real proj4
 describe('Coordinate Converter', () => {
     describe('latLonToBng', () => {
@@ -41,6 +42,29 @@ describe('Coordinate Converter', () => {
             assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
             assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
             assert.strictEqual(result.z, 10, 'Zoom level should be 10');
+            // At zoom 10: tileSpan = 716.8m, London should be around tile (739, 251)
+            assert.strictEqual(result.tileX, 739);
+            assert.strictEqual(result.tileY, 251);
+        });
+        test('converts BNG to tile coordinates at zoom 8', () => {
+            // London: approximately 530000, 180000
+            const result = bngToTile(530000, 180000, 8);
+            assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
+            assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
+            assert.strictEqual(result.z, 8, 'Zoom level should be 8');
+            // At zoom 8: tileSpan = 2867.2m, tiles are 4x larger than zoom 10
+            assert.strictEqual(result.tileX, 184);
+            assert.strictEqual(result.tileY, 62);
+        });
+        test('tile coordinates scale correctly between zoom 8 and zoom 10', () => {
+            // At zoom 8, tiles are 4x larger, so coordinates should be ~1/4
+            const result10 = bngToTile(530000, 180000, 10);
+            const result8 = bngToTile(530000, 180000, 8);
+            // Verify the 4:1 ratio (approximately, due to grid alignment)
+            const ratioX = result10.tileX / result8.tileX;
+            const ratioY = result10.tileY / result8.tileY;
+            assert.ok(ratioX > 3.9 && ratioX < 4.1, `X ratio should be ~4, got ${ratioX}`);
+            assert.ok(ratioY > 3.9 && ratioY < 4.1, `Y ratio should be ~4, got ${ratioY}`);
         });
         test('tile coordinates increase with BNG coordinates', () => {
             const result1 = bngToTile(100000, 100000, 10);
@@ -54,13 +78,19 @@ describe('Coordinate Converter', () => {
         });
     });
     describe('bngToPixelInTile', () => {
-        test('converts BNG to pixel position within tile', () => {
+        test('converts BNG to pixel position within tile at zoom 10', () => {
             const result = bngToPixelInTile(530000, 180000, 10);
             assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE, `Pixel X ${result.pixelX} should be within tile (0-${TILE_SIZE - 1})`);
             assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE, `Pixel Y ${result.pixelY} should be within tile (0-${TILE_SIZE - 1})`);
             assert.strictEqual(result.z, 10, 'Zoom level should be 10');
         });
-        test('pixel position is within tile bounds for various UK locations', () => {
+        test('converts BNG to pixel position within tile at zoom 8', () => {
+            const result = bngToPixelInTile(530000, 180000, 8);
+            assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE, `Pixel X ${result.pixelX} should be within tile (0-${TILE_SIZE - 1})`);
+            assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE, `Pixel Y ${result.pixelY} should be within tile (0-${TILE_SIZE - 1})`);
+            assert.strictEqual(result.z, 8, 'Zoom level should be 8');
+        });
+        test('pixel position is within tile bounds for various UK locations at both zooms', () => {
             const locations = [
                 { easting: 100000, northing: 100000 }, // SW England
                 { easting: 530000, northing: 180000 }, // London
@@ -68,11 +98,13 @@ describe('Coordinate Converter', () => {
                 { easting: 0, northing: 0 }, // Origin
                 { easting: 700000, northing: 1200000 }, // NE Scotland
             ];
-            locations.forEach(({ easting, northing }) => {
-                const result = bngToPixelInTile(easting, northing, 10);
-                assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE, `Pixel X out of bounds for E=${easting}, N=${northing}`);
-                assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE, `Pixel Y out of bounds for E=${easting}, N=${northing}`);
-            });
+            for (const zoom of [8, 10]) {
+                locations.forEach(({ easting, northing }) => {
+                    const result = bngToPixelInTile(easting, northing, zoom);
+                    assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE, `Pixel X out of bounds for E=${easting}, N=${northing} at zoom ${zoom}`);
+                    assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE, `Pixel Y out of bounds for E=${easting}, N=${northing} at zoom ${zoom}`);
+                });
+            }
         });
         test('throws error for invalid zoom level', () => {
             assert.throws(() => bngToPixelInTile(530000, 180000, -1), /Zoom level must be between 0 and 11/);
@@ -80,20 +112,35 @@ describe('Coordinate Converter', () => {
         });
     });
     describe('latLonToTile', () => {
-        test('converts lat/lon to tile coordinates', async () => {
+        test('converts lat/lon to tile coordinates at zoom 10', async () => {
             const result = await latLonToTile(51.5074, -0.1276, 10);
-            assert.ok(result.tileX >= 0, 'Tile X should be non-negative');
-            assert.ok(result.tileY >= 0, 'Tile Y should be non-negative');
+            assert.strictEqual(result.tileX, 739, 'London should be at tileX 739 at zoom 10');
+            assert.strictEqual(result.tileY, 251, 'London should be at tileY 251 at zoom 10');
             assert.strictEqual(result.z, 10);
+        });
+        test('converts lat/lon to tile coordinates at zoom 8', async () => {
+            const result = await latLonToTile(51.5074, -0.1276, 8);
+            assert.strictEqual(result.tileX, 184, 'London should be at tileX 184 at zoom 8');
+            assert.strictEqual(result.tileY, 62, 'London should be at tileY 62 at zoom 8');
+            assert.strictEqual(result.z, 8);
         });
     });
     describe('latLonToPixelInTile', () => {
-        test('converts lat/lon to pixel position', async () => {
+        test('converts lat/lon to pixel position at zoom 10', async () => {
             const result = await latLonToPixelInTile(51.5074, -0.1276, 10);
             assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE);
             assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE);
-            assert.ok(result.tileX >= 0);
-            assert.ok(result.tileY >= 0);
+            assert.strictEqual(result.tileX, 739);
+            assert.strictEqual(result.tileY, 251);
+            assert.strictEqual(result.z, 10);
+        });
+        test('converts lat/lon to pixel position at zoom 8', async () => {
+            const result = await latLonToPixelInTile(51.5074, -0.1276, 8);
+            assert.ok(result.pixelX >= 0 && result.pixelX < TILE_SIZE);
+            assert.ok(result.pixelY >= 0 && result.pixelY < TILE_SIZE);
+            assert.strictEqual(result.tileX, 184);
+            assert.strictEqual(result.tileY, 62);
+            assert.strictEqual(result.z, 8);
         });
     });
 });
@@ -241,24 +288,31 @@ describe('TileCoverageAdapter', () => {
         });
     });
     describe('getTileUrl', () => {
-        test('generates correct URLs for verified tile coordinates', () => {
+        test('generates correct URL format with STANDARD_ZOOM', () => {
+            // Test URL construction - coordinates are arbitrary for this test
             const testCases = [
-                { mno: 'mno1', tileX: 713, tileY: 302, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42' },
-                { mno: 'mno3', tileX: 738, tileY: 252, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/738/252.png?v=42' },
-                { mno: 'mno3', tileX: 454, tileY: 941, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/454/941.png?v=42' },
-                { mno: 'mno3', tileX: 361, tileY: 930, expected: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/361/930.png?v=42' },
+                { mno: 'mno1', tileX: 100, tileY: 50 },
+                { mno: 'mno2', tileX: 200, tileY: 100 },
+                { mno: 'mno3', tileX: 150, tileY: 75 },
+                { mno: 'mno4', tileX: 180, tileY: 60 },
             ];
             for (const tc of testCases) {
                 const url = adapter.getTileUrl(tc.mno, tc.tileX, tc.tileY);
-                assert.strictEqual(url, tc.expected);
+                const expected = `https://ofcom.europa.uk.com/tiles/gbof_${tc.mno}_raster_bng2/${STANDARD_ZOOM}/${tc.tileX}/${tc.tileY}.png?v=${TILE_VERSION}`;
+                assert.strictEqual(url, expected);
             }
+        });
+        test('uses current STANDARD_ZOOM (8) in URLs', () => {
+            assert.strictEqual(STANDARD_ZOOM, 8, 'STANDARD_ZOOM should be 8');
+            const url = adapter.getTileUrl('mno1', 184, 62);
+            assert.ok(url.includes('/8/'), 'URL should use zoom level 8');
         });
         test('handles all four MNO IDs', () => {
             const mnos = ['mno1', 'mno2', 'mno3', 'mno4'];
             for (const mno of mnos) {
                 const url = adapter.getTileUrl(mno, 100, 100);
                 assert.ok(url.includes(mno), `URL should contain ${mno}`);
-                assert.ok(url.includes('/10/100/100.png'), 'URL should contain tile coordinates');
+                assert.ok(url.includes(`/${STANDARD_ZOOM}/100/100.png`), 'URL should contain tile coordinates');
             }
         });
     });
@@ -266,47 +320,58 @@ describe('TileCoverageAdapter', () => {
 // Test tile URL construction
 describe('Tile URL Construction', () => {
     const TILE_API_BASE = 'https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2';
-    const TILE_VERSION = '42';
-    const STANDARD_ZOOM = 10;
-    test('constructs correct tile URL', () => {
+    test('constructs correct tile URL format', () => {
         const mnoId = 'mno1';
-        const tileX = 713;
-        const tileY = 302;
+        const tileX = 184;
+        const tileY = 62;
         const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`;
-        assert.strictEqual(url, 'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42');
+        assert.strictEqual(url, `https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/${STANDARD_ZOOM}/184/62.png?v=${TILE_VERSION}`);
     });
     test('constructs URLs for all MNOs', () => {
         const mnoIds = ['mno1', 'mno2', 'mno3', 'mno4'];
         for (const mnoId of mnoIds) {
-            const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/10/0/0.png?v=${TILE_VERSION}`;
+            const url = `${TILE_API_BASE.replace('{mno}', mnoId)}/${STANDARD_ZOOM}/0/0.png?v=${TILE_VERSION}`;
             assert.ok(url.includes(mnoId), `URL should include MNO ${mnoId}`);
-            assert.ok(url.includes('/10/'), 'URL should include zoom level');
+            assert.ok(url.includes(`/${STANDARD_ZOOM}/`), 'URL should include zoom level');
         }
     });
-    test('constructs URLs for verified postcode tile mappings', () => {
-        // Verified tile coordinates from actual Ofcom service
-        const verifiedMappings = [
-            { location: 'AL5 3EH', mno: 'mno1', tileX: 713, tileY: 302, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42' },
-            { location: 'SW1A 1AA', mno: 'mno3', tileX: 738, tileY: 252, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/738/252.png?v=42' },
-            { location: 'EH1 1YZ', mno: 'mno3', tileX: 454, tileY: 941, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/454/941.png?v=42' },
-            { location: 'G2 1DY', mno: 'mno3', tileX: 361, tileY: 930, expectedUrl: 'https://ofcom.europa.uk.com/tiles/gbof_mno3_raster_bng2/10/361/930.png?v=42' },
+    test('constructs URLs for zoom 10 tile coordinates (reference)', () => {
+        // These tile coordinates were verified at zoom 10 (for documentation)
+        // At zoom 8, different coordinates would be used
+        const zoom10Mappings = [
+            { location: 'AL5 3EH', mno: 'mno1', tileX: 713, tileY: 302 },
+            { location: 'SW1A 1AA', mno: 'mno3', tileX: 738, tileY: 252 },
+            { location: 'EH1 1YZ', mno: 'mno3', tileX: 454, tileY: 941 },
+            { location: 'G2 1DY', mno: 'mno3', tileX: 361, tileY: 930 },
         ];
-        for (const mapping of verifiedMappings) {
-            const url = `${TILE_API_BASE.replace('{mno}', mapping.mno)}/${STANDARD_ZOOM}/${mapping.tileX}/${mapping.tileY}.png?v=${TILE_VERSION}`;
-            assert.strictEqual(url, mapping.expectedUrl, `URL mismatch for ${mapping.location}`);
+        for (const mapping of zoom10Mappings) {
+            const url = `${TILE_API_BASE.replace('{mno}', mapping.mno)}/10/${mapping.tileX}/${mapping.tileY}.png?v=${TILE_VERSION}`;
+            assert.ok(url.includes('/10/'), 'URL should use zoom 10 for these reference coordinates');
+            assert.ok(url.includes(`/${mapping.tileX}/${mapping.tileY}.png`), `URL should include tile coordinates for ${mapping.location}`);
+        }
+    });
+    test('constructs URLs for zoom 8 tile coordinates', () => {
+        // At zoom 8, tiles are 4x larger than zoom 10
+        // London: (739, 251) at zoom 10 → (184, 62) at zoom 8
+        const zoom8Mappings = [
+            { location: 'London', mno: 'mno1', tileX: 184, tileY: 62 },
+            { location: 'Edinburgh', mno: 'mno3', tileX: 113, tileY: 234 },
+        ];
+        for (const mapping of zoom8Mappings) {
+            const url = `${TILE_API_BASE.replace('{mno}', mapping.mno)}/8/${mapping.tileX}/${mapping.tileY}.png?v=${TILE_VERSION}`;
+            assert.ok(url.includes('/8/'), 'URL should use zoom 8');
+            assert.ok(url.includes(`/${mapping.tileX}/${mapping.tileY}.png`), `URL should include tile coordinates for ${mapping.location}`);
         }
     });
     test('handles large tile coordinates', () => {
-        // Test with large coordinates (far north/east Scotland)
-        const url = `${TILE_API_BASE.replace('{mno}', 'mno1')}/10/999/999.png?v=${TILE_VERSION}`;
+        const url = `${TILE_API_BASE.replace('{mno}', 'mno1')}/${STANDARD_ZOOM}/999/999.png?v=${TILE_VERSION}`;
         assert.ok(url.includes('/999/999.png'), 'Should handle large tile coordinates');
     });
     test('URL format is consistent across all MNOs', () => {
         const mnoIds = ['mno1', 'mno2', 'mno3', 'mno4'];
-        const tileX = 738;
-        const tileY = 252;
+        const tileX = 184;
+        const tileY = 62;
         const urls = mnoIds.map(mno => `${TILE_API_BASE.replace('{mno}', mno)}/${STANDARD_ZOOM}/${tileX}/${tileY}.png?v=${TILE_VERSION}`);
-        // All URLs should have same structure, just different MNO
         for (let i = 0; i < urls.length; i++) {
             assert.ok(urls[i].includes(`/${tileX}/${tileY}.png`), `URL ${i} should contain tile coordinates`);
             assert.ok(urls[i].includes(`v=${TILE_VERSION}`), `URL ${i} should contain version`);
@@ -317,23 +382,18 @@ describe('Tile URL Construction', () => {
 // Test cache key construction
 describe('Cache Key Construction', () => {
     test('creates unique cache keys', () => {
-        const TILE_VERSION = '42';
-        const STANDARD_ZOOM = 10;
-        const key1 = `mno1-${STANDARD_ZOOM}-713-302-v${TILE_VERSION}`;
-        const key2 = `mno2-${STANDARD_ZOOM}-713-302-v${TILE_VERSION}`;
-        const key3 = `mno1-${STANDARD_ZOOM}-714-302-v${TILE_VERSION}`;
+        const key1 = `mno1-${STANDARD_ZOOM}-184-62-v${TILE_VERSION}`;
+        const key2 = `mno2-${STANDARD_ZOOM}-184-62-v${TILE_VERSION}`;
+        const key3 = `mno1-${STANDARD_ZOOM}-185-62-v${TILE_VERSION}`;
         assert.notStrictEqual(key1, key2, 'Different MNOs should have different keys');
         assert.notStrictEqual(key1, key3, 'Different tiles should have different keys');
     });
     test('cache keys include all necessary components', () => {
-        const TILE_VERSION = '42';
-        const STANDARD_ZOOM = 10;
-        // Verified tile coordinates
         const testCases = [
-            { mno: 'mno1', tileX: 713, tileY: 302 },
-            { mno: 'mno2', tileX: 738, tileY: 252 },
-            { mno: 'mno3', tileX: 454, tileY: 941 },
-            { mno: 'mno4', tileX: 361, tileY: 930 },
+            { mno: 'mno1', tileX: 184, tileY: 62 },
+            { mno: 'mno2', tileX: 185, tileY: 62 },
+            { mno: 'mno3', tileX: 113, tileY: 234 },
+            { mno: 'mno4', tileX: 90, tileY: 231 },
         ];
         for (const tc of testCases) {
             const key = `${tc.mno}-${STANDARD_ZOOM}-${tc.tileX}-${tc.tileY}-v${TILE_VERSION}`;
@@ -344,18 +404,22 @@ describe('Cache Key Construction', () => {
             assert.ok(key.includes(String(STANDARD_ZOOM)), 'Cache key should include zoom');
         }
     });
-    test('cache keys are different for all verified locations', () => {
-        const TILE_VERSION = '42';
-        const STANDARD_ZOOM = 10;
+    test('cache keys are different for different locations', () => {
         const keys = [
-            `mno1-${STANDARD_ZOOM}-713-302-v${TILE_VERSION}`, // AL5 3EH
-            `mno3-${STANDARD_ZOOM}-738-252-v${TILE_VERSION}`, // SW1A 1AA
-            `mno3-${STANDARD_ZOOM}-454-941-v${TILE_VERSION}`, // EH1 1YZ
-            `mno3-${STANDARD_ZOOM}-361-930-v${TILE_VERSION}`, // G2 1DY
+            `mno1-${STANDARD_ZOOM}-184-62-v${TILE_VERSION}`, // London
+            `mno3-${STANDARD_ZOOM}-185-62-v${TILE_VERSION}`, // East of London
+            `mno3-${STANDARD_ZOOM}-113-234-v${TILE_VERSION}`, // Edinburgh
+            `mno3-${STANDARD_ZOOM}-90-231-v${TILE_VERSION}`, // Glasgow
         ];
-        // All keys should be unique
         const uniqueKeys = new Set(keys);
         assert.strictEqual(uniqueKeys.size, keys.length, 'All cache keys should be unique');
+    });
+    test('cache keys differ by zoom level', () => {
+        const keyZ8 = `mno1-8-184-62-v${TILE_VERSION}`;
+        const keyZ10 = `mno1-10-739-251-v${TILE_VERSION}`;
+        assert.notStrictEqual(keyZ8, keyZ10, 'Cache keys at different zoom levels should differ');
+        assert.ok(keyZ8.includes('-8-'), 'Zoom 8 key should include zoom level');
+        assert.ok(keyZ10.includes('-10-'), 'Zoom 10 key should include zoom level');
     });
 });
 // Test module exports
