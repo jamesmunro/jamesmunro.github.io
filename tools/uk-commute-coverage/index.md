@@ -91,9 +91,9 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
       <thead>
         <tr>
           <th>Network</th>
-          <th>Excellent</th>
-          <th>Good</th>
-          <th>Adequate</th>
+          <th>Indoor+</th>
+          <th>Outdoor+</th>
+          <th>Variable+</th>
           <th>Poor/None</th>
           <th>Rank</th>
         </tr>
@@ -103,12 +103,12 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
       </tbody>
     </table>
     <div class="coverage-legend">
-      <p><small><strong>Ofcom coverage levels:</strong></small></p>
+      <p><small><strong>Ofcom coverage levels (% of route with this level or better):</strong></small></p>
       <ul>
-        <li><strong>Excellent</strong> = Level 3-4: Good outdoor, variable in-home / Good outdoor and in-home</li>
-        <li><strong>Good</strong> = Level 2+: Good outdoor</li>
-        <li><strong>Adequate</strong> = Level 1+: Variable outdoor</li>
-        <li><strong>Poor/None</strong> = Level 0: Poor to none outdoor</li>
+        <li><strong>Indoor+</strong> = Level 3-4: Good indoor coverage or better</li>
+        <li><strong>Outdoor+</strong> = Level 2+: Good outdoor coverage or better</li>
+        <li><strong>Variable+</strong> = Level 1+: Variable outdoor or better</li>
+        <li><strong>Poor/None</strong> = Level 0: Poor to no coverage</li>
       </ul>
       <p><small><strong>Ranking:</strong> Networks ranked by average coverage level across all sampled points. Higher average = better rank. Ties receive the same rank.</small></p>
     </div>

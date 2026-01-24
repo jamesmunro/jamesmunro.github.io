@@ -82,9 +82,9 @@ describe('ChartRenderer', () => {
 
       const summary = renderer.calculateSummary(coverageResults);
 
-      assert.strictEqual(summary.EE['Excellent'], 100);
-      assert.strictEqual(summary.EE['Good'], 100);
-      assert.strictEqual(summary.EE['Adequate'], 100);
+      assert.strictEqual(summary.EE['Indoor+'], 100);
+      assert.strictEqual(summary.EE['Outdoor+'], 100);
+      assert.strictEqual(summary.EE['Variable+'], 100);
       assert.strictEqual(summary.EE['Poor/None'], 0);
       assert.strictEqual(summary.EE.avgLevel, 4);
     });
@@ -104,7 +104,7 @@ describe('ChartRenderer', () => {
 
       const summary = renderer.calculateSummary(coverageResults);
 
-      assert.strictEqual(summary.EE['Excellent'], 50);
+      assert.strictEqual(summary.EE['Indoor+'], 50);
       assert.strictEqual(summary.EE['Poor/None'], 50);
       assert.strictEqual(summary.EE.avgLevel, 2);
     });
@@ -126,26 +126,26 @@ describe('ChartRenderer', () => {
     test('handles empty results', () => {
       const summary = renderer.calculateSummary([]);
 
-      assert.strictEqual(summary.EE['Excellent'], 0);
-      assert.strictEqual(summary.EE['Good'], 0);
+      assert.strictEqual(summary.EE['Indoor+'], 0);
+      assert.strictEqual(summary.EE['Outdoor+'], 0);
       assert.strictEqual(summary.EE.avgLevel, 0);
     });
 
     test('correctly categorizes coverage levels', () => {
-      // Level 3+ = Excellent, Level 2+ = Good, Level 1+ = Adequate, Level 0 = Poor/None
+      // Level 3+ = Indoor+, Level 2+ = Outdoor+, Level 1+ = Variable+, Level 0 = Poor/None
       const coverageResults: CoverageResult[] = [
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } }, // Excellent
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } }, // Excellent
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } }, // Good (not excellent)
-        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 1 } } } }, // Adequate (not good)
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 4 } } } }, // Indoor+
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 3 } } } }, // Indoor+
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 2 } } } }, // Outdoor+ (not indoor)
+        { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 1 } } } }, // Variable+ (not outdoor)
         { point: { distance: 0, lat: 0, lng: 0 }, coverage: { latitude: 0, longitude: 0, networks: { EE: { level: 0 } } } }, // Poor/None
       ];
 
       const summary = renderer.calculateSummary(coverageResults);
 
-      assert.strictEqual(summary.EE['Excellent'], 40, '2 of 5 points are level 3+');
-      assert.strictEqual(summary.EE['Good'], 60, '3 of 5 points are level 2+');
-      assert.strictEqual(summary.EE['Adequate'], 80, '4 of 5 points are level 1+');
+      assert.strictEqual(summary.EE['Indoor+'], 40, '2 of 5 points are level 3+');
+      assert.strictEqual(summary.EE['Outdoor+'], 60, '3 of 5 points are level 2+');
+      assert.strictEqual(summary.EE['Variable+'], 80, '4 of 5 points are level 1+');
       assert.strictEqual(summary.EE['Poor/None'], 20, '1 of 5 points is level 0');
     });
 

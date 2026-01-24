@@ -113,12 +113,12 @@ export interface TileInfo {
   tileY: number;
 }
 
-/** Coverage statistics for a network */
+/** Coverage statistics for a network (Ofcom "or better" style) */
 export interface NetworkSummaryStats {
-  Excellent: number;
-  Good: number;
-  Adequate: number;
-  'Poor/None': number;
+  'Indoor+': number;   // Level 3-4: Indoor coverage or better
+  'Outdoor+': number;  // Level 2+: Outdoor coverage or better
+  'Variable+': number; // Level 1+: Variable outdoor or better
+  'Poor/None': number; // Level 0: Poor/None
   avgLevel: number;
   Rank?: number;
 }

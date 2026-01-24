@@ -231,16 +231,16 @@ export class ChartRenderer {
       );
 
       const total = levels.length;
-      // Count points with good coverage (level 2+) and excellent (level 3+)
-      const excellent = levels.filter(l => l >= 3).length;
-      const good = levels.filter(l => l >= 2).length;
-      const adequate = levels.filter(l => l >= 1).length;
-      const poorNone = levels.filter(l => l === 0).length;
+      // Count points with coverage at each threshold (Ofcom "or better" style)
+      const indoor = levels.filter(l => l >= 3).length;    // Level 3-4: Indoor coverage or better
+      const outdoor = levels.filter(l => l >= 2).length;   // Level 2+: Outdoor coverage or better
+      const variable = levels.filter(l => l >= 1).length;  // Level 1+: Variable outdoor or better
+      const poorNone = levels.filter(l => l === 0).length; // Level 0: Poor/None
 
       summary[network] = {
-        'Excellent': total > 0 ? Math.round((excellent / total) * 100) : 0,
-        'Good': total > 0 ? Math.round((good / total) * 100) : 0,
-        'Adequate': total > 0 ? Math.round((adequate / total) * 100) : 0,
+        'Indoor+': total > 0 ? Math.round((indoor / total) * 100) : 0,
+        'Outdoor+': total > 0 ? Math.round((outdoor / total) * 100) : 0,
+        'Variable+': total > 0 ? Math.round((variable / total) * 100) : 0,
         'Poor/None': total > 0 ? Math.round((poorNone / total) * 100) : 0,
         avgLevel: total > 0 ? (levels.reduce((a, b) => a + b, 0) / total) : 0
       };
@@ -298,9 +298,9 @@ export class ChartRenderer {
 
     const headers = table.querySelectorAll('th');
     const sortableColumns: Record<number, string> = {
-      1: 'Excellent',
-      2: 'Good',
-      3: 'Adequate',
+      1: 'Indoor+',
+      2: 'Outdoor+',
+      3: 'Variable+',
       4: 'Poor/None',
       5: 'Rank'
     };
@@ -353,9 +353,9 @@ export class ChartRenderer {
       const row = tbody.insertRow();
       row.innerHTML = `
         <td><strong>${network}</strong></td>
-        <td>${stats['Excellent']}%</td>
-        <td>${stats['Good']}%</td>
-        <td>${stats['Adequate']}%</td>
+        <td>${stats['Indoor+']}%</td>
+        <td>${stats['Outdoor+']}%</td>
+        <td>${stats['Variable+']}%</td>
         <td>${stats['Poor/None']}%</td>
         <td>${stats['Rank']}</td>
       `;
