@@ -70,10 +70,7 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
   <div id="progress" class="progress-container" style="display:none">
     <div id="progress-steps"></div>
     <progress id="progress-bar" max="100" value="0"></progress>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-      <span id="progress-text">Initializing...</span>
-      <span id="stats-text" style="font-size: 0.85rem; color: var(--text-secondary); font-family: monospace;"></span>
-    </div>
+    <span id="progress-text">Initializing...</span>
   </div>
 
   <!-- Chart Canvas -->
@@ -118,6 +115,12 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
 
   <!-- Error Display (Fail Fast) -->
   <div id="error" class="error-message" style="display:none"></div>
+
+  <!-- Cache Monitor Footer -->
+  <footer class="cache-monitor">
+    <span id="cache-stored">Stored: 0 tiles</span>
+    <span id="cache-hits">Hits: 0</span>
+  </footer>
 </div>
 
 <style>
@@ -229,6 +232,19 @@ hero_subtitle: Find the best network for your commute by analysing mobile data c
   text-align: center;
   font-size: 0.9rem;
   color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.cache-monitor {
+  margin-top: 2rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 2rem;
 }
 
 .error-message {

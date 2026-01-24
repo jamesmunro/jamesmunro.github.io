@@ -78,6 +78,9 @@ export class CoverageAnalyzer {
         }
       });
     }
+
+    // Initialize cache monitor on page load (defer to ensure DOM is ready)
+    setTimeout(() => this.updateCacheMonitor(), 0);
   }
 
   private loadFormValues(): void {
@@ -455,8 +458,8 @@ export class CoverageAnalyzer {
       results.push(result);
 
       const progress = 40 + (i / sampledPoints.length) * 55;
-      const stats = `Tiles: ${this.coverageAdapter.stats.tilesFetched} fetched / ${this.coverageAdapter.stats.tilesFromCache} cached`;
-      this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} samples`, stats);
+      this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} samples`);
+      this.updateCacheMonitor();
 
       if (i < sampledPoints.length - 1 && (i + 1) % BATCH_SIZE === 0) {
         await this.sleep(DELAY_MS);
@@ -507,17 +510,18 @@ export class CoverageAnalyzer {
 
   private hideProgress(): void { this.hideElement('progress'); }
 
-  private updateProgress(percent: number, text: string, stats: string | null = null): void {
+  private updateProgress(percent: number, text: string): void {
     const bar = document.getElementById('progress-bar') as HTMLProgressElement | null;
     const textEl = document.getElementById('progress-text');
-    const statsEl = document.getElementById('stats-text');
     if (bar) bar.value = percent;
     if (textEl) textEl.textContent = text;
-    if (statsEl && stats) {
-      statsEl.textContent = stats;
-    } else if (statsEl) {
-      statsEl.textContent = '';
-    }
+  }
+
+  private updateCacheMonitor(): void {
+    const storedEl = document.getElementById('cache-stored');
+    const hitsEl = document.getElementById('cache-hits');
+    if (storedEl) storedEl.textContent = `Stored: ${this.coverageAdapter.getStoredTileCount()} tiles`;
+    if (hitsEl) hitsEl.textContent = `Hits: ${this.coverageAdapter.stats.tilesFromCache}`;
   }
 
   private setStep(stepIndex: number): void {

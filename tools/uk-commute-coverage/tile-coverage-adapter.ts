@@ -333,4 +333,12 @@ export class TileCoverageAdapter {
       console.warn('Failed to clear cache:', error);
     }
   }
+
+  /**
+   * Get the count of tiles stored in localStorage index
+   */
+  getStoredTileCount(): number {
+    const index = this.loadTileCacheFromStorage();
+    return Object.keys(index).length;
+  }
 }
