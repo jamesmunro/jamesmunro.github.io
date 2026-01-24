@@ -152,8 +152,14 @@ export class ChartRenderer {
       <div class="coverage-bars-container">
     `;
 
+    // Sort networks by coverage rank (best coverage first)
+    const summary = this.calculateSummary(coverageResults);
+    const networksSortedByRank = NETWORKS.slice().sort((a, b) =>
+      summary[b].avgLevel - summary[a].avgLevel
+    );
+
     // Create a bar for each network
-    for (const network of NETWORKS) {
+    for (const network of networksSortedByRank) {
       const segments = this.groupIntoSegments(coverageResults, network);
 
       html += `
