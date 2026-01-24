@@ -422,8 +422,6 @@ export class CoverageAnalyzer {
 
   async getCoverageData(sampledPoints: SampledPoint[], startPostcode: string, endPostcode: string, tileNetwork = ''): Promise<CoverageResult[]> {
     const results: CoverageResult[] = [];
-    const BATCH_SIZE = 5;
-    const DELAY_MS = 500;
     const displayedTiles = new Set<string>();
 
     for (let i = 0; i < sampledPoints.length; i++) {
@@ -463,10 +461,6 @@ export class CoverageAnalyzer {
       const progress = 40 + (i / sampledPoints.length) * 55;
       this.updateProgress(progress, `Analyzing coverage... ${i + 1}/${sampledPoints.length} samples`);
       this.updateCacheMonitor();
-
-      if (i < sampledPoints.length - 1 && (i + 1) % BATCH_SIZE === 0) {
-        await this.sleep(DELAY_MS);
-      }
     }
     return results;
   }
@@ -500,10 +494,6 @@ export class CoverageAnalyzer {
       }
     }
     this.updateCacheMonitor();
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private showProgress(): void {
