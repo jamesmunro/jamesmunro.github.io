@@ -27,7 +27,7 @@ import {
 } from './pixel-extractor.js';
 
 import { TileCoverageAdapter } from './tile-coverage-adapter.js';
-import { STANDARD_ZOOM, TILE_VERSION } from './constants.js';
+import { STANDARD_ZOOM, TILE_VERSION, TILE_API_BASE } from './constants.js';
 
 // Test coordinate converter with real proj4
 describe('Coordinate Converter', () => {
@@ -380,7 +380,8 @@ describe('TileCoverageAdapter', () => {
 
       for (const tc of testCases) {
         const url = adapter.getTileUrl(tc.mno, tc.tileX, tc.tileY);
-        const expected = `https://ofcom.europa.uk.com/tiles/gbof_${tc.mno}_raster_bng2/${STANDARD_ZOOM}/${tc.tileX}/${tc.tileY}.png?v=${TILE_VERSION}`;
+        const baseUrl = TILE_API_BASE.replace('{mno}', tc.mno);
+        const expected = `${baseUrl}/${STANDARD_ZOOM}/${tc.tileX}/${tc.tileY}.png?v=${TILE_VERSION}`;
         assert.strictEqual(url, expected);
       }
     });
