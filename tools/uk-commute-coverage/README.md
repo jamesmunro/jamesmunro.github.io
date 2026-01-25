@@ -95,6 +95,28 @@ The tool returns 5 coverage levels based on Ofcom tile colors:
 npm install
 ```
 
+### Cloudflare Worker (CORS Proxy)
+
+The Ofcom tile API doesn't return CORS headers, so production deployments require a proxy. A Cloudflare Worker handles this by proxying tile requests and adding the necessary headers.
+
+**Deploying the worker:**
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Workers & Pages
+2. Create a new worker named `uk-commute-coverage`
+3. Paste the contents of `cloudflare-worker.js`
+4. Deploy
+
+The worker proxies requests from:
+```
+https://uk-commute-coverage.jamesjulianmunro.workers.dev/tiles/...
+```
+to:
+```
+https://ofcom.europa.uk.com/tiles/...
+```
+
+**Local development** uses the Eleventy dev server proxy (`/api/tiles/...`) configured in `.eleventy.js`, so no Cloudflare setup is needed for local testing.
+
 ### Running Tests
 
 ```bash
