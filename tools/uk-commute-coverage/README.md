@@ -108,7 +108,7 @@ The Ofcom tile API doesn't return CORS headers, so production deployments requir
 
 The worker proxies requests from:
 ```
-https://uk-commute-coverage.jamesjulianmunro.workers.dev/tiles/...
+https://uk-commute-coverage.dirac.workers.dev/tiles/...
 ```
 to:
 ```
