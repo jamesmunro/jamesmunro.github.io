@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> | Personal Tools &amp; Portfolio</title>
+    <meta name="site-version" content="20260126.0806">
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+        padding-top: 40px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1></h1>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<h1>Ofcom Coverage Tile System - Technical Specification</h1>
+<h2>Overview</h2>
+<p>The Ofcom mobile coverage checker at <code>https://ofcom.europa.uk.com/apps/gbof/</code> uses a tile-based map system to display coverage data. Tiles are pre-rendered PNG images served from a tile server.</p>
+<h2>Tile URL Format</h2>
+<pre><code>https://ofcom.europa.uk.com/tiles/gbof_{mno}_raster_bng2/{z}/{x}/{y}.png?v={version}
+</code></pre>
+<h3>Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mno</code></td>
+<td>Mobile Network Operator</td>
+<td><code>mno1</code>, <code>mno2</code>, <code>mno3</code>, <code>mno4</code></td>
+</tr>
+<tr>
+<td><code>z</code></td>
+<td>Zoom level</td>
+<td>0-11</td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td>Tile column index</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td>Tile row index (TMS convention)</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>Cache-busting parameter</td>
+<td>Currently <code>42</code></td>
+</tr>
+</tbody>
+</table>
+<h3>Example</h3>
+<pre><code>https://ofcom.europa.uk.com/tiles/gbof_mno1_raster_bng2/10/713/302.png?v=42
+</code></pre>
+<h2>Coordinate System</h2>
+<h3>Projection: British National Grid (EPSG:27700)</h3>
+<p>The tiles use the British National Grid (BNG) projection, <strong>not</strong> Web Mercator (EPSG:3857). This is a Transverse Mercator projection specific to Great Britain.</p>
+<p>BNG coordinates are expressed as:</p>
+<ul>
+<li><strong>Easting (E)</strong>: meters east from a false origin west of the Isles of Scilly</li>
+<li><strong>Northing (N)</strong>: meters north from a false origin south of the Isles of Scilly</li>
+</ul>
+<p>Valid ranges for Great Britain:</p>
+<ul>
+<li>Easting: ~0 to ~700,000</li>
+<li>Northing: ~0 to ~1,300,000</li>
+</ul>
+<h3>Resolution Array (meters per pixel)</h3>
+<p>Each zoom level has a fixed resolution (verified against ground distance measurements):</p>
+<table>
+<thead>
+<tr>
+<th>Zoom</th>
+<th>Resolution (m/px)</th>
+<th>Tile Coverage (m)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>2867.2</td>
+<td>734,003</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1433.6</td>
+<td>367,002</td>
+</tr>
+<tr>
+<td>2</td>
+<td>716.8</td>
+<td>183,501</td>
+</tr>
+<tr>
+<td>3</td>
+<td>358.4</td>
+<td>91,750</td>
+</tr>
+<tr>
+<td>4</td>
+<td>179.2</td>
+<td>45,875</td>
+</tr>
+<tr>
+<td>5</td>
+<td>89.6</td>
+<td>22,938</td>
+</tr>
+<tr>
+<td>6</td>
+<td>44.8</td>
+<td>11,469</td>
+</tr>
+<tr>
+<td>7</td>
+<td>22.4</td>
+<td>5,734</td>
+</tr>
+<tr>
+<td>8</td>
+<td>11.2</td>
+<td>2,867</td>
+</tr>
+<tr>
+<td>9</td>
+<td>5.6</td>
+<td>1,434</td>
+</tr>
+<tr>
+<td>10</td>
+<td>2.8</td>
+<td>717</td>
+</tr>
+<tr>
+<td>11</td>
+<td>1.4</td>
+<td>358</td>
+</tr>
+</tbody>
+</table>
+<p>Tile coverage = resolution × 256 (tile size in pixels)</p>
+<h3>TMS Y-Axis Convention</h3>
+<p>The tile server uses <strong>TMS (Tile Map Service)</strong> convention where:</p>
+<ul>
+<li>Y = 0 is at the <strong>bottom</strong> (south)</li>
+<li>Y increases northward</li>
+</ul>
+<p>This is the opposite of the &quot;XYZ&quot; / &quot;Slippy Map&quot; convention used by Google Maps and OpenStreetMap.</p>
+<h2>Converting Coordinates to Tile Indices</h2>
+<h3>From British National Grid (Easting/Northing) to Tile (x, y, z)</h3>
+<pre><code class="language-javascript">const resolutions = [2867.2, 1433.6, 716.8, 358.4, 179.2, 89.6, 44.8, 22.4, 11.2, 5.6, 2.8, 1.4];
+const TILE_SIZE = 256;
+
+function bngToTile(easting, northing, zoom) {
+    const resolution = resolutions[zoom];
+    const tileSpan = resolution * TILE_SIZE;
+
+    const x = Math.floor(easting / tileSpan);
+    const y = Math.floor(northing / tileSpan);  // TMS: y increases northward
+
+    return { x, y, z: zoom };
+}
+</code></pre>
+<h3>From WGS84 (Lat/Lon) to British National Grid</h3>
+<p>To convert from latitude/longitude (WGS84, EPSG:4326) to BNG, use the Ordnance Survey transformation. This involves:</p>
+<ol>
+<li>Convert lat/lon to 3D Cartesian coordinates</li>
+<li>Apply a Helmert transformation (7-parameter)</li>
+<li>Project to Transverse Mercator</li>
+</ol>
+<p>Libraries that handle this:</p>
+<ul>
+<li><strong>JavaScript</strong>: <a href="https://github.com/proj4js/proj4js">proj4js</a> with EPSG:27700 definition</li>
+<li><strong>Python</strong>: <code>pyproj</code> or <code>osgeo.osr</code></li>
+</ul>
+<pre><code class="language-javascript">// Using proj4js
+import proj4 from 'proj4';
+
+// Define BNG projection
+proj4.defs('EPSG:27700', '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs');
+
+function latLonToBng(lat, lon) {
+    const [easting, northing] = proj4('EPSG:4326', 'EPSG:27700', [lon, lat]);
+    return { easting, northing };
+}
+</code></pre>
+<h3>Complete Conversion: Lat/Lon to Tile</h3>
+<pre><code class="language-javascript">function latLonToTile(lat, lon, zoom) {
+    const { easting, northing } = latLonToBng(lat, lon);
+    return bngToTile(easting, northing, zoom);
+}
+
+// Example: London (51.5074, -0.1278)
+const tile = latLonToTile(51.5074, -0.1278, 10);
+// Returns: { x: 739, y: 251, z: 10 }
+</code></pre>
+<h2>Pixel Position Within a Tile</h2>
+<p>To find the exact pixel within a tile for a given coordinate:</p>
+<pre><code class="language-javascript">function bngToPixelInTile(easting, northing, zoom) {
+    const resolution = resolutions[zoom];
+    const tileSpan = resolution * TILE_SIZE;
+
+    const x = Math.floor(easting / tileSpan);
+    const y = Math.floor(northing / tileSpan);
+
+    // Pixel offset within the tile
+    const pixelX = Math.floor((easting % tileSpan) / resolution);
+    const pixelY = TILE_SIZE - 1 - Math.floor((northing % tileSpan) / resolution);
+    // Note: pixelY is inverted because PNG pixel 0 is at top, but BNG northing increases upward
+
+    return { tileX: x, tileY: y, pixelX, pixelY };
+}
+</code></pre>
+<h2>Coverage Data Interpretation</h2>
+<p>The PNG tiles contain colour-coded coverage information. Pixel colours indicate:</p>
+<ul>
+<li><strong>Presence of colour</strong>: Coverage available</li>
+<li><strong>Transparency</strong>: No coverage data / out of bounds</li>
+</ul>
+<p>Exact colour meanings depend on the coverage type being displayed (voice, data, 4G, 5G, etc.).</p>
+<h2>Leaflet Configuration Reference</h2>
+<p>The original implementation uses these Leaflet options:</p>
+<pre><code class="language-javascript">L.tileLayer(tileURL, {
+    tms: true,        // TMS y-axis convention
+    noWrap: true,     // Don't wrap around the world
+    opacity: 0.8
+});
+</code></pre>
+
+
+    </main>
+
+    <footer style="text-align:center; padding:18px 24px; color:var(--text-secondary); font-size:0.9rem;">
+      <div class="card" style="max-width:1080px; margin: 0 auto 32px; background:transparent; box-shadow:none; border:none; padding:0;">
+        <small>Site version: <strong>20260126.0806</strong></small>
+      </div>
+    </footer>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>

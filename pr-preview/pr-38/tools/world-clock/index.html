@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Clock | Personal Tools &amp; Portfolio</title>
+    <meta name="site-version" content="20260126.0806">
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+        /* Light mode colors */
+        --bg-primary: #f5f7fb;
+        --bg-card: #fff;
+        --bg-secondary: #f4f6fb;
+        --bg-secondary-hover: #eef2fb;
+        --bg-output: #f6f8ff;
+        --text-primary: #1f2a44;
+        --text-secondary: #5b6884;
+        --text-tertiary: #56637e;
+        --border-color: #d4d9e6;
+        --border-card: rgba(153, 176, 234, 0.3);
+        --border-hover: #99b0ea;
+        --link-color: #3559a2;
+        --link-hover: #2b4a89;
+        --error-color: #b42318;
+        --header-gradient-1: #1f3f7a;
+        --header-gradient-2: #3559a2;
+        --header-text: #fff;
+        --shadow-card: rgba(31, 42, 68, 0.08);
+        --shadow-header: rgba(31, 63, 122, 0.25);
+        --shadow-hover: rgba(53, 89, 162, 0.12);
+
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      :root.dark-mode {
+        color-scheme: dark;
+
+        /* Dark mode colors */
+        --bg-primary: #0f1419;
+        --bg-card: #1a1f2e;
+        --bg-secondary: #151b26;
+        --bg-secondary-hover: #1f2738;
+        --bg-output: #13181f;
+        --text-primary: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #7d8590;
+        --border-color: #30363d;
+        --border-card: rgba(99, 110, 234, 0.3);
+        --border-hover: #636eea;
+        --link-color: #6b8aff;
+        --link-hover: #8ca6ff;
+        --error-color: #f85149;
+        --header-gradient-1: #161b33;
+        --header-gradient-2: #1f2d52;
+        --header-text: #e6edf3;
+        --shadow-card: rgba(0, 0, 0, 0.3);
+        --shadow-header: rgba(0, 0, 0, 0.4);
+        --shadow-hover: rgba(99, 110, 234, 0.2);
+      }
+
+      body {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(120deg, var(--header-gradient-1), var(--header-gradient-2));
+        color: var(--header-text);
+        padding: 56px 24px 64px;
+        box-shadow: 0 12px 30px var(--shadow-header);
+        position: relative;
+      }
+
+      header h1 {
+        margin: 0 0 12px;
+        font-size: 2.4rem;
+      }
+
+      header p {
+        margin: 0;
+        max-width: 640px;
+        opacity: 0.9;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: var(--header-text);
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .theme-toggle:active {
+        transform: translateY(0);
+      }
+
+      main {
+        max-width: 1080px;
+        margin: -32px auto 64px;
+        padding: 0 24px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 16px 40px var(--shadow-card);
+        border: 1px solid var(--border-card);
+        padding: 28px;
+        margin-bottom: 32px;
+      }
+
+      .tool-index {
+        display: grid;
+        gap: 16px;
+      }
+
+      .tool-index a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      .tool-index a:hover {
+        border-color: var(--border-hover);
+        background: var(--bg-secondary-hover);
+        box-shadow: 0 10px 18px var(--shadow-hover);
+        transform: translateY(-2px);
+      }
+
+      .tool-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .tool-meta span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .breadcrumb {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+        padding-top: 40px;
+      }
+
+      .breadcrumb a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+
+      .tool-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .tool-header h2 {
+        margin: 0;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        resize: vertical;
+        background: var(--bg-card);
+        color: var(--text-primary);
+      }
+
+      .helper {
+        margin: 12px 0 0;
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .link-button {
+        background: none;
+        border: 0;
+        padding: 0;
+        color: var(--link-color);
+        text-decoration: underline;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .link-button:hover {
+        color: var(--link-hover);
+      }
+
+      .tool-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-top: 20px;
+      }
+
+      .output {
+        background: var(--bg-output);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 140px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-primary);
+      }
+
+      .status {
+        color: var(--text-tertiary);
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: var(--error-color);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">☀️</span>
+        <span id="theme-text">Light</span>
+      </button>
+      <h1>World Clock</h1>
+      
+      <p>Large, multi-timezone clock with second-by-second updates.</p>
+      
+    </header>
+
+    <main>
+      <div class="breadcrumb" style="margin-bottom: 16px; padding-left: 2px;"><a href="../../">← Back to tool index</a></div>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+  .clock-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .clock-tile {
+    background: linear-gradient(145deg, #1a1a2e, #16162a);
+    border-radius: 12px;
+    padding: 32px 40px;
+    border: 2px solid #2a2a4a;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    position: relative;
+    width: fit-content;
+  }
+
+  .clock-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.3), transparent);
+  }
+
+  .clock-city {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+
+  .clock-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 4rem;
+    font-weight: 400;
+    margin: 0;
+    color: #ff6b6b;
+    text-shadow:
+      0 0 20px rgba(255, 107, 107, 0.6),
+      0 0 40px rgba(255, 107, 107, 0.3);
+    letter-spacing: 0.05em;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    display: inline-block;
+  }
+
+  .clock-date {
+    font-family: 'Share Tech Mono', monospace;
+    margin: 20px 0 0;
+    color: #6b7aa1;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+  }
+
+  .clock-indicator {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    background: #00ff88;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.8);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .timezone-note {
+    margin-top: 20px;
+    color: #56637e;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 600px) {
+    .clock-time {
+      font-size: 2.4rem;
+    }
+    .clock-tile {
+      padding: 20px 24px;
+    }
+    .clock-time-segment {
+      padding: 6px 8px;
+    }
+  }
+
+  /* Timezone difference table styles */
+  .tz-table-container {
+    overflow-x: auto;
+    margin-top: 24px;
+  }
+
+  .tz-difference-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Share Tech Mono', monospace;
+    background: linear-gradient(145deg, #1a1a2e, #16162a);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .tz-difference-table th {
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 16px 12px;
+    text-align: left;
+    border-bottom: 2px solid #2a2a4a;
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+  }
+
+  .tz-difference-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #2a2a4a;
+    color: #6b7aa1;
+    font-size: 0.9rem;
+  }
+
+  .tz-difference-table tr:hover {
+    background: rgba(255, 107, 107, 0.05);
+  }
+
+  .tz-difference-table .period-cell {
+    color: #ff6b6b;
+    font-weight: 500;
+  }
+
+  .tz-difference-table .offset-cell {
+    color: #00ff88;
+    font-family: monospace;
+  }
+
+  .tz-difference-table .diff-cell {
+    color: #6b9aff;
+    font-weight: 500;
+  }
+
+  .dst-transition {
+    background: rgba(255, 107, 107, 0.1);
+    border-left: 3px solid #ff6b6b;
+  }
+
+  .dst-badge {
+    display: inline-block;
+    background: rgba(255, 107, 107, 0.2);
+    color: #ff6b6b;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+    text-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+  }
+
+  @media (max-width: 768px) {
+    .tz-difference-table {
+      font-size: 0.8rem;
+    }
+    .tz-difference-table th,
+    .tz-difference-table td {
+      padding: 10px 8px;
+    }
+  }
+</style>
+<section class="card" aria-labelledby="world-clock-title">
+  <div class="tool-header">
+    <h2 id="world-clock-title">Multi-timezone clock</h2>
+    <span class="status" id="clock-status">Updating every second.</span>
+  </div>
+  <div class="clock-grid" id="clock-grid"></div>
+  <p class="timezone-note">
+    Jersey and London share Europe/London time. Singapore and Hong Kong share Asia/Singapore time year-round.
+  </p>
+</section>
+<section class="card" aria-labelledby="timezone-differences">
+  <div class="tool-header">
+    <h2 id="timezone-differences">Timezone Differences Over Next Year</h2>
+    <span class="status">Including daylight saving time transitions</span>
+  </div>
+  <div class="tz-table-container">
+    <table class="tz-difference-table" id="tz-difference-table">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Singapore & HK (UTC)</th>
+          <th>Jersey & London (UTC)</th>
+          <th>New York (UTC)</th>
+          <th>LON → SGP</th>
+          <th>NYC → SGP</th>
+          <th>NYC → LON</th>
+        </tr>
+      </thead>
+      <tbody id="tz-difference-tbody">
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 20px;">
+            Calculating timezone differences...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="card" aria-labelledby="clock-notes">
+  <h2 id="clock-notes">Notes</h2>
+  <ul>
+    <li>Clocks render locally in your browser using IANA time zones.</li>
+    <li>Seconds are shown for precise coordination.</li>
+    <li>Minimal clocks are used to cover the requested locations.</li>
+    <li>The timezone difference table shows how offsets change throughout the year due to daylight saving time transitions.</li>
+  </ul>
+</section>
+<script>
+  const clocks = [
+    {
+      label: "Singapore & Hong Kong",
+      timeZone: "Asia/Singapore",
+    },
+    {
+      label: "Jersey & London",
+      timeZone: "Europe/London",
+    },
+    {
+      label: "New York",
+      timeZone: "America/New_York",
+    },
+  ];
+
+  const clockGrid = document.getElementById("clock-grid");
+
+  const formatters = clocks.map((clock) => ({
+    ...clock,
+    timeFormatter: new Intl.DateTimeFormat("en-GB", {
+      timeZone: clock.timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }),
+    dateFormatter: new Intl.DateTimeFormat("en-GB", {
+      timeZone: clock.timeZone,
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+  }));
+
+  const clockNodes = formatters.map((clock) => {
+    const tile = document.createElement("div");
+    tile.className = "clock-tile";
+
+    const indicator = document.createElement("div");
+    indicator.className = "clock-indicator";
+
+    const city = document.createElement("p");
+    city.className = "clock-city";
+    city.textContent = clock.label;
+
+    const time = document.createElement("p");
+    time.className = "clock-time";
+
+    const date = document.createElement("p");
+    date.className = "clock-date";
+
+    tile.append(indicator, city, time, date);
+    clockGrid.appendChild(tile);
+
+    return { time, date, ...clock };
+  });
+
+  const updateClocks = () => {
+    const now = new Date();
+    clockNodes.forEach((clock) => {
+      clock.time.textContent = clock.timeFormatter.format(now);
+      clock.date.textContent = clock.dateFormatter.format(now);
+    });
+  };
+
+  updateClocks();
+  setInterval(updateClocks, 1000);
+
+  // Calculate timezone differences and DST transitions
+  function calculateTimezoneDifferences() {
+    const timezones = [
+      { name: 'Singapore & HK', tz: 'Asia/Singapore', label: 'SGP' },
+      { name: 'Jersey & London', tz: 'Europe/London', label: 'LON' },
+      { name: 'New York', tz: 'America/New_York', label: 'NYC' }
+    ];
+
+    // Get UTC offset in hours for a given date and timezone
+    function getUTCOffset(date, timezone) {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      const parts = formatter.formatToParts(date);
+      const tzDate = new Date(
+        parts.find(p => p.type === 'year').value,
+        parts.find(p => p.type === 'month').value - 1,
+        parts.find(p => p.type === 'day').value,
+        parts.find(p => p.type === 'hour').value,
+        parts.find(p => p.type === 'minute').value,
+        parts.find(p => p.type === 'second').value
+      );
+
+      return (tzDate - date) / (1000 * 60 * 60);
+    }
+
+    // Format offset as +HH:MM or -HH:MM
+    function formatOffset(offset) {
+      const sign = offset >= 0 ? '+' : '-';
+      const absOffset = Math.abs(offset);
+      const hours = Math.floor(absOffset);
+      const minutes = Math.round((absOffset - hours) * 60);
+      return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    // Calculate time difference in hours between two timezones
+    function getTimeDiff(offset1, offset2) {
+      const diff = Math.abs(offset1 - offset2);
+      return diff;
+    }
+
+    // Scan through next 365 days to find all DST transitions
+    const periods = [];
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+    let currentDate = new Date(startDate);
+    let lastOffsets = timezones.map(tz => getUTCOffset(currentDate, tz.tz));
+    let periodStart = new Date(currentDate);
+
+    // Check every day for offset changes
+    while (currentDate < endDate) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      const currentOffsets = timezones.map(tz => getUTCOffset(currentDate, tz.tz));
+
+      // Check if any offset has changed
+      let offsetChanged = false;
+      const changedTimezones = [];
+      for (let i = 0; i < currentOffsets.length; i++) {
+        if (currentOffsets[i] !== lastOffsets[i]) {
+          offsetChanged = true;
+          changedTimezones.push(timezones[i].label);
+        }
+      }
+
+      if (offsetChanged) {
+        // Save the period that just ended
+        const periodEnd = new Date(currentDate);
+        periodEnd.setDate(periodEnd.getDate() - 1);
+
+        periods.push({
+          start: new Date(periodStart),
+          end: periodEnd,
+          offsets: [...lastOffsets],
+          transitionNext: changedTimezones
+        });
+
+        // Start new period
+        periodStart = new Date(currentDate);
+        lastOffsets = currentOffsets;
+      }
+    }
+
+    // Add final period
+    periods.push({
+      start: new Date(periodStart),
+      end: new Date(endDate),
+      offsets: [...lastOffsets],
+      transitionNext: []
+    });
+
+    return { periods, timezones };
+  }
+
+  // Populate the table
+  function populateTimezoneTable() {
+    const { periods, timezones } = calculateTimezoneDifferences();
+    const tbody = document.getElementById('tz-difference-tbody');
+    tbody.innerHTML = '';
+
+    periods.forEach((period, index) => {
+      const row = document.createElement('tr');
+
+      // Add DST transition class if this period has a transition
+      if (period.transitionNext.length > 0) {
+        row.classList.add('dst-transition');
+      }
+
+      // Period date range
+      const periodCell = document.createElement('td');
+      periodCell.className = 'period-cell';
+      const startStr = period.start.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: period.start.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+      });
+      const endStr = period.end.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: period.end.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+      });
+      periodCell.textContent = `${startStr} – ${endStr}`;
+
+      if (period.transitionNext.length > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'dst-badge';
+        badge.textContent = `${period.transitionNext.join(', ')} DST`;
+        periodCell.appendChild(badge);
+      }
+
+      row.appendChild(periodCell);
+
+      // UTC offsets for each timezone
+      period.offsets.forEach(offset => {
+        const offsetCell = document.createElement('td');
+        offsetCell.className = 'offset-cell';
+        offsetCell.textContent = formatOffset(offset);
+        row.appendChild(offsetCell);
+      });
+
+      // Time differences
+      const sgpOffset = period.offsets[0];
+      const lonOffset = period.offsets[1];
+      const nycOffset = period.offsets[2];
+
+      // LON → SGP
+      const lonToSgpCell = document.createElement('td');
+      lonToSgpCell.className = 'diff-cell';
+      const lonToSgpDiff = sgpOffset - lonOffset;
+      lonToSgpCell.textContent = `${lonToSgpDiff > 0 ? '+' : ''}${lonToSgpDiff}h`;
+      row.appendChild(lonToSgpCell);
+
+      // NYC → SGP
+      const nycToSgpCell = document.createElement('td');
+      nycToSgpCell.className = 'diff-cell';
+      const nycToSgpDiff = sgpOffset - nycOffset;
+      nycToSgpCell.textContent = `${nycToSgpDiff > 0 ? '+' : ''}${nycToSgpDiff}h`;
+      row.appendChild(nycToSgpCell);
+
+      // NYC → LON
+      const nycToLonCell = document.createElement('td');
+      nycToLonCell.className = 'diff-cell';
+      const nycToLonDiff = lonOffset - nycOffset;
+      nycToLonCell.textContent = `${nycToLonDiff > 0 ? '+' : ''}${nycToLonDiff}h`;
+      row.appendChild(nycToLonCell);
+
+      tbody.appendChild(row);
+    });
+
+    function formatOffset(offset) {
+      const sign = offset >= 0 ? '+' : '-';
+      const absOffset = Math.abs(offset);
+      const hours = Math.floor(absOffset);
+      const minutes = Math.round((absOffset - hours) * 60);
+      return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+  }
+
+  // Initialize the timezone table
+  populateTimezoneTable();
+</script>
+
+
+    </main>
+
+    <footer style="text-align:center; padding:18px 24px; color:var(--text-secondary); font-size:0.9rem;">
+      <div class="card" style="max-width:1080px; margin: 0 auto 32px; background:transparent; box-shadow:none; border:none; padding:0;">
+        <small>Site version: <strong>20260126.0806</strong></small>
+      </div>
+    </footer>
+
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        const root = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+
+        function setTheme(theme) {
+          if (theme === 'dark') {
+            root.classList.add('dark-mode');
+            icon.textContent = '🌙';
+            text.textContent = 'Dark';
+          } else {
+            root.classList.remove('dark-mode');
+            icon.textContent = '☀️';
+            text.textContent = 'Light';
+          }
+          localStorage.setItem('theme', theme);
+        }
+
+        // Apply saved theme on page load
+        setTheme(savedTheme);
+
+        // Toggle theme on button click
+        toggle.addEventListener('click', function() {
+          const currentTheme = root.classList.contains('dark-mode') ? 'dark' : 'light';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      })();
+    </script>
+  </body>
+</html>
