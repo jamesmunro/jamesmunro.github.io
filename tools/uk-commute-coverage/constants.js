@@ -9,7 +9,7 @@ export const COLOR_TOLERANCE = 10;
 // Use local proxy on localhost to avoid CORS, Cloudflare Worker proxy in production
 export const TILE_API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
     ? '/api/tiles/gbof_{mno}_raster_bng2' // Local: Eleventy dev server proxy
-    : 'https://uk-commute-coverage.jamesjulianmunro.workers.dev/tiles/gbof_{mno}_raster_bng2'; // Prod: CF Worker
+    : 'https://uk-commute-coverage.dirac.workers.dev/tiles/gbof_{mno}_raster_bng2'; // Prod: CF Worker
 // =============================================================================
 // IndexedDB Configuration
 // =============================================================================
